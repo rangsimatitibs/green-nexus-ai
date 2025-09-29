@@ -13,11 +13,19 @@ const Hero = () => {
               AI-Powered Material Innovation Platform
             </div>
             
-            <div className="space-y-6">
-              <h1 className="text-5xl lg:text-6xl font-bold text-foreground leading-tight">
+            <div className="space-y-6 relative">
+              {/* Floating Material Elements */}
+              <div className="absolute -top-8 -right-4 w-16 h-16 bg-gradient-to-br from-accent to-primary rounded-full opacity-80 animate-pulse shadow-lg"></div>
+              <div className="absolute -top-2 right-20 w-8 h-8 bg-gradient-to-br from-primary to-accent transform rotate-45 opacity-70 shadow-md"></div>
+              <div className="absolute top-12 -left-8 w-12 h-12 bg-gradient-to-br from-primary-glow to-accent rounded-lg transform rotate-12 opacity-60 shadow-md"></div>
+              <div className="absolute top-20 right-8 w-6 h-6 bg-gradient-to-br from-accent to-primary-glow rounded-full opacity-50"></div>
+              
+              <h1 className="text-5xl lg:text-6xl font-bold text-foreground leading-tight relative z-10">
                 Connect. Innovate.{" "}
-                <span className="bg-gradient-sustainable bg-clip-text text-transparent">
+                <span className="bg-gradient-sustainable bg-clip-text text-transparent relative">
                   Sustain.
+                  {/* Inline geometric accent */}
+                  <div className="absolute -top-4 -right-6 w-8 h-8 bg-gradient-to-br from-accent to-primary opacity-40 rounded-full animate-bounce"></div>
                 </span>
               </h1>
               

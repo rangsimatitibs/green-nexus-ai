@@ -20,30 +20,6 @@ const Hero = () => {
               <div className="absolute top-12 -left-8 w-12 h-12 bg-gradient-to-br from-primary-glow to-accent rounded-lg transform rotate-12 opacity-60 shadow-md animate-[bounce_3s_ease-in-out_infinite]"></div>
               <div className="absolute top-20 right-8 w-6 h-6 bg-gradient-to-br from-accent to-primary-glow rounded-full opacity-50 animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
               
-              {/* Connecting Lines/Paths */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="linkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity="0.4"/>
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.2"/>
-                  </linearGradient>
-                </defs>
-                <path 
-                  d="M 80 40 Q 200 80 320 60" 
-                  stroke="url(#linkGradient)" 
-                  strokeWidth="2" 
-                  fill="none"
-                  className="animate-[fade-in_2s_ease-in-out_infinite_alternate]"
-                />
-                <path 
-                  d="M 60 120 Q 150 100 240 140" 
-                  stroke="url(#linkGradient)" 
-                  strokeWidth="1.5" 
-                  fill="none"
-                  className="animate-[fade-in_3s_ease-in-out_infinite_alternate]"
-                />
-              </svg>
-              
               {/* Orbiting Elements */}
               <div className="absolute top-8 right-12 w-4 h-4 bg-gradient-to-br from-primary to-accent rounded-full opacity-60 animate-[spin_6s_linear_infinite] origin-[2rem_2rem]"></div>
               <div className="absolute top-4 right-16 w-3 h-3 bg-gradient-to-br from-accent to-primary-glow rounded-full opacity-40 animate-[spin_10s_linear_infinite_reverse] origin-[3rem_3rem]"></div>

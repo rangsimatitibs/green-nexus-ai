@@ -20,22 +20,22 @@ All colors MUST be HSL for proper theming.
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 15%;
 
-    /* Primary - Sustainable forest green */
-    --primary: 140 45% 25%;
+    /* Primary - Logo teal (dark circle) */
+    --primary: 180 25% 25%;
     --primary-foreground: 0 0% 98%;
-    --primary-glow: 140 55% 45%;
+    --primary-glow: 160 30% 45%;
 
-    /* Secondary - Innovation blue */
-    --secondary: 210 100% 96%;
-    --secondary-foreground: 215 25% 15%;
+    /* Secondary - Soft sage background */
+    --secondary: 140 15% 94%;
+    --secondary-foreground: 180 25% 25%;
 
-    /* Muted tones */
-    --muted: 210 40% 94%;
-    --muted-foreground: 215 15% 45%;
+    /* Muted tones - Neutral sage */
+    --muted: 140 10% 92%;
+    --muted-foreground: 160 15% 45%;
 
-    /* Accent - Eco bright green */
-    --accent: 142 60% 50%;
-    --accent-foreground: 0 0% 98%;
+    /* Accent - Logo sage green (light circle) */
+    --accent: 140 25% 65%;
+    --accent-foreground: 180 25% 25%;
 
     /* Earth tone */
     --earth: 25 35% 45%;
@@ -48,17 +48,17 @@ All colors MUST be HSL for proper theming.
     --success-foreground: 0 0% 98%;
 
     /* Interface elements */
-    --border: 214.3 31.8% 88%;
-    --input: 214.3 31.8% 88%;
-    --ring: 140 45% 25%;
+    --border: 140 15% 88%;
+    --input: 140 15% 88%;
+    --ring: 180 25% 25%;
 
     --radius: 0.75rem;
 
-    /* Gradients - Innovation and sustainability */
+    /* Gradients - Logo-inspired teal harmony */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-sustainable: linear-gradient(120deg, hsl(var(--accent)), hsl(var(--primary-glow)));
-    --gradient-innovation: linear-gradient(45deg, hsl(var(--primary)), hsl(142 55% 35%));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--background)), hsl(210 40% 96%));
+    --gradient-innovation: linear-gradient(45deg, hsl(var(--primary)), hsl(160 35% 55%));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--background)), hsl(140 10% 96%));
 
     /* Shadows - Elevated design */
     --shadow-subtle: 0 1px 3px 0 hsl(215 25% 15% / 0.1), 0 1px 2px 0 hsl(215 25% 15% / 0.06);

@@ -2,6 +2,9 @@ import Header from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail } from "lucide-react";
 import { useState } from "react";
+import alexPhoto from "@/assets/alex-joseph.jpg";
+import rangsimatiti from "@/assets/rangsimatiti.jpg";
+import holgerPhoto from "@/assets/dr-holger-warth.jpg";
 
 const About = () => {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
@@ -13,9 +16,7 @@ const About = () => {
       shortBio: "A serial entrepreneur, with a history of turning AI concepts into scalable platforms.",
       fullBio: "Former CTO of Google-backed Dermie.AI, bringing deep knowledge of machine learning and a vision for transforming industries with intelligent systems.",
       email: "alex@materialink.ai",
-      // To add photo: Replace this with the path to your image
-      // Example: image: alexPhoto (after importing at top: import alexPhoto from "@/assets/alex-joseph.jpg")
-      image: null,
+      image: alexPhoto,
     },
     {
       name: "Rangsimatiti Binda Saichompoo",
@@ -23,7 +24,7 @@ const About = () => {
       shortBio: "A sustainability alchemist, driven by the urgency of plastic pollution.",
       fullBio: "Combining scientific insights in sustainable materials & biomass valorization with an entrepreneurial spirit, turning innovation into impact for a cleaner future.",
       email: "rangsimatiti.b.s@gmail.com",
-      image: null,
+      image: rangsimatiti,
     },
     {
       name: "Dr. Holger Warth",
@@ -31,7 +32,7 @@ const About = () => {
       shortBio: "Chief Technology and Innovation Officer at medmix, brings strategic leadership and innovation expertise to MateriaLink.",
       fullBio: "With a proven track record in global R&D across multiple countries, he has successfully reduced product development cycles and increased launches. His previous executive roles at Aliaxis, Hoya Vision Care, and Evonik, managing budgets up to several hundred million dollars, position him as a key advisor for our technology roadmap and market expansion.",
       email: null,
-      image: null,
+      image: holgerPhoto,
     },
   ];
 

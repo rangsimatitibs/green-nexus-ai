@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import logo from "@/assets/materialink-logo.png";
 
 const Header = () => {
@@ -25,9 +26,9 @@ const Header = () => {
             <a href="#platform" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
               Platform
             </a>
-            <a href="#about" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
+            <Link to="/about" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
               About
-            </a>
+            </Link>
           </div>
           
           <div className="flex items-center gap-3">

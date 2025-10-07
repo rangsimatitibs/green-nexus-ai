@@ -78,7 +78,7 @@ const About = () => {
                     )}
                     
                     {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/50 to-transparent opacity-100 group-hover:opacity-95 transition-opacity duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-100 group-hover:opacity-95 transition-opacity duration-500" />
                     
                     {/* Name & Role (Always Visible) */}
                     <div className="absolute bottom-0 left-0 right-0 p-6 text-center">

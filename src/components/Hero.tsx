@@ -4,99 +4,86 @@ import heroImage from "@/assets/hero-sustainable-materials.jpg";
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen bg-gradient-hero flex items-center pt-20">
-      <div className="container mx-auto px-6 py-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 bg-accent/10 text-accent px-4 py-2 rounded-full text-sm font-medium">
-              <Sparkles className="w-4 h-4" />
-              AI-Powered Material Innovation Platform
-            </div>
-            
-            <div className="space-y-6 relative">
-              {/* Floating Material Elements with Linking Animation */}
-              <div className="absolute -top-8 -right-4 w-16 h-16 bg-gradient-to-br from-accent to-primary rounded-full opacity-80 animate-pulse shadow-lg hover-scale"></div>
-              <div className="absolute -top-2 right-20 w-8 h-8 bg-gradient-to-br from-primary to-accent transform rotate-45 opacity-70 shadow-md animate-[spin_8s_linear_infinite]"></div>
-              <div className="absolute top-12 -left-8 w-12 h-12 bg-gradient-to-br from-primary-glow to-accent rounded-lg transform rotate-12 opacity-60 shadow-md animate-[bounce_3s_ease-in-out_infinite]"></div>
-              <div className="absolute top-20 right-8 w-6 h-6 bg-gradient-to-br from-accent to-primary-glow rounded-full opacity-50 animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
-              
-              {/* Orbiting Elements */}
-              <div className="absolute top-8 right-12 w-4 h-4 bg-gradient-to-br from-primary to-accent rounded-full opacity-60 animate-[spin_6s_linear_infinite] origin-[2rem_2rem]"></div>
-              <div className="absolute top-4 right-16 w-3 h-3 bg-gradient-to-br from-accent to-primary-glow rounded-full opacity-40 animate-[spin_10s_linear_infinite_reverse] origin-[3rem_3rem]"></div>
-              
-              <h1 className="text-5xl lg:text-6xl font-bold text-foreground leading-tight relative z-10">
-                Connect. Innovate.{" "}
-                <span className="bg-gradient-sustainable bg-clip-text text-transparent relative">
-                  Sustain.
-                  {/* Inline geometric accent with enhanced animation */}
-                  <div className="absolute -top-4 -right-6 w-8 h-8 bg-gradient-to-br from-accent to-primary opacity-40 rounded-full animate-[bounce_2s_ease-in-out_infinite] hover:animate-[spin_1s_linear_infinite]"></div>
-                </span>
-              </h1>
-              
-              <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl">
-                The AI-powered platform connecting sustainable material producers, innovators, 
-                businesses, and educators across Europe and the UK. Transform your processes 
-                with eco-friendly alternatives without compromising performance.
-              </p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="hero" size="lg" className="group">
-                Explore Platform
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button variant="outline" size="lg">
-                Watch Demo
-              </Button>
-            </div>
-            
-            <div className="flex items-center gap-8 pt-8">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Leaf className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground">500+</p>
-                  <p className="text-sm text-muted-foreground">Sustainable Materials</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
-                  <Users className="w-5 h-5 text-accent" />
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground">200+</p>
-                  <p className="text-sm text-muted-foreground">Connected Companies</p>
-                </div>
-              </div>
-            </div>
+    <section className="relative min-h-screen bg-gradient-hero flex items-center pt-20 overflow-hidden">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)`,
+          backgroundSize: '48px 48px'
+        }}></div>
+      </div>
+
+      <div className="container mx-auto px-6 py-32 relative z-10">
+        <div className="max-w-5xl mx-auto text-center space-y-12">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-sm font-medium border border-white/20">
+            <Sparkles className="w-4 h-4" />
+            AI-Powered Material Innovation
           </div>
           
-          <div className="relative">
-            <div className="relative rounded-2xl overflow-hidden shadow-large">
-              <img 
-                src={heroImage} 
-                alt="Sustainable materials innovation laboratory showcasing eco-friendly alternatives and bioprocessing technology" 
-                className="w-full h-auto object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent"></div>
+          {/* Main Headline */}
+          <h1 className="text-6xl lg:text-7xl xl:text-8xl font-bold text-white leading-[1.1] tracking-tight">
+            Every material decision{" "}
+            <span className="block mt-2 bg-gradient-to-r from-accent to-white bg-clip-text text-transparent">
+              matters.
+            </span>
+          </h1>
+          
+          {/* Subheadline */}
+          <p className="text-xl lg:text-2xl text-white/90 leading-relaxed max-w-3xl mx-auto font-light">
+            Connect sustainable material producers, innovators, and businesses across Europe. 
+            Transform your processes with AI-powered alternatives.
+          </p>
+          
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
+            <Button size="lg" className="bg-white text-primary hover:bg-white/90 shadow-xl px-8 py-6 text-lg font-semibold">
+              Explore Platform
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+            <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm px-8 py-6 text-lg">
+              Watch Demo
+            </Button>
+          </div>
+          
+          {/* Stats */}
+          <div className="flex flex-wrap items-center justify-center gap-12 pt-12">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20">
+                <Leaf className="w-6 h-6 text-accent" />
+              </div>
+              <div className="text-left">
+                <p className="text-2xl font-bold text-white">500+</p>
+                <p className="text-sm text-white/80">Sustainable Materials</p>
+              </div>
             </div>
             
-            <div className="absolute -bottom-6 -left-6 bg-card p-6 rounded-xl shadow-medium border border-border">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-sustainable rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-accent-foreground" />
-                </div>
-                <div>
-                  <p className="font-semibold text-card-foreground">AI Matching</p>
-                  <p className="text-sm text-muted-foreground">Smart material recommendations</p>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20">
+                <Users className="w-6 h-6 text-accent" />
+              </div>
+              <div className="text-left">
+                <p className="text-2xl font-bold text-white">200+</p>
+                <p className="text-sm text-white/80">Connected Companies</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20">
+                <Sparkles className="w-6 h-6 text-accent" />
+              </div>
+              <div className="text-left">
+                <p className="text-2xl font-bold text-white">AI-Powered</p>
+                <p className="text-sm text-white/80">Smart Matching</p>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Floating Elements */}
+      <div className="absolute top-1/4 left-10 w-32 h-32 bg-accent/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-1/4 right-10 w-40 h-40 bg-primary-glow/10 rounded-full blur-3xl"></div>
     </section>
   );
 };

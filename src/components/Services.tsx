@@ -35,46 +35,46 @@ const Services = () => {
   ];
 
   return (
-    <section id="services" className="py-24 bg-muted/30">
+    <section id="services" className="py-32 bg-background">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
+        <div className="text-center mb-20">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-5 py-2.5 rounded-full text-sm font-semibold mb-8">
             <Zap className="w-4 h-4" />
             AI-Powered Services
           </div>
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">
-            Transforming Material Innovation
+          <h2 className="text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
+            Transforming Material <br className="hidden sm:block" />
+            <span className="bg-gradient-sustainable bg-clip-text text-transparent">Innovation</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Our comprehensive suite of AI-powered services helps you discover, validate, 
-            and integrate sustainable materials into your existing processes seamlessly.
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Discover, validate, and integrate sustainable materials seamlessly with AI-powered intelligence.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {services.map((service, index) => (
-            <Card key={index} className="group hover:shadow-large transition-all duration-300 border-border/50 hover:border-primary/20">
-              <CardHeader className="pb-4">
-                <div className={`w-14 h-14 ${service.gradient} rounded-xl flex items-center justify-center mb-4 group-hover:shadow-glow transition-all duration-300`}>
-                  <service.icon className="w-7 h-7 text-primary-foreground" />
+            <Card key={index} className="group hover:shadow-xl transition-all duration-500 border-2 border-transparent hover:border-primary/20 bg-card hover:-translate-y-1">
+              <CardHeader className="pb-6">
+                <div className={`w-16 h-16 ${service.gradient} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:shadow-glow transition-all duration-500`}>
+                  <service.icon className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl font-bold text-card-foreground group-hover:text-primary transition-colors">
+                <CardTitle className="text-xl font-bold text-card-foreground group-hover:text-primary transition-colors mb-3">
                   {service.title}
                 </CardTitle>
-                <CardDescription className="text-muted-foreground leading-relaxed">
+                <CardDescription className="text-muted-foreground leading-relaxed text-base">
                   {service.description}
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <ul className="space-y-3 mb-6">
+                <ul className="space-y-3 mb-8">
                   {service.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" />
+                    <li key={featureIndex} className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
                       {feature}
                     </li>
                   ))}
                 </ul>
-                <Button variant="ghost" className="w-full group/btn">
+                <Button variant="ghost" className="w-full group/btn font-semibold">
                   Learn More
                   <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                 </Button>
@@ -83,8 +83,8 @@ const Services = () => {
           ))}
         </div>
 
-        <div className="text-center mt-16">
-          <Button variant="sustainable" size="lg" className="group">
+        <div className="text-center mt-20">
+          <Button size="lg" className="bg-gradient-sustainable text-white hover:shadow-xl hover:scale-105 transition-all duration-300 px-8 py-6 text-lg font-semibold group">
             Explore All Services
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Button>

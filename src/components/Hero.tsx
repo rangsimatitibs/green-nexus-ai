@@ -1,10 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Leaf, Users } from "lucide-react";
 import heroImage from "@/assets/hero-sustainable-materials.jpg";
+import FloatingShapes from "./FloatingShapes";
 
 const Hero = () => {
   return (
     <section className="relative min-h-screen bg-gradient-hero flex items-center pt-20 overflow-hidden">
+      {/* 3D Floating Shapes Background */}
+      <FloatingShapes />
+      
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{

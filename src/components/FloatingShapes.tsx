@@ -36,11 +36,11 @@ const OrbitingCircle = ({
     <mesh ref={meshRef}>
       <sphereGeometry args={[size, 32, 32]} />
       <meshStandardMaterial 
-        color="#5eead4" 
+        color="#a78bfa" 
         transparent 
-        opacity={0.4}
-        emissive="#5eead4"
-        emissiveIntensity={0.5}
+        opacity={0.25}
+        emissive="#c4b5fd"
+        emissiveIntensity={0.4}
       />
     </mesh>
   );

@@ -1,8 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Leaf, Users } from "lucide-react";
-import heroImage from "@/assets/hero-sustainable-materials.jpg";
-import materialLeft from "@/assets/material-texture-left.jpg";
-import materialRight from "@/assets/material-texture-right.jpg";
+import materialBackground from "@/assets/material-background.jpg";
 import FloatingShapes from "./FloatingShapes";
 
 const Hero = () => {
@@ -11,25 +9,17 @@ const Hero = () => {
       {/* 3D Floating Shapes Background */}
       <FloatingShapes />
       
-      {/* Material texture images integrated into background */}
-      <div className="absolute left-0 top-0 bottom-0 w-1/2 pointer-events-none z-[5] opacity-20">
+      {/* Material texture background */}
+      <div className="absolute inset-0 pointer-events-none z-[5] opacity-30">
         <img 
-          src={materialLeft} 
-          alt="" 
-          className="h-full w-full object-cover"
-        />
-      </div>
-      
-      <div className="absolute right-0 top-0 bottom-0 w-1/2 pointer-events-none z-[5] opacity-20">
-        <img 
-          src={materialRight} 
+          src={materialBackground} 
           alt="" 
           className="h-full w-full object-cover"
         />
       </div>
       
       {/* Gradient overlay to blend */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--primary))] via-[hsl(var(--primary))]/95 to-[hsl(var(--primary))] z-[6] pointer-events-none"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--primary))]/90 via-[hsl(var(--primary))]/85 to-[hsl(var(--primary))]/90 z-[6] pointer-events-none"></div>
       
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-5">

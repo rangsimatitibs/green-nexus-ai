@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Leaf, Users } from "lucide-react";
 import heroImage from "@/assets/hero-sustainable-materials.jpg";
+import materialLeft from "@/assets/material-texture-left.jpg";
+import materialRight from "@/assets/material-texture-right.jpg";
 import FloatingShapes from "./FloatingShapes";
 
 const Hero = () => {
@@ -9,6 +11,25 @@ const Hero = () => {
       {/* 3D Floating Shapes Background */}
       <FloatingShapes />
       
+      {/* Material texture images on sides for depth */}
+      <div className="absolute left-0 top-0 bottom-0 w-[30%] pointer-events-none z-[5]">
+        <img 
+          src={materialLeft} 
+          alt="" 
+          className="h-full w-full object-cover opacity-40 mix-blend-soft-light"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[hsl(var(--primary))]"></div>
+      </div>
+      
+      <div className="absolute right-0 top-0 bottom-0 w-[30%] pointer-events-none z-[5]">
+        <img 
+          src={materialRight} 
+          alt="" 
+          className="h-full w-full object-cover opacity-40 mix-blend-soft-light"
+        />
+        <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-[hsl(var(--primary))]"></div>
+      </div>
+      
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
@@ -16,6 +37,9 @@ const Hero = () => {
           backgroundSize: '48px 48px'
         }}></div>
       </div>
+      
+      {/* Overlay gradient for depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[hsl(var(--primary))]/5 to-transparent z-[6] pointer-events-none"></div>
 
       <div className="container mx-auto px-6 py-32 relative z-10">
         <div className="max-w-5xl mx-auto text-center space-y-12">

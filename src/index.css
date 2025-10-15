@@ -8,37 +8,37 @@ All colors MUST be HSL for proper theming.
 
 @layer base {
   :root {
-    /* Base colors - Soft pastel foundation */
-    --background: 270 35% 96%;
-    --foreground: 270 15% 15%;
+    /* Base colors - Clean, modern foundation */
+    --background: 0 0% 100%;
+    --foreground: 220 15% 10%;
 
     /* Card system - Subtle elevation */
     --card: 0 0% 100%;
-    --card-foreground: 270 15% 15%;
+    --card-foreground: 220 15% 10%;
 
     /* Popover system */
     --popover: 0 0% 100%;
-    --popover-foreground: 270 15% 15%;
+    --popover-foreground: 220 15% 10%;
 
-    /* Primary - Soft Purple */
-    --primary: 270 60% 65%;
+    /* Primary - Deep Teal with Punch */
+    --primary: 174 65% 38%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 270 75% 80%;
+    --primary-glow: 174 75% 55%;
 
-    /* Secondary - Gentle Lavender */
-    --secondary: 280 50% 70%;
+    /* Secondary - Warm Energy */
+    --secondary: 18 80% 60%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Muted tones - Soft */
-    --muted: 270 20% 92%;
-    --muted-foreground: 270 15% 50%;
+    /* Muted tones - Minimal */
+    --muted: 220 10% 96%;
+    --muted-foreground: 220 15% 45%;
 
-    /* Accent - Fresh Mint */
-    --accent: 160 70% 60%;
+    /* Accent - Vibrant Green */
+    --accent: 140 60% 50%;
     --accent-foreground: 0 0% 100%;
 
     /* Earth tone */
-    --earth: 142 45% 50%;
+    --earth: 30 50% 55%;
     --earth-foreground: 0 0% 100%;
 
     /* Status colors */
@@ -48,25 +48,25 @@ All colors MUST be HSL for proper theming.
     --success-foreground: 0 0% 98%;
 
     /* Interface elements */
-    --border: 270 20% 88%;
-    --input: 270 20% 88%;
-    --ring: 270 60% 65%;
+    --border: 220 10% 90%;
+    --input: 220 10% 90%;
+    --ring: 174 65% 38%;
 
-    --radius: 1rem;
+    --radius: 0.875rem;
 
-    /* Gradients - Soft & Airy */
-    --gradient-primary: linear-gradient(135deg, hsl(270 60% 75%), hsl(270 75% 85%));
-    --gradient-sustainable: linear-gradient(135deg, hsl(160 60% 75%), hsl(160 50% 85%));
-    --gradient-innovation: linear-gradient(135deg, hsl(280 55% 80%), hsl(270 60% 75%));
-    --gradient-hero: linear-gradient(135deg, hsl(270 50% 85%), hsl(280 45% 90%));
-    --gradient-accent: linear-gradient(135deg, hsl(270 60% 70%), hsl(160 70% 65%));
+    /* Gradients - Bold & Modern */
+    --gradient-primary: linear-gradient(135deg, hsl(174 65% 38%), hsl(174 75% 55%));
+    --gradient-sustainable: linear-gradient(135deg, hsl(140 60% 50%), hsl(174 65% 38%));
+    --gradient-innovation: linear-gradient(135deg, hsl(174 75% 55%), hsl(140 60% 50%));
+    --gradient-hero: linear-gradient(135deg, hsl(174 65% 38%) 0%, hsl(174 55% 28%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(18 80% 60%), hsl(30 50% 55%));
 
-    /* Shadows - Soft */
-    --shadow-sm: 0 2px 8px hsl(270 60% 65% / 0.08);
-    --shadow-medium: 0 4px 16px hsl(270 60% 65% / 0.12);
-    --shadow-large: 0 8px 32px hsl(270 60% 65% / 0.15);
-    --shadow-glow: 0 0 40px hsl(270 75% 80% / 0.25);
-    --shadow-xl: 0 20px 50px hsl(270 60% 65% / 0.18);
+    /* Shadows - Enhanced */
+    --shadow-sm: 0 1px 3px 0 hsl(220 15% 10% / 0.08);
+    --shadow-medium: 0 8px 16px -4px hsl(220 15% 10% / 0.12);
+    --shadow-large: 0 20px 40px -8px hsl(220 15% 10% / 0.18);
+    --shadow-glow: 0 0 40px hsl(174 75% 55% / 0.4);
+    --shadow-xl: 0 25px 50px -12px hsl(220 15% 10% / 0.25);
 
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -90,34 +90,34 @@ All colors MUST be HSL for proper theming.
   }
 
   .dark {
-    --background: 270 25% 10%;
-    --foreground: 270 20% 98%;
+    --background: 220 18% 10%;
+    --foreground: 0 0% 98%;
 
-    --card: 270 20% 12%;
-    --card-foreground: 270 20% 98%;
+    --card: 220 15% 14%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 270 20% 12%;
-    --popover-foreground: 270 20% 98%;
+    --popover: 220 15% 14%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 270 60% 65%;
+    --primary: 174 65% 45%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 270 75% 80%;
+    --primary-glow: 174 75% 60%;
 
-    --secondary: 280 50% 60%;
+    --secondary: 18 80% 55%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 270 20% 18%;
-    --muted-foreground: 270 15% 65%;
+    --muted: 220 15% 20%;
+    --muted-foreground: 220 10% 75%;
 
-    --accent: 160 70% 55%;
+    --accent: 140 60% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 75% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 270 20% 20%;
-    --input: 270 20% 20%;
-    --ring: 270 60% 65%;
+    --border: 220 15% 25%;
+    --input: 220 15% 25%;
+    --ring: 174 65% 45%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;

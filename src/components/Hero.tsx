@@ -11,24 +11,25 @@ const Hero = () => {
       {/* 3D Floating Shapes Background */}
       <FloatingShapes />
       
-      {/* Material texture images on sides for depth */}
-      <div className="absolute left-0 top-0 bottom-0 w-[30%] pointer-events-none z-[5]">
+      {/* Material texture images integrated into background */}
+      <div className="absolute left-0 top-0 bottom-0 w-1/2 pointer-events-none z-[5] opacity-20">
         <img 
           src={materialLeft} 
           alt="" 
-          className="h-full w-full object-cover opacity-40 mix-blend-soft-light"
+          className="h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[hsl(var(--primary))]"></div>
       </div>
       
-      <div className="absolute right-0 top-0 bottom-0 w-[30%] pointer-events-none z-[5]">
+      <div className="absolute right-0 top-0 bottom-0 w-1/2 pointer-events-none z-[5] opacity-20">
         <img 
           src={materialRight} 
           alt="" 
-          className="h-full w-full object-cover opacity-40 mix-blend-soft-light"
+          className="h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-[hsl(var(--primary))]"></div>
       </div>
+      
+      {/* Gradient overlay to blend */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--primary))] via-[hsl(var(--primary))]/95 to-[hsl(var(--primary))] z-[6] pointer-events-none"></div>
       
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-5">

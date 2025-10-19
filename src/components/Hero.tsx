@@ -50,9 +50,9 @@ const Hero = () => {
               Explore Platform
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
-            <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm px-8 py-6 text-lg">
-              Watch Demo
-            </Button>
+          <Button variant="outline" size="lg" className="bg-white/20 border-white text-white hover:bg-white/30 backdrop-blur-sm px-8 py-6 text-lg font-semibold">
+            Watch Demo
+          </Button>
           </div>
           
           {/* Stats */}

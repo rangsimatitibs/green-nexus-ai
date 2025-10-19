@@ -10,7 +10,7 @@ const Hero = () => {
       <FloatingShapes />
       
       {/* Material texture background */}
-      <div className="absolute inset-0 pointer-events-none z-[5] opacity-50">
+      <div className="absolute inset-0 pointer-events-none z-[5] opacity-80">
         <img 
           src={materialBackground} 
           alt="" 
@@ -19,7 +19,7 @@ const Hero = () => {
       </div>
       
       {/* Gradient overlay to blend */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--primary))]/70 via-[hsl(var(--primary))]/60 to-[hsl(var(--primary))]/70 z-[6] pointer-events-none"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--primary))]/40 via-[hsl(var(--primary))]/30 to-[hsl(var(--primary))]/40 z-[6] pointer-events-none"></div>
       
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-5">

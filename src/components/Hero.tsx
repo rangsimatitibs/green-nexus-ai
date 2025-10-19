@@ -1,18 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Leaf, Users } from "lucide-react";
-import materialBackground from "@/assets/material-background.jpg";
-import FloatingShapes from "./FloatingShapes";
+import sustainableFabricsBg from "@/assets/sustainable-fabrics-bg.png";
 
 const Hero = () => {
   return (
     <section className="relative min-h-screen bg-gradient-hero flex items-center pt-20 overflow-hidden">
-      {/* 3D Floating Shapes Background */}
-      <FloatingShapes />
-      
-      {/* Material texture background */}
-      <div className="absolute inset-0 pointer-events-none z-[5] opacity-80">
+      {/* Sustainable fabrics background */}
+      <div className="absolute inset-0 pointer-events-none z-[5]">
         <img 
-          src={materialBackground} 
+          src={sustainableFabricsBg} 
           alt="" 
           className="h-full w-full object-cover"
         />

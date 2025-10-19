@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Leaf, Users } from "lucide-react";
-import materialBackground from "@/assets/material-background.jpg";
 import FloatingShapes from "./FloatingShapes";
 
 const Hero = () => {
@@ -8,18 +7,6 @@ const Hero = () => {
     <section className="relative min-h-screen bg-gradient-hero flex items-center pt-20 overflow-hidden">
       {/* 3D Floating Shapes Background */}
       <FloatingShapes />
-      
-      {/* Material texture background */}
-      <div className="absolute inset-0 pointer-events-none z-[5] opacity-80">
-        <img 
-          src={materialBackground} 
-          alt="" 
-          className="h-full w-full object-cover"
-        />
-      </div>
-      
-      {/* Gradient overlay to blend */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--primary))]/40 via-[hsl(var(--primary))]/30 to-[hsl(var(--primary))]/40 z-[6] pointer-events-none"></div>
       
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-5">

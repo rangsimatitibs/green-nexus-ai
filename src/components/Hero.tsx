@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Leaf, Users } from "lucide-react";
-import seaweedSustainableBg from "@/assets/seaweed-sustainable-bg.png";
+import greenPlantsBg from "@/assets/green-plants-bg.jpg";
 
 const Hero = () => {
   return (
@@ -8,7 +8,7 @@ const Hero = () => {
       {/* Sustainable fabrics background */}
       <div className="absolute inset-0 pointer-events-none z-[5]">
         <img 
-          src={seaweedSustainableBg} 
+          src={greenPlantsBg} 
           alt="" 
           className="h-full w-full object-cover"
         />

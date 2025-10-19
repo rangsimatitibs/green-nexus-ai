@@ -18,9 +18,6 @@ const Hero = () => {
         />
       </div>
       
-      {/* Gradient overlay to blend */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--primary))]/40 via-[hsl(var(--primary))]/30 to-[hsl(var(--primary))]/40 z-[6] pointer-events-none"></div>
-      
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
@@ -28,9 +25,6 @@ const Hero = () => {
           backgroundSize: '48px 48px'
         }}></div>
       </div>
-      
-      {/* Overlay gradient for depth */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[hsl(var(--primary))]/5 to-transparent z-[6] pointer-events-none"></div>
 
       <div className="container mx-auto px-6 py-32 relative z-10">
         <div className="max-w-5xl mx-auto text-center space-y-12">

@@ -29,12 +29,19 @@ const Header = () => {
             <Link to="/about" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
               About
             </Link>
+            <a 
+              href="#contact" 
+              className="text-sm font-medium text-foreground hover:text-primary transition-smooth"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              Contact
+            </a>
           </div>
           
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm">
-              Sign In
-            </Button>
             <Button variant="hero" size="sm">
               Get Started
             </Button>

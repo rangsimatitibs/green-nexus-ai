@@ -93,7 +93,7 @@ const Platform = () => {
               </div>
             </div>
             
-            <a href="/signup">
+            <a href="/signup" className="mt-8 block">
               <Button size="lg" className="bg-gradient-innovation text-white hover:shadow-xl hover:scale-105 transition-all duration-300 px-8 py-6 text-lg font-semibold group">
                 Join the Platform
                 <Network className="w-5 h-5 group-hover:scale-110 transition-transform" />

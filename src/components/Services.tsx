@@ -1,10 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Search, CheckCircle, Zap, Target, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Services = () => {
   const services = [
     {
+      id: "material-scouting",
       icon: Search,
       title: "Material Scouting",
       description: "AI-powered algorithms to discover and identify sustainable materials tailored to your specific requirements and applications.",
@@ -12,6 +14,7 @@ const Services = () => {
       gradient: "bg-gradient-primary"
     },
     {
+      id: "material-validation",
       icon: CheckCircle,
       title: "Material Validation",
       description: "Comprehensive testing and validation processes to ensure sustainable materials meet your quality and performance standards.",
@@ -19,6 +22,7 @@ const Services = () => {
       gradient: "bg-gradient-sustainable"
     },
     {
+      id: "bioprocessing",
       icon: Zap,
       title: "Bioprocessing Optimization",
       description: "Advanced bioprocessing techniques and optimization strategies to enhance the production of sustainable materials.",
@@ -26,6 +30,7 @@ const Services = () => {
       gradient: "bg-gradient-innovation"
     },
     {
+      id: "application-matching",
       icon: Target,
       title: "Application Matching",
       description: "Intelligent matching system that connects sustainable materials with the most suitable applications and use cases.",
@@ -74,20 +79,24 @@ const Services = () => {
                     </li>
                   ))}
                 </ul>
-                <Button variant="ghost" className="w-full group/btn font-semibold">
-                  Learn More
-                  <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                </Button>
+                <Link to={`/services#${service.id}`}>
+                  <Button variant="ghost" className="w-full group/btn font-semibold">
+                    Learn More
+                    <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ))}
         </div>
 
         <div className="text-center mt-20">
-          <Button size="lg" className="bg-gradient-sustainable text-white hover:shadow-xl hover:scale-105 transition-all duration-300 px-8 py-6 text-lg font-semibold group">
-            Explore All Services
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </Button>
+          <Link to="/services">
+            <Button size="lg" className="bg-gradient-sustainable text-white hover:shadow-xl hover:scale-105 transition-all duration-300 px-8 py-6 text-lg font-semibold group">
+              Explore All Services
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

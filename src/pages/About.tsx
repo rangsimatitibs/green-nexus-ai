@@ -1,7 +1,8 @@
+import { useState } from "react";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail } from "lucide-react";
-import { useState } from "react";
 import alexPhoto from "@/assets/alex-joseph.jpg";
 import rangsimatiti from "@/assets/rangsimatiti.jpg";
 import holgerPhoto from "@/assets/dr-holger-warth.jpg";
@@ -121,6 +122,7 @@ const About = () => {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };

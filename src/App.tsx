@@ -8,6 +8,9 @@ import About from "./pages/About";
 import SignUp from "./pages/SignUp";
 import ServicesLanding from "./pages/ServicesLanding";
 import Blog from "./pages/Blog";
+import MaterialsInformatics from "./pages/blog/MaterialsInformatics";
+import BiomaterialsInnovation from "./pages/blog/BiomaterialsInnovation";
+import SustainableMaterials from "./pages/blog/SustainableMaterials";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +27,9 @@ const App = () => (
           <Route path="/signup" element={<SignUp />} />
           <Route path="/services" element={<ServicesLanding />} />
           <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/materials-informatics" element={<MaterialsInformatics />} />
+          <Route path="/blog/biomaterials-innovation" element={<BiomaterialsInnovation />} />
+          <Route path="/blog/sustainable-materials" element={<SustainableMaterials />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

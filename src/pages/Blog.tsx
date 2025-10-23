@@ -2,26 +2,30 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Blog = () => {
   const posts = [
     {
-      title: "The Future of Sustainable Materials in Manufacturing",
-      description: "Exploring how AI and biotechnology are revolutionizing material science and creating new opportunities for sustainable production.",
-      date: "March 15, 2024",
-      category: "Innovation"
+      title: "What is materials informatics and why it matters?",
+      description: "Exploring how AI and data science are revolutionizing material discovery and creating new opportunities for sustainable innovation.",
+      date: "October 15, 2025",
+      category: "Innovation",
+      link: "/blog/materials-informatics"
     },
     {
-      title: "5 Steps to Validate Sustainable Materials for Your Business",
-      description: "A comprehensive guide to ensuring sustainable materials meet your quality, performance, and compliance requirements.",
-      date: "March 10, 2024",
-      category: "Best Practices"
+      title: "Biomaterials innovation in 2025",
+      description: "Discover the cutting-edge developments in biomaterials that are transforming industries from packaging to medical devices.",
+      date: "October 10, 2025",
+      category: "Technology",
+      link: "/blog/biomaterials-innovation"
     },
     {
-      title: "Bioprocessing Optimization: Reducing Costs While Going Green",
-      description: "Learn how advanced bioprocessing techniques can lower production costs and environmental impact simultaneously.",
-      date: "March 5, 2024",
-      category: "Technology"
+      title: "Sustainable materials: Are we there yet?",
+      description: "A comprehensive look at the progress, challenges, and opportunities in the transition to truly sustainable materials.",
+      date: "October 5, 2025",
+      category: "Best Practices",
+      link: "/blog/sustainable-materials"
     }
   ];
 
@@ -48,29 +52,31 @@ const Blog = () => {
           <div className="container mx-auto px-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {posts.map((post, index) => (
-                <Card key={index} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                      <Calendar className="w-4 h-4" />
-                      {post.date}
-                    </div>
-                    <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold mb-3">
-                      {post.category}
-                    </div>
-                    <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                      {post.title}
-                    </CardTitle>
-                    <CardDescription className="text-base leading-relaxed">
-                      {post.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2 text-primary font-semibold text-sm group-hover:gap-3 transition-all">
-                      Read More
-                      <ArrowRight className="w-4 h-4" />
-                    </div>
-                  </CardContent>
-                </Card>
+                <Link key={index} to={post.link}>
+                  <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer h-full">
+                    <CardHeader>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                        <Calendar className="w-4 h-4" />
+                        {post.date}
+                      </div>
+                      <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold mb-3">
+                        {post.category}
+                      </div>
+                      <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                        {post.title}
+                      </CardTitle>
+                      <CardDescription className="text-base leading-relaxed">
+                        {post.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-2 text-primary font-semibold text-sm group-hover:gap-3 transition-all">
+                        Read More
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
 

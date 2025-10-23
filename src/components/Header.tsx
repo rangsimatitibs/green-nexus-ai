@@ -42,9 +42,11 @@ const Header = () => {
           </div>
           
           <div className="flex items-center gap-3">
-            <Button variant="hero" size="sm">
-              Get Started
-            </Button>
+            <Link to="/signup">
+              <Button variant="hero" size="sm">
+                Get Started
+              </Button>
+            </Link>
           </div>
         </nav>
       </div>

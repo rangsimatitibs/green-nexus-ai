@@ -45,13 +45,12 @@ const Hero = () => {
           
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button size="lg" className="bg-white text-primary hover:bg-white/90 shadow-xl px-8 py-6 text-lg font-semibold">
-              Explore Platform
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          <Button variant="outline" size="lg" className="bg-white/20 border-white text-white hover:bg-white/30 backdrop-blur-sm px-8 py-6 text-lg font-semibold">
-            Watch Demo
-          </Button>
+            <a href="/signup">
+              <Button size="lg" className="bg-white text-primary hover:bg-white/90 shadow-xl px-8 py-6 text-lg font-semibold">
+                Get Started
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </a>
           </div>
           
           {/* Stats */}

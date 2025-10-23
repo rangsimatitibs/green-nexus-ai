@@ -39,9 +39,8 @@ const Hero = () => {
           </h1>
           
           {/* Subheadline */}
-          <p className="text-xl lg:text-2xl text-white/90 leading-relaxed max-w-3xl mx-auto font-light">
-            Connect sustainable material producers, innovators, and businesses across Europe. 
-            Transform your processes with AI-powered alternatives.
+          <p className="text-xl lg:text-2xl text-white leading-relaxed max-w-3xl mx-auto font-light">
+            Connect sustainable material producers, innovators, and businesses across Europe.
           </p>
           
           {/* CTA Buttons */}

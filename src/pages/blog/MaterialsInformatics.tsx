@@ -3,36 +3,68 @@ import Footer from "@/components/Footer";
 import { Calendar, User, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import authorPhoto from "@/assets/rangsimatiti.jpg";
+import heroImage from "@/assets/blog-materials-informatics.jpg";
 
 const MaterialsInformatics = () => {
+  const tags = [
+    { name: "Innovation", color: "bg-primary" },
+    { name: "AI & Data Science", color: "bg-accent" },
+    { name: "Materials Science", color: "bg-[hsl(270,60%,55%)]" }
+  ];
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="pt-20">
         {/* Hero */}
-        <section className="py-12 bg-gradient-hero">
-          <div className="container mx-auto px-6">
+        <section className="relative py-12 overflow-hidden">
+          <div className="absolute inset-0">
+            <img 
+              src={heroImage} 
+              alt="Materials Informatics" 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/60" />
+          </div>
+          
+          <div className="container mx-auto px-6 relative z-10">
             <Link to="/blog">
-              <Button variant="ghost" className="text-white hover:text-white/80 mb-6">
+              <Button variant="ghost" className="mb-6 hover:bg-white/10">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Blog
               </Button>
             </Link>
             <div className="max-w-4xl">
-              <div className="inline-block bg-white/10 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-semibold mb-4">
-                Innovation
+              <div className="flex flex-wrap gap-2 mb-4">
+                {tags.map((tag, index) => (
+                  <span 
+                    key={index}
+                    className={`${tag.color} text-white px-3 py-1 rounded-full text-xs font-semibold`}
+                  >
+                    {tag.name}
+                  </span>
+                ))}
               </div>
-              <h1 className="text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
+              <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
                 What is materials informatics and why it matters?
               </h1>
-              <div className="flex items-center gap-6 text-white/90">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span className="text-sm">October 15, 2025</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  <span className="text-sm">MateriaLink Team</span>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3">
+                  <img 
+                    src={authorPhoto} 
+                    alt="Rangsimatiti Binda Saichompoo"
+                    className="w-12 h-12 rounded-full object-cover border-2 border-primary"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2 text-sm text-foreground font-medium">
+                      <User className="w-4 h-4" />
+                      Rangsimatiti Binda Saichompoo
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="w-4 h-4" />
+                      October 15, 2025
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

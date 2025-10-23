@@ -11,6 +11,7 @@ import Blog from "./pages/Blog";
 import MaterialsInformatics from "./pages/blog/MaterialsInformatics";
 import BiomaterialsInnovation from "./pages/blog/BiomaterialsInnovation";
 import SustainableMaterials from "./pages/blog/SustainableMaterials";
+import MaterialValidation from "./pages/blog/MaterialValidation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/blog/materials-informatics" element={<MaterialsInformatics />} />
           <Route path="/blog/biomaterials-innovation" element={<BiomaterialsInnovation />} />
           <Route path="/blog/sustainable-materials" element={<SustainableMaterials />} />
+          <Route path="/blog/material-validation" element={<MaterialValidation />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

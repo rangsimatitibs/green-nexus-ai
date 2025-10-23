@@ -4,14 +4,15 @@ import { Calendar, User, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import authorPhoto from "@/assets/rangsimatiti.jpg";
-import heroImage from "@/assets/blog-sustainable-materials.jpg";
+import heroImage from "@/assets/blog-material-validation.jpg";
 
-const SustainableMaterials = () => {
+const MaterialValidation = () => {
   const tags = [
     { name: "Best Practices", color: "bg-secondary" },
     { name: "Sustainability", color: "bg-success" },
-    { name: "Industry Insights", color: "bg-earth" }
+    { name: "Quality Control", color: "bg-earth" }
   ];
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -21,7 +22,7 @@ const SustainableMaterials = () => {
           <div className="absolute inset-0">
             <img 
               src={heroImage} 
-              alt="Sustainable Materials" 
+              alt="Material Validation" 
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/60" />
@@ -46,7 +47,7 @@ const SustainableMaterials = () => {
                 ))}
               </div>
               <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
-                Sustainable materials: Are we there yet?
+                5 Steps to Validate Sustainable Materials for Your Business
               </h1>
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-3">
@@ -62,7 +63,7 @@ const SustainableMaterials = () => {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="w-4 h-4" />
-                      October 5, 2025
+                      October 20, 2025
                     </div>
                   </div>
                 </div>
@@ -76,44 +77,49 @@ const SustainableMaterials = () => {
           <div className="container mx-auto px-6">
             <article className="max-w-3xl mx-auto prose prose-lg">
               <p className="text-xl text-muted-foreground leading-relaxed mb-8">
-                As we approach the end of 2025, it's time to take stock of where we stand in the journey toward truly sustainable materials. Have we made the progress we hoped for? What challenges remain? And what does the path forward look like?
+                Transitioning to sustainable materials requires careful validation to ensure they meet your quality, performance, and regulatory requirements. This comprehensive guide outlines the essential steps for successful material validation.
               </p>
 
-              <h2 className="text-3xl font-bold text-foreground mt-12 mb-6">Progress So Far</h2>
+              <h2 className="text-3xl font-bold text-foreground mt-12 mb-6">Step 1: Define Your Requirements</h2>
               <p className="text-muted-foreground leading-relaxed mb-6">
-                [Content to be added - This section will evaluate the progress made in sustainable materials development, including key milestones achieved, regulatory changes, market adoption rates, and technological advancements that have brought us closer to sustainability goals.]
+                [Content to be added - This section will cover how to establish clear technical specifications, performance benchmarks, sustainability criteria, regulatory requirements, and cost constraints for your material selection process.]
               </p>
 
-              <h2 className="text-3xl font-bold text-foreground mt-12 mb-6">Persistent Challenges</h2>
+              <h2 className="text-3xl font-bold text-foreground mt-12 mb-6">Step 2: Source and Screen Candidates</h2>
               <p className="text-muted-foreground leading-relaxed mb-6">
-                [Content to be added - This section will honestly assess the challenges that remain, including cost barriers, performance gaps, scalability issues, infrastructure limitations, and behavioral change requirements needed for widespread adoption.]
+                [Content to be added - This section will discuss strategies for identifying potential sustainable materials, preliminary screening criteria, working with suppliers, and using databases and networks to find suitable candidates.]
               </p>
 
-              <h2 className="text-3xl font-bold text-foreground mt-12 mb-6">Success Stories and Lessons Learned</h2>
+              <h2 className="text-3xl font-bold text-foreground mt-12 mb-6">Step 3: Conduct Laboratory Testing</h2>
               <p className="text-muted-foreground leading-relaxed mb-6">
-                [Content to be added - This section will highlight success stories from companies and industries that have successfully transitioned to sustainable materials, examining what worked, what didn't, and the key factors that enabled their success.]
+                [Content to be added - This section will outline the essential laboratory tests, including physical properties, chemical composition, durability, and performance under various conditions, plus how to interpret test results.]
               </p>
 
-              <h2 className="text-3xl font-bold text-foreground mt-12 mb-6">The Path Forward</h2>
+              <h2 className="text-3xl font-bold text-foreground mt-12 mb-6">Step 4: Run Pilot Production</h2>
               <p className="text-muted-foreground leading-relaxed mb-6">
-                [Content to be added - This section will outline what needs to happen next to accelerate the transition to sustainable materials, including policy recommendations, technological priorities, collaboration opportunities, and realistic timelines for achieving sustainability goals.]
+                [Content to be added - This section will explain the importance of pilot-scale testing, how to design pilot runs, what to measure and monitor, and how to identify and address potential production challenges early.]
               </p>
 
-              <h2 className="text-3xl font-bold text-foreground mt-12 mb-6">How You Can Contribute</h2>
+              <h2 className="text-3xl font-bold text-foreground mt-12 mb-6">Step 5: Verify Compliance and Scale</h2>
               <p className="text-muted-foreground leading-relaxed mb-6">
-                [Content to be added - This section will provide actionable steps that businesses, researchers, and individuals can take to contribute to the sustainable materials transition, from adopting new materials to supporting innovation to advocating for policy change.]
+                [Content to be added - This section will cover final compliance verification, certification processes, scaling considerations, supply chain validation, and preparing for full commercial production.]
               </p>
 
-              <div className="mt-16 p-8 bg-gradient-innovation rounded-2xl">
+              <h2 className="text-3xl font-bold text-foreground mt-12 mb-6">Common Pitfalls to Avoid</h2>
+              <p className="text-muted-foreground leading-relaxed mb-6">
+                [Content to be added - This section will highlight common mistakes in the validation process, how to avoid them, and best practices learned from successful material transitions.]
+              </p>
+
+              <div className="mt-16 p-8 bg-gradient-sustainable rounded-2xl">
                 <h3 className="text-2xl font-bold text-white mb-4">
-                  Be Part of the Solution
+                  Need Help Validating Materials?
                 </h3>
                 <p className="text-white/90 mb-6">
-                  Join the movement toward sustainable materials and connect with innovators driving real change.
+                  MateriaLink offers comprehensive material validation services to ensure your sustainable materials meet all requirements.
                 </p>
                 <Link to="/signup">
                   <Button size="lg" className="bg-white text-primary hover:bg-white/90">
-                    Get Started Today
+                    Get Expert Support
                   </Button>
                 </Link>
               </div>
@@ -126,4 +132,4 @@ const SustainableMaterials = () => {
   );
 };
 
-export default SustainableMaterials;
+export default MaterialValidation;

@@ -7,24 +7,47 @@ import { Link } from "react-router-dom";
 const Blog = () => {
   const posts = [
     {
+      title: "5 Steps to Validate Sustainable Materials for Your Business",
+      description: "A comprehensive guide to ensuring sustainable materials meet your quality, performance, and compliance requirements.",
+      date: "October 20, 2025",
+      tags: [
+        { name: "Best Practices", color: "bg-secondary" },
+        { name: "Sustainability", color: "bg-success" },
+        { name: "Quality Control", color: "bg-earth" }
+      ],
+      link: "/blog/material-validation"
+    },
+    {
       title: "What is materials informatics and why it matters?",
       description: "Exploring how AI and data science are revolutionizing material discovery and creating new opportunities for sustainable innovation.",
       date: "October 15, 2025",
-      category: "Innovation",
+      tags: [
+        { name: "Innovation", color: "bg-primary" },
+        { name: "AI & Data Science", color: "bg-accent" },
+        { name: "Materials Science", color: "bg-[hsl(270,60%,55%)]" }
+      ],
       link: "/blog/materials-informatics"
     },
     {
       title: "Biomaterials innovation in 2025",
       description: "Discover the cutting-edge developments in biomaterials that are transforming industries from packaging to medical devices.",
       date: "October 10, 2025",
-      category: "Technology",
+      tags: [
+        { name: "Technology", color: "bg-accent" },
+        { name: "Biomaterials", color: "bg-success" },
+        { name: "Innovation", color: "bg-primary" }
+      ],
       link: "/blog/biomaterials-innovation"
     },
     {
       title: "Sustainable materials: Are we there yet?",
       description: "A comprehensive look at the progress, challenges, and opportunities in the transition to truly sustainable materials.",
       date: "October 5, 2025",
-      category: "Best Practices",
+      tags: [
+        { name: "Best Practices", color: "bg-secondary" },
+        { name: "Sustainability", color: "bg-success" },
+        { name: "Industry Insights", color: "bg-earth" }
+      ],
       link: "/blog/sustainable-materials"
     }
   ];
@@ -59,8 +82,15 @@ const Blog = () => {
                         <Calendar className="w-4 h-4" />
                         {post.date}
                       </div>
-                      <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold mb-3">
-                        {post.category}
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {post.tags.map((tag, tagIndex) => (
+                          <span 
+                            key={tagIndex}
+                            className={`${tag.color} text-white px-2 py-1 rounded-full text-xs font-semibold`}
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
                       </div>
                       <CardTitle className="text-xl group-hover:text-primary transition-colors">
                         {post.title}

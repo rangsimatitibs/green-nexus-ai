@@ -117,67 +117,59 @@ const ServicesLanding = () => {
             id={service.id}
             className={index % 2 === 0 ? "py-24 bg-background" : "py-24 bg-muted/30"}
           >
-            <div className="container mx-auto px-6">
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
-                {/* Image */}
-                <div className={`relative ${index % 2 === 1 ? 'lg:order-2' : ''}`}>
-                  <Card className="overflow-hidden border-2 border-primary/20 shadow-xl">
-                    <div className="relative h-[400px]">
-                      <img 
-                        src={service.background} 
-                        alt={service.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent" />
-                      <div className="absolute bottom-8 left-8">
-                        <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4">
-                          <service.icon className="w-8 h-8 text-primary" />
-                        </div>
-                        <h3 className="text-2xl font-bold text-white">{service.title}</h3>
+            <div className="container mx-auto px-6 max-w-5xl">
+              {/* Header with Icon and Title */}
+              <div className="text-center mb-12">
+                <div className="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-glow">
+                  <service.icon className="w-10 h-10 text-white" />
+                </div>
+                <h2 className="text-4xl font-bold text-foreground mb-4">{service.title}</h2>
+                <p className="text-xl text-muted-foreground">{service.subtitle}</p>
+              </div>
+
+              {/* Hero Image */}
+              <Card className="overflow-hidden border-2 border-primary/20 shadow-xl mb-12">
+                <div className="relative h-[300px]">
+                  <img 
+                    src={service.background} 
+                    alt={service.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent" />
+                </div>
+              </Card>
+
+              {/* Description */}
+              <p className="text-lg text-muted-foreground mb-12 leading-relaxed text-center max-w-3xl mx-auto">
+                {service.description}
+              </p>
+
+              {/* Features Grid */}
+              <div className="grid md:grid-cols-3 gap-6 mb-12">
+                {service.features.map((feature, featureIndex) => (
+                  <Card key={featureIndex} className="border border-border hover:border-primary/50 hover:shadow-lg transition-all duration-300">
+                    <CardContent className="p-6 text-center">
+                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                        <feature.icon className="w-6 h-6 text-primary" />
                       </div>
-                    </div>
+                      <h4 className="font-semibold text-foreground mb-2">{feature.title}</h4>
+                      <p className="text-sm text-muted-foreground">{feature.description}</p>
+                    </CardContent>
                   </Card>
-                </div>
+                ))}
+              </div>
 
-                {/* Content */}
-                <div className={index % 2 === 1 ? 'lg:order-1' : ''}>
-                  <h2 className="text-4xl font-bold text-foreground mb-4">{service.subtitle}</h2>
-                  <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-                    {service.description}
-                  </p>
-
-                  {/* Features */}
-                  <div className="space-y-4 mb-8">
-                    {service.features.map((feature, featureIndex) => (
-                      <Card key={featureIndex} className="border border-border hover:border-primary/50 transition-all duration-300">
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <feature.icon className="w-5 h-5 text-primary" />
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-foreground mb-1">{feature.title}</h4>
-                              <p className="text-sm text-muted-foreground">{feature.description}</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-
-                  {/* Benefits */}
-                  <div className="bg-muted/50 rounded-lg p-6">
-                    <h4 className="font-semibold text-foreground mb-4">Key Benefits</h4>
-                    <ul className="space-y-2">
-                      {service.benefits.map((benefit, benefitIndex) => (
-                        <li key={benefitIndex} className="flex items-center gap-2 text-muted-foreground">
-                          <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
-                          {benefit}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+              {/* Benefits */}
+              <div className="bg-muted/50 rounded-xl p-8">
+                <h4 className="font-bold text-foreground mb-6 text-xl text-center">Key Benefits</h4>
+                <ul className="grid md:grid-cols-2 gap-4">
+                  {service.benefits.map((benefit, benefitIndex) => (
+                    <li key={benefitIndex} className="flex items-center gap-3 text-muted-foreground">
+                      <CheckCircle className="w-5 h-5 text-accent flex-shrink-0" />
+                      <span>{benefit}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </section>

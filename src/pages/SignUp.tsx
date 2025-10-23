@@ -253,34 +253,8 @@ const SignUp = () => {
             </Card>
           </div>
 
-          {/* TypeForm Survey Section */}
-          <div className="max-w-2xl mx-auto mb-16 text-center">
-            <div className="p-8 bg-gradient-to-r from-accent/10 to-primary/10 rounded-2xl border-2 border-accent/20">
-              <MessageSquare className="w-12 h-12 mx-auto mb-4 text-accent" />
-              <h3 className="text-2xl font-bold text-foreground mb-3">
-                Help Us Improve MateriaLink
-              </h3>
-              <p className="text-muted-foreground mb-6">
-                Share your thoughts and needs to help us build a better platform for sustainable materials innovation.
-              </p>
-              <a 
-                href="https://form.typeform.com/to/MBPg47eq" 
-                target="_blank" 
-                rel="noopener noreferrer"
-              >
-                <Button 
-                  size="lg" 
-                  className="bg-gradient-to-r from-accent to-secondary hover:shadow-xl hover:scale-105 transition-all duration-300"
-                >
-                  <MessageSquare className="w-5 h-5 mr-2" />
-                  Your Opinion Matters!
-                </Button>
-              </a>
-            </div>
-          </div>
-
-          {/* Services Grid - Now After Form */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Services Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
             {services.map((service) => (
               <Card key={service.title} className="border-2 hover:border-primary transition-smooth overflow-hidden relative group">
                 {/* Background Image */}
@@ -312,6 +286,32 @@ const SignUp = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+
+          {/* TypeForm Survey Section */}
+          <div className="max-w-2xl mx-auto mt-16 text-center">
+            <div className="p-8 bg-gradient-to-r from-accent/10 to-primary/10 rounded-2xl border-2 border-accent/20">
+              <MessageSquare className="w-12 h-12 mx-auto mb-4 text-accent" />
+              <h3 className="text-2xl font-bold text-foreground mb-3">
+                Help Us Improve MateriaLink
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                Share your thoughts and needs to help us build a better platform for sustainable materials innovation.
+              </p>
+              <a 
+                href="https://form.typeform.com/to/MBPg47eq" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-accent to-secondary hover:shadow-xl hover:scale-105 transition-all duration-300"
+                >
+                  <MessageSquare className="w-5 h-5 mr-2" />
+                  Your Opinion Matters!
+                </Button>
+              </a>
+            </div>
           </div>
         </div>
       </main>

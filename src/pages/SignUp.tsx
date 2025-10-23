@@ -11,6 +11,10 @@ import { Search, CheckCircle, Cog, Target } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { z } from "zod";
+import materialScoutingBg from "@/assets/material-scouting-bg.jpg";
+import materialValidationBg from "@/assets/material-validation-bg.jpg";
+import bioprocessingBg from "@/assets/bioprocessing-bg.jpg";
+import applicationMatchingBg from "@/assets/application-matching-bg.jpg";
 
 const signupSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address" }).max(255),
@@ -28,7 +32,8 @@ const services = [
       "Advanced AI matching",
       "Global material database",
       "Performance analytics"
-    ]
+    ],
+    backgroundImage: materialScoutingBg
   },
   {
     icon: CheckCircle,
@@ -37,7 +42,8 @@ const services = [
       "Quality assurance",
       "Performance testing",
       "Compliance verification"
-    ]
+    ],
+    backgroundImage: materialValidationBg
   },
   {
     icon: Cog,
@@ -46,7 +52,8 @@ const services = [
       "Process optimization",
       "Efficiency improvements",
       "Cost reduction"
-    ]
+    ],
+    backgroundImage: bioprocessingBg
   },
   {
     icon: Target,
@@ -55,7 +62,8 @@ const services = [
       "Smart recommendations",
       "Use case analysis",
       "Market insights"
-    ]
+    ],
+    backgroundImage: applicationMatchingBg
   }
 ];
 
@@ -154,32 +162,8 @@ const SignUp = () => {
             </p>
           </div>
 
-          {/* Services Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-            {services.map((service) => (
-              <Card key={service.title} className="border-2 hover:border-primary transition-smooth">
-                <CardHeader>
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <service.icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <CardTitle className="text-lg">{service.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {service.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2 text-sm text-muted-foreground">
-                        <span className="text-primary mt-0.5">•</span>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Sign Up Form */}
-          <div className="max-w-2xl mx-auto">
+          {/* Sign Up Form - Now First */}
+          <div className="max-w-2xl mx-auto mb-16">
             <Card className="border-2">
               <CardHeader>
                 <CardTitle className="text-2xl">Request Early Access</CardTitle>
@@ -267,6 +251,41 @@ const SignUp = () => {
                 </form>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Services Grid - Now After Form */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {services.map((service) => (
+              <Card key={service.title} className="border-2 hover:border-primary transition-smooth overflow-hidden relative group">
+                {/* Background Image */}
+                <div className="absolute inset-0">
+                  <img 
+                    src={service.backgroundImage} 
+                    alt={service.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30"></div>
+                </div>
+                
+                {/* Content */}
+                <CardHeader className="relative z-10">
+                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4 border border-white/30">
+                    <service.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <CardTitle className="text-lg text-white">{service.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="relative z-10">
+                  <ul className="space-y-2">
+                    {service.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-2 text-sm text-white/90">
+                        <span className="text-white mt-0.5">•</span>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </main>

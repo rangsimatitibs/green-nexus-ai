@@ -45,7 +45,7 @@ const About = () => {
           {/* Header Section */}
           <div className="text-center mb-16 animate-fade-in">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              About MateriaLink - Smart Materials AI Platform
+              About MateriaLink
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Pioneering material informatics and sustainable smart materials through AI-powered innovation

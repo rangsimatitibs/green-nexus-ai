@@ -61,10 +61,10 @@ const Blog = () => {
           <div className="container mx-auto px-6">
             <div className="text-center max-w-3xl mx-auto">
               <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6">
-                Insights & Updates
+                Smart Materials & Material Informatics Insights
               </h1>
               <p className="text-xl text-white/90">
-                Latest trends, best practices, and innovations in sustainable materials
+                Latest trends, material AI platform innovations, and best practices in smart materials and material informatics
               </p>
             </div>
           </div>

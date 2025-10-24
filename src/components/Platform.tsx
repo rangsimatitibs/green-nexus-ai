@@ -44,19 +44,19 @@ const Platform = () => {
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 bg-accent/10 text-accent px-5 py-2.5 rounded-full text-sm font-semibold">
                 <Brain className="w-4 h-4" />
-                Intelligent Platform
+                Material Informatics Platform
               </div>
               
               <h2 className="text-5xl lg:text-6xl font-bold text-foreground leading-[1.1]">
                 Empowering{" "}
                 <span className="bg-gradient-innovation bg-clip-text text-transparent">
-                  Sustainable
+                  Smart Materials
                 </span>{" "}
                 Innovation
               </h2>
               
               <p className="text-xl text-muted-foreground leading-relaxed">
-                MateriaLink bridges the gap between sustainable material innovation and practical implementation, 
+                MateriaLink's material AI platform bridges the gap between smart materials innovation and practical implementation through advanced material informatics, 
                 supporting Europe and UK's emerging startups and middle-sized companies.
               </p>
             </div>

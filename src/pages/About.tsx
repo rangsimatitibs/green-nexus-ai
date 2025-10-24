@@ -45,10 +45,10 @@ const About = () => {
           {/* Header Section */}
           <div className="text-center mb-16 animate-fade-in">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              About MateriaLink
+              About MateriaLink - Smart Materials AI Platform
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Pioneering sustainable material solutions through AI-powered innovation
+              Pioneering material informatics and sustainable smart materials through AI-powered innovation
             </p>
           </div>
 

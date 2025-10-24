@@ -97,14 +97,14 @@ const ServicesLanding = () => {
             <div className="text-center max-w-4xl mx-auto">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-sm font-semibold mb-8">
                 <Zap className="w-4 h-4" />
-                AI-Powered Services
+                Material AI Platform Services
               </div>
               <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-                Comprehensive Solutions for <br />
-                Sustainable Material Innovation
+                Smart Materials Discovery & <br />
+                Material Informatics Solutions
               </h1>
               <p className="text-xl text-white/90 leading-relaxed">
-                End-to-end services powered by AI to discover, validate, and integrate sustainable materials into your business
+                End-to-end material AI platform services powered by advanced material informatics to discover, validate, and integrate smart materials into your business
               </p>
             </div>
           </div>

@@ -27,20 +27,20 @@ const Hero = () => {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-sm font-medium border border-white/20">
             <Sparkles className="w-4 h-4" />
-            AI-Powered Material Innovation
+            Smart Materials AI Platform
           </div>
           
           {/* Main Headline */}
           <h1 className="text-6xl lg:text-7xl xl:text-8xl font-bold text-white leading-[1.1] tracking-tight">
-            Every material decision{" "}
+            Smart Materials Discovery{" "}
             <span className="block mt-2 bg-gradient-to-r from-accent to-white bg-clip-text text-transparent">
-              matters.
+              Powered by AI.
             </span>
           </h1>
           
           {/* Subheadline */}
           <p className="text-xl lg:text-2xl text-white leading-relaxed max-w-3xl mx-auto font-light">
-            Connect sustainable material producers, innovators, and businesses across Europe.
+            Leading material AI platform connecting sustainable material producers, innovators, and businesses through advanced material informatics.
           </p>
           
           {/* CTA Buttons */}

@@ -45,14 +45,14 @@ const Services = () => {
         <div className="text-center mb-20">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-5 py-2.5 rounded-full text-sm font-semibold mb-8">
             <Zap className="w-4 h-4" />
-            AI-Powered Services
+            Material AI Platform Services
           </div>
           <h2 className="text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
-            Transforming Material <br className="hidden sm:block" />
-            <span className="bg-gradient-sustainable bg-clip-text text-transparent">Innovation</span>
+            Smart Materials Discovery & <br className="hidden sm:block" />
+            <span className="bg-gradient-sustainable bg-clip-text text-transparent">Material Informatics</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Discover, validate, and integrate sustainable materials seamlessly with AI-powered intelligence.
+            Discover, validate, and integrate smart materials seamlessly with our AI-powered material informatics platform.
           </p>
         </div>
 

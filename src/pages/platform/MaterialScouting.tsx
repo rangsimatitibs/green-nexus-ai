@@ -567,11 +567,13 @@ const MaterialScouting = () => {
                                       {/* Company Header with Logo */}
                                       <div className="flex items-start gap-4 mb-4">
                                         <div className="flex-shrink-0">
-                                          <img 
-                                            src={supplier.logo} 
-                                            alt={`${supplier.company} logo`}
-                                            className="w-24 h-12 object-contain rounded border bg-background p-2"
-                                          />
+                                          <div className="w-16 h-16 rounded-full border-2 border-border bg-background p-2 flex items-center justify-center overflow-hidden">
+                                            <img 
+                                              src={supplier.logo} 
+                                              alt={`${supplier.company} logo`}
+                                              className="w-full h-full object-cover"
+                                            />
+                                          </div>
                                         </div>
                                         <div className="flex-1">
                                           <h6 className="text-xl font-semibold text-foreground mb-1">

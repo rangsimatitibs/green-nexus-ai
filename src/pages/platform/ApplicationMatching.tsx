@@ -102,52 +102,6 @@ const ApplicationMatching = () => {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-20 px-6 bg-muted/30">
-        <div className="container mx-auto max-w-6xl">
-          <h2 className="text-4xl font-bold text-center text-foreground mb-4">
-            How Application Matching Works
-          </h2>
-          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-            From application requirements to validated material recommendations
-          </p>
-          
-          <div className="grid md:grid-cols-4 gap-6">
-            {workflow.map((item) => (
-              <Card key={item.step} className="p-6 text-center">
-                <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl font-bold text-secondary">{item.step}</span>
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">{item.title}</h3>
-                <p className="text-sm text-muted-foreground">{item.description}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Key Capabilities */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto max-w-6xl">
-          <h2 className="text-4xl font-bold text-center text-foreground mb-4">
-            Advanced Matching Capabilities
-          </h2>
-          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Intelligent algorithms that understand your application needs
-          </p>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {capabilities.map((capability, index) => (
-              <Card key={index} className="p-8">
-                <capability.icon className="h-12 w-12 text-secondary mb-4" />
-                <h3 className="text-xl font-semibold text-foreground mb-3">{capability.title}</h3>
-                <p className="text-muted-foreground">{capability.description}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Interactive Demo */}
       <section className="py-20 px-6 bg-gradient-to-br from-secondary/5 to-accent/5">
         <div className="container mx-auto max-w-6xl">
@@ -247,6 +201,52 @@ const ApplicationMatching = () => {
               )}
             </div>
           </Card>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-20 px-6 bg-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <h2 className="text-4xl font-bold text-center text-foreground mb-4">
+            How Application Matching Works
+          </h2>
+          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+            From application requirements to validated material recommendations
+          </p>
+          
+          <div className="grid md:grid-cols-4 gap-6">
+            {workflow.map((item) => (
+              <Card key={item.step} className="p-6 text-center">
+                <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-secondary">{item.step}</span>
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{item.title}</h3>
+                <p className="text-sm text-muted-foreground">{item.description}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Key Capabilities */}
+      <section className="py-20 px-6">
+        <div className="container mx-auto max-w-6xl">
+          <h2 className="text-4xl font-bold text-center text-foreground mb-4">
+            Advanced Matching Capabilities
+          </h2>
+          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+            Intelligent algorithms that understand your application needs
+          </p>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {capabilities.map((capability, index) => (
+              <Card key={index} className="p-8">
+                <capability.icon className="h-12 w-12 text-secondary mb-4" />
+                <h3 className="text-xl font-semibold text-foreground mb-3">{capability.title}</h3>
+                <p className="text-muted-foreground">{capability.description}</p>
+              </Card>
+            ))}
+          </div>
         </div>
       </section>
 

@@ -12,6 +12,10 @@ import MaterialsInformatics from "./pages/blog/MaterialsInformatics";
 import BiomaterialsInnovation from "./pages/blog/BiomaterialsInnovation";
 import SustainableMaterials from "./pages/blog/SustainableMaterials";
 import MaterialValidation from "./pages/blog/MaterialValidation";
+import MaterialScouting from "./pages/platform/MaterialScouting";
+import ApplicationMatching from "./pages/platform/ApplicationMatching";
+import PropertyPrediction from "./pages/platform/PropertyPrediction";
+import ProcessOptimization from "./pages/platform/ProcessOptimization";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +36,10 @@ const App = () => (
           <Route path="/blog/biomaterials-innovation" element={<BiomaterialsInnovation />} />
           <Route path="/blog/sustainable-materials" element={<SustainableMaterials />} />
           <Route path="/blog/material-validation" element={<MaterialValidation />} />
+          <Route path="/platform/material-scouting" element={<MaterialScouting />} />
+          <Route path="/platform/application-matching" element={<ApplicationMatching />} />
+          <Route path="/platform/property-prediction" element={<PropertyPrediction />} />
+          <Route path="/platform/process-optimization" element={<ProcessOptimization />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

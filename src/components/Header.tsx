@@ -36,19 +36,19 @@ const Header = () => {
               <NavigationMenuList>
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="text-sm font-medium bg-transparent hover:bg-transparent data-[state=open]:bg-transparent">
-                    Services
+                    Platform
                   </NavigationMenuTrigger>
                   <NavigationMenuContent className="bg-popover">
                     <ul className="grid w-[400px] gap-3 p-4">
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            to="/signup"
+                            to="/platform/material-scouting"
                             className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
-                            <div className="text-sm font-medium leading-none">Platform</div>
+                            <div className="text-sm font-medium leading-none">Material Scouting</div>
                             <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              Join our AI-powered platform for sustainable materials
+                              Discover sustainable materials with AI-powered search
                             </p>
                           </Link>
                         </NavigationMenuLink>
@@ -56,12 +56,12 @@ const Header = () => {
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            to="/services"
+                            to="/platform/application-matching"
                             className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
-                            <div className="text-sm font-medium leading-none">Features</div>
+                            <div className="text-sm font-medium leading-none">Application Matching</div>
                             <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              Explore our comprehensive service offerings
+                              Match materials to your specific applications
                             </p>
                           </Link>
                         </NavigationMenuLink>
@@ -69,12 +69,25 @@ const Header = () => {
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            to="/blog"
+                            to="/platform/property-prediction"
                             className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
-                            <div className="text-sm font-medium leading-none">Blog</div>
+                            <div className="text-sm font-medium leading-none">Property Prediction</div>
                             <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              Latest insights on sustainable materials
+                              Predict material properties with machine learning
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to="/platform/process-optimization"
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                          >
+                            <div className="text-sm font-medium leading-none">Process Optimization</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Optimize bioprocessing for maximum efficiency
                             </p>
                           </Link>
                         </NavigationMenuLink>
@@ -84,6 +97,10 @@ const Header = () => {
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
+            
+            <Link to="/blog" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
+              Blog
+            </Link>
 
             <Link to="/about" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
               About

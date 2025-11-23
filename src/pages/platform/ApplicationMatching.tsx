@@ -1,11 +1,49 @@
-import { Target, Layers, Sparkles, CheckCircle, ArrowRight } from "lucide-react";
+import { Target, Layers, Sparkles, CheckCircle, ArrowRight, Wand2 } from "lucide-react";
+import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 
 const ApplicationMatching = () => {
+  const [application, setApplication] = useState("");
+  const [matches, setMatches] = useState<any[]>([]);
+  const [isMatching, setIsMatching] = useState(false);
+
+  const handleMatch = () => {
+    setIsMatching(true);
+    setTimeout(() => {
+      const mockMatches = [
+        {
+          material: "Polylactic Acid (PLA)",
+          matchScore: 94,
+          strengths: ["Biodegradable", "FDA approved", "Good mechanical properties"],
+          considerations: ["Limited heat resistance", "Moisture sensitive"],
+          cost: "$$"
+        },
+        {
+          material: "Polyhydroxyalkanoates (PHA)",
+          matchScore: 88,
+          strengths: ["Marine biodegradable", "Flexible", "Biocompatible"],
+          considerations: ["Higher cost", "Limited suppliers"],
+          cost: "$$$"
+        },
+        {
+          material: "Cellulose Acetate",
+          matchScore: 82,
+          strengths: ["Transparent", "Good barrier properties", "Compostable"],
+          considerations: ["Chemical processing required", "Moderate strength"],
+          cost: "$$"
+        }
+      ];
+      setMatches(mockMatches);
+      setIsMatching(false);
+    }, 1500);
+  };
+
   const capabilities = [
     {
       icon: Target,
@@ -107,6 +145,108 @@ const ApplicationMatching = () => {
               </Card>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Interactive Demo */}
+      <section className="py-20 px-6 bg-gradient-to-br from-secondary/5 to-accent/5">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <Badge className="mb-4" variant="outline">
+              <Sparkles className="h-3 w-3 mr-1" />
+              Interactive Demo
+            </Badge>
+            <h2 className="text-4xl font-bold text-foreground mb-4">
+              Try Application Matching
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Describe your application and see which materials match your requirements
+            </p>
+          </div>
+
+          <Card className="p-8 max-w-4xl mx-auto">
+            <div className="space-y-6">
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  Describe Your Application
+                </label>
+                <Textarea
+                  placeholder="Example: I need a biodegradable material for food packaging that can withstand temperatures up to 60°C and has good moisture barrier properties..."
+                  value={application}
+                  onChange={(e) => setApplication(e.target.value)}
+                  rows={4}
+                  className="resize-none"
+                />
+              </div>
+              
+              <Button 
+                onClick={handleMatch}
+                disabled={isMatching || !application.trim()}
+                className="w-full"
+                size="lg"
+              >
+                {isMatching ? (
+                  <>Finding Matches...</>
+                ) : (
+                  <>
+                    <Wand2 className="h-4 w-4 mr-2" />
+                    Find Material Matches
+                  </>
+                )}
+              </Button>
+
+              {matches.length > 0 && (
+                <div className="space-y-4 animate-fade-in mt-8">
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Top Material Recommendations
+                  </h3>
+                  {matches.map((match, index) => (
+                    <Card key={index} className="p-6 hover-scale">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h4 className="text-xl font-semibold text-foreground mb-2">
+                            {match.material}
+                          </h4>
+                          <Badge variant="secondary">Rank #{index + 1}</Badge>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm text-muted-foreground mb-1">Match Score</div>
+                          <div className="text-3xl font-bold text-secondary">{match.matchScore}%</div>
+                          <div className="text-xs text-muted-foreground mt-1">Cost: {match.cost}</div>
+                        </div>
+                      </div>
+                      
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            Strengths
+                          </div>
+                          <ul className="space-y-1">
+                            {match.strengths.map((strength: string, i: number) => (
+                              <li key={i} className="text-sm text-muted-foreground">• {strength}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        
+                        <div>
+                          <div className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                            <Target className="h-4 w-4 text-amber-500" />
+                            Considerations
+                          </div>
+                          <ul className="space-y-1">
+                            {match.considerations.map((consideration: string, i: number) => (
+                              <li key={i} className="text-sm text-muted-foreground">• {consideration}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Card>
         </div>
       </section>
 

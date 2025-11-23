@@ -1,11 +1,64 @@
-import { Search, Database, Target, CheckCircle, ArrowRight } from "lucide-react";
+import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
+import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 
 const MaterialScouting = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const sampleMaterials = [
+    {
+      name: "Polylactic Acid (PLA)",
+      category: "Biopolymer",
+      properties: ["Biodegradable", "Bio-based", "Tensile Strength: 50-70 MPa"],
+      sustainability: 92,
+      applications: ["Packaging", "3D Printing", "Medical Implants"]
+    },
+    {
+      name: "Cellulose Nanofibers",
+      category: "Nanocellulose",
+      properties: ["High Strength", "Renewable", "Modulus: 130-140 GPa"],
+      sustainability: 95,
+      applications: ["Composites", "Packaging", "Coatings"]
+    },
+    {
+      name: "Mycelium-Based Composite",
+      category: "Fungal Material",
+      properties: ["Compostable", "Low Energy", "Density: 0.1-0.2 g/cm³"],
+      sustainability: 98,
+      applications: ["Packaging", "Insulation", "Furniture"]
+    },
+    {
+      name: "Bio-based Polyethylene",
+      category: "Bio-plastic",
+      properties: ["Carbon Negative", "Recyclable", "Tensile: 20-30 MPa"],
+      sustainability: 85,
+      applications: ["Bottles", "Films", "Consumer Goods"]
+    }
+  ];
+
+  const handleSearch = () => {
+    setIsSearching(true);
+    setTimeout(() => {
+      const query = searchQuery.toLowerCase();
+      const filtered = sampleMaterials.filter(mat => 
+        mat.name.toLowerCase().includes(query) ||
+        mat.category.toLowerCase().includes(query) ||
+        mat.properties.some(p => p.toLowerCase().includes(query)) ||
+        mat.applications.some(a => a.toLowerCase().includes(query))
+      );
+      setSearchResults(filtered.length > 0 ? filtered : sampleMaterials);
+      setIsSearching(false);
+    }, 1000);
+  };
+
   const capabilities = [
     {
       icon: Database,
@@ -107,6 +160,104 @@ const MaterialScouting = () => {
               </Card>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Interactive Demo */}
+      <section className="py-20 px-6 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <Badge className="mb-4" variant="outline">
+              <Sparkles className="h-3 w-3 mr-1" />
+              Interactive Demo
+            </Badge>
+            <h2 className="text-4xl font-bold text-foreground mb-4">
+              Try Material Scouting Now
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Search our sample database to see how AI-powered material discovery works
+            </p>
+          </div>
+
+          <Card className="p-8 max-w-4xl mx-auto">
+            <div className="space-y-6">
+              <div className="flex gap-3">
+                <Input
+                  placeholder="Search by material name, property, or application (e.g., 'biodegradable', 'packaging', 'high strength')..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  className="flex-1"
+                />
+                <Button 
+                  onClick={handleSearch}
+                  disabled={isSearching}
+                  className="min-w-[120px]"
+                >
+                  {isSearching ? (
+                    <>Searching...</>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4 mr-2" />
+                      Search
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {searchResults.length > 0 && (
+                <div className="space-y-4 animate-fade-in">
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Found {searchResults.length} Materials
+                  </h3>
+                  {searchResults.map((material, index) => (
+                    <Card key={index} className="p-6 hover-scale">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h4 className="text-xl font-semibold text-foreground mb-1">
+                            {material.name}
+                          </h4>
+                          <Badge variant="secondary">{material.category}</Badge>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm text-muted-foreground mb-1">Sustainability Score</div>
+                          <div className="text-2xl font-bold text-primary">{material.sustainability}%</div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <div className="text-sm font-medium text-foreground mb-2">Key Properties:</div>
+                          <div className="flex flex-wrap gap-2">
+                            {material.properties.map((prop: string, i: number) => (
+                              <Badge key={i} variant="outline">{prop}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <div className="text-sm font-medium text-foreground mb-2">Applications:</div>
+                          <div className="flex flex-wrap gap-2">
+                            {material.applications.map((app: string, i: number) => (
+                              <Badge key={i} className="bg-primary/10 text-primary hover:bg-primary/20">
+                                {app}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {searchResults.length === 0 && searchQuery && !isSearching && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No materials found. Try a different search term.
+                </div>
+              )}
+            </div>
+          </Card>
         </div>
       </section>
 

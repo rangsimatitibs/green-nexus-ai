@@ -1,4 +1,4 @@
-import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp } from "lucide-react";
+import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom } from "lucide-react";
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -22,6 +22,8 @@ const MaterialScouting = () => {
       id: "pla",
       name: "Polylactic Acid (PLA)",
       category: "Biopolymer",
+      chemicalFormula: "(C₃H₄O₂)ₙ",
+      chemicalStructure: "[-O-CH(CH₃)-CO-]ₙ",
       properties: {
         tensileStrength: "50-70 MPa",
         meltingPoint: "150-160°C",
@@ -47,6 +49,8 @@ const MaterialScouting = () => {
         {
           company: "NatureWorks LLC",
           country: "🇺🇸 USA",
+          logo: "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=200&h=100&fit=crop",
+          productImage: "https://images.unsplash.com/photo-1603400521630-9f2de124b33b?w=400&h=300&fit=crop",
           properties: {
             tensileStrength: "65 MPa",
             meltingPoint: "155°C",
@@ -60,6 +64,8 @@ const MaterialScouting = () => {
         {
           company: "Total Corbion PLA",
           country: "🇳🇱 Netherlands",
+          logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200&h=100&fit=crop",
+          productImage: "https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?w=400&h=300&fit=crop",
           properties: {
             tensileStrength: "60 MPa",
             meltingPoint: "158°C",
@@ -73,6 +79,8 @@ const MaterialScouting = () => {
         {
           company: "Futerro",
           country: "🇧🇪 Belgium",
+          logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200&h=100&fit=crop",
+          productImage: "https://images.unsplash.com/photo-1614741118887-7a4ee193a5fa?w=400&h=300&fit=crop",
           properties: {
             tensileStrength: "55 MPa",
             meltingPoint: "152°C",
@@ -89,6 +97,8 @@ const MaterialScouting = () => {
       id: "cnf",
       name: "Cellulose Nanofibers",
       category: "Nanocellulose",
+      chemicalFormula: "(C₆H₁₀O₅)ₙ",
+      chemicalStructure: "[-C₆H₇O₂(OH)₃-]ₙ (β-1,4-glycosidic bonds)",
       properties: {
         tensileStrength: "200-300 MPa",
         modulus: "130-140 GPa",
@@ -114,6 +124,8 @@ const MaterialScouting = () => {
         {
           company: "CelluComp",
           country: "🇬🇧 UK",
+          logo: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=200&h=100&fit=crop",
+          productImage: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=400&h=300&fit=crop",
           properties: {
             tensileStrength: "280 MPa",
             modulus: "135 GPa",
@@ -127,6 +139,8 @@ const MaterialScouting = () => {
         {
           company: "Nippon Paper",
           country: "🇯🇵 Japan",
+          logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200&h=100&fit=crop",
+          productImage: "https://images.unsplash.com/photo-1604871000636-074fa5117945?w=400&h=300&fit=crop",
           properties: {
             tensileStrength: "250 MPa",
             modulus: "140 GPa",
@@ -143,6 +157,8 @@ const MaterialScouting = () => {
       id: "mycelium",
       name: "Mycelium-Based Composite",
       category: "Fungal Material",
+      chemicalFormula: "Complex biopolymer matrix",
+      chemicalStructure: "Chitin (C₈H₁₃NO₅)ₙ + β-glucans + proteins",
       properties: {
         tensileStrength: "0.5-2 MPa",
         density: "0.1-0.2 g/cm³",
@@ -168,6 +184,8 @@ const MaterialScouting = () => {
         {
           company: "Ecovative Design",
           country: "🇺🇸 USA",
+          logo: "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=200&h=100&fit=crop",
+          productImage: "https://images.unsplash.com/photo-1585571430840-52abb4c2beaf?w=400&h=300&fit=crop",
           properties: {
             density: "0.15 g/cm³",
             compressiveStrength: "50 kPa",
@@ -181,6 +199,8 @@ const MaterialScouting = () => {
         {
           company: "Magical Mushroom",
           country: "🇩🇪 Germany",
+          logo: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=200&h=100&fit=crop",
+          productImage: "https://images.unsplash.com/photo-1564720595928-7cd6bb96c616?w=400&h=300&fit=crop",
           properties: {
             density: "0.18 g/cm³",
             compressiveStrength: "60 kPa",
@@ -197,6 +217,8 @@ const MaterialScouting = () => {
       id: "biope",
       name: "Bio-based Polyethylene",
       category: "Bio-plastic",
+      chemicalFormula: "(C₂H₄)ₙ",
+      chemicalStructure: "[-CH₂-CH₂-]ₙ",
       properties: {
         tensileStrength: "20-30 MPa",
         density: "0.94-0.96 g/cm³",
@@ -222,6 +244,8 @@ const MaterialScouting = () => {
         {
           company: "Braskem",
           country: "🇧🇷 Brazil",
+          logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200&h=100&fit=crop",
+          productImage: "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?w=400&h=300&fit=crop",
           properties: {
             tensileStrength: "28 MPa",
             density: "0.95 g/cm³",
@@ -235,6 +259,8 @@ const MaterialScouting = () => {
         {
           company: "Dow Chemical",
           country: "🇺🇸 USA",
+          logo: "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=200&h=100&fit=crop",
+          productImage: "https://images.unsplash.com/photo-1610056494052-6a4f83cc8d2f?w=400&h=300&fit=crop",
           properties: {
             tensileStrength: "25 MPa",
             density: "0.94 g/cm³",
@@ -385,6 +411,20 @@ const MaterialScouting = () => {
                               </h4>
                               <Badge variant="secondary">{material.category}</Badge>
                             </div>
+                            <div className="mb-3">
+                              <Card className="p-3 bg-muted/50 inline-block">
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Atom className="h-4 w-4 text-primary" />
+                                  <div>
+                                    <span className="font-medium text-foreground">Formula: </span>
+                                    <span className="text-muted-foreground">{material.chemicalFormula}</span>
+                                  </div>
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  Structure: {material.chemicalStructure}
+                                </div>
+                              </Card>
+                            </div>
                             <div className="flex flex-wrap gap-2 mb-3">
                               <Badge variant="outline" className="gap-1">
                                 <Scale className="h-3 w-3" />
@@ -524,8 +564,16 @@ const MaterialScouting = () => {
                                 <div className="space-y-4">
                                   {material.suppliers.map((supplier: any, idx: number) => (
                                     <Card key={idx} className="p-6">
-                                      <div className="flex justify-between items-start mb-4">
-                                        <div>
+                                      {/* Company Header with Logo */}
+                                      <div className="flex items-start gap-4 mb-4">
+                                        <div className="flex-shrink-0">
+                                          <img 
+                                            src={supplier.logo} 
+                                            alt={`${supplier.company} logo`}
+                                            className="w-24 h-12 object-contain rounded border bg-background p-2"
+                                          />
+                                        </div>
+                                        <div className="flex-1">
                                           <h6 className="text-xl font-semibold text-foreground mb-1">
                                             {supplier.company}
                                           </h6>
@@ -538,6 +586,15 @@ const MaterialScouting = () => {
                                             {supplier.pricing}
                                           </div>
                                         </div>
+                                      </div>
+
+                                      {/* Product Image */}
+                                      <div className="mb-4">
+                                        <img 
+                                          src={supplier.productImage} 
+                                          alt={`${material.name} product from ${supplier.company}`}
+                                          className="w-full h-48 object-cover rounded-lg"
+                                        />
                                       </div>
 
                                       <div className="grid md:grid-cols-2 gap-4 mb-4">

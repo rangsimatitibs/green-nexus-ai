@@ -99,6 +99,7 @@ const MaterialScouting = () => {
       category: "Nanocellulose",
       chemicalFormula: "(C₆H₁₀O₅)ₙ",
       chemicalStructure: "[-C₆H₇O₂(OH)₃-]ₙ (β-1,4-glycosidic bonds)",
+      uniqueness: "Nano-scale reinforcement with exceptional strength-to-weight ratio, derived from abundant cellulose sources",
       properties: {
         tensileStrength: "200-300 MPa",
         modulus: "130-140 GPa",
@@ -159,6 +160,7 @@ const MaterialScouting = () => {
       category: "Fungal Material",
       chemicalFormula: "Complex biopolymer matrix",
       chemicalStructure: "Chitin (C₈H₁₃NO₅)ₙ + β-glucans + proteins",
+      uniqueness: "Grown rather than manufactured - carbon-negative production using agricultural waste as substrate",
       properties: {
         tensileStrength: "0.5-2 MPa",
         density: "0.1-0.2 g/cm³",
@@ -174,7 +176,7 @@ const MaterialScouting = () => {
           biodegradability: 100,
           toxicity: 95
         },
-        calculation: "Weighted average: Renewable (30%), Carbon Footprint (30%), Biodegradability (25%), Toxicity (15%)"
+        calculation: "Weighted average: Renewable (30%), Carbon Footpoint (30%), Biodegradability (25%), Toxicity (15%)"
       },
       applications: ["Packaging", "Insulation", "Furniture"],
       regulations: ["ASTM D6400", "EN 13432", "USDA BioPreferred"],
@@ -439,6 +441,17 @@ const MaterialScouting = () => {
                                 {material.suppliers.length} Suppliers
                               </Badge>
                             </div>
+                            {material.uniqueness && (
+                              <Card className="p-3 bg-primary/5 border-primary/20 mb-3">
+                                <div className="flex items-start gap-2 text-sm">
+                                  <Sparkles className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                                  <div>
+                                    <span className="font-semibold text-primary">Unique Aspect: </span>
+                                    <span className="text-foreground">{material.uniqueness}</span>
+                                  </div>
+                                </div>
+                              </Card>
+                            )}
                           </div>
                           <div className="text-right">
                             <div className="text-sm text-muted-foreground mb-1">Sustainability</div>
@@ -567,7 +580,7 @@ const MaterialScouting = () => {
                                       {/* Company Header with Logo */}
                                       <div className="flex items-start gap-4 mb-4">
                                         <div className="flex-shrink-0">
-                                          <div className="w-16 h-16 rounded-full border-2 border-border bg-background p-2 flex items-center justify-center overflow-hidden">
+                                          <div className="w-16 h-16 rounded-full border-2 border-border bg-background flex items-center justify-center overflow-hidden">
                                             <img 
                                               src={supplier.logo} 
                                               alt={`${supplier.company} logo`}

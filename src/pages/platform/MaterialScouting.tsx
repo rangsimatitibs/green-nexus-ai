@@ -1,4 +1,4 @@
-import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom } from "lucide-react";
+import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X } from "lucide-react";
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const MaterialScouting = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -16,6 +18,8 @@ const MaterialScouting = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [expandedMaterial, setExpandedMaterial] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"overview" | "suppliers">("overview");
+  const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
+  const [showComparison, setShowComparison] = useState(false);
 
   const sampleMaterials = [
     {
@@ -281,6 +285,7 @@ const MaterialScouting = () => {
     setIsSearching(true);
     setExpandedMaterial(null);
     setViewMode("overview");
+    setSelectedMaterials([]);
     setTimeout(() => {
       const query = searchQuery.toLowerCase();
       const filtered = sampleMaterials.filter(mat => 
@@ -294,6 +299,31 @@ const MaterialScouting = () => {
       setSearchResults(filtered.length > 0 ? filtered : sampleMaterials);
       setIsSearching(false);
     }, 1000);
+  };
+
+  const toggleMaterialSelection = (materialId: string) => {
+    setSelectedMaterials(prev => 
+      prev.includes(materialId) 
+        ? prev.filter(id => id !== materialId)
+        : [...prev, materialId]
+    );
+  };
+
+  const getComparisonData = () => {
+    return searchResults.filter(m => selectedMaterials.includes(m.id));
+  };
+
+  const getPropertyDifference = (property: string, materials: any[]) => {
+    const values = materials.map(m => {
+      if (property.includes('.')) {
+        const [parent, child] = property.split('.');
+        return m[parent]?.[child];
+      }
+      return m.properties?.[property];
+    });
+    
+    const uniqueValues = [...new Set(values.filter(v => v !== undefined))];
+    return uniqueValues.length > 1;
   };
 
   const capabilities = [
@@ -398,15 +428,33 @@ const MaterialScouting = () => {
 
               {searchResults.length > 0 && (
                 <div className="space-y-4 animate-fade-in">
-                  <h3 className="text-lg font-semibold text-foreground">
-                    Found {searchResults.length} Materials
-                  </h3>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Found {searchResults.length} Materials
+                    </h3>
+                    {selectedMaterials.length > 0 && (
+                      <Button 
+                        onClick={() => setShowComparison(true)}
+                        variant="default"
+                        className="gap-2"
+                      >
+                        <GitCompare className="h-4 w-4" />
+                        Compare ({selectedMaterials.length})
+                      </Button>
+                    )}
+                  </div>
                   {searchResults.map((material) => (
                     <Card key={material.id} className="overflow-hidden">
                       {/* Main Material Card */}
                       <div className="p-6">
                         <div className="flex justify-between items-start mb-4">
-                          <div className="flex-1">
+                          <div className="flex items-start gap-3 flex-1">
+                            <Checkbox 
+                              checked={selectedMaterials.includes(material.id)}
+                              onCheckedChange={() => toggleMaterialSelection(material.id)}
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                               <h4 className="text-xl font-semibold text-foreground">
                                 {material.name}
@@ -452,6 +500,7 @@ const MaterialScouting = () => {
                                 </div>
                               </Card>
                             )}
+                            </div>
                           </div>
                           <div className="text-right">
                             <div className="text-sm text-muted-foreground mb-1">Sustainability</div>
@@ -796,6 +845,150 @@ const MaterialScouting = () => {
           </Link>
         </div>
       </section>
+
+      {/* Comparison Dialog */}
+      <Dialog open={showComparison} onOpenChange={setShowComparison}>
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-2xl">Material Comparison</DialogTitle>
+                <DialogDescription>
+                  Side-by-side comparison of {selectedMaterials.length} selected materials
+                </DialogDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowComparison(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+
+          <div className="grid gap-6 mt-6" style={{ gridTemplateColumns: `repeat(${selectedMaterials.length}, minmax(300px, 1fr))` }}>
+            {getComparisonData().map((material) => (
+              <Card key={material.id} className="p-6 space-y-4">
+                {/* Material Header */}
+                <div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">{material.name}</h3>
+                  <Badge variant="secondary">{material.category}</Badge>
+                </div>
+
+                <Separator />
+
+                {/* Chemical Formula */}
+                <div className={getPropertyDifference('chemicalFormula', getComparisonData()) ? 'bg-primary/10 p-3 rounded-md border-2 border-primary/30' : ''}>
+                  <div className="text-sm font-semibold text-muted-foreground mb-1">Chemical Formula</div>
+                  <div className="text-sm text-foreground font-mono">{material.chemicalFormula}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{material.chemicalStructure}</div>
+                </div>
+
+                {/* Uniqueness */}
+                {material.uniqueness && (
+                  <div className="bg-accent/10 p-3 rounded-md">
+                    <div className="flex items-start gap-2">
+                      <Sparkles className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                      <div className="text-xs text-foreground">{material.uniqueness}</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Properties */}
+                <div>
+                  <div className="text-sm font-semibold text-muted-foreground mb-2">Properties</div>
+                  <div className="space-y-2">
+                    {Object.entries(material.properties).map(([key, value]) => (
+                      <div 
+                        key={key}
+                        className={`text-sm ${getPropertyDifference(`properties.${key}`, getComparisonData()) ? 'bg-primary/10 p-2 rounded-md border-2 border-primary/30' : 'p-2'}`}
+                      >
+                        <span className="text-muted-foreground capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}: </span>
+                        <span className="text-foreground font-medium">{String(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sustainability Score */}
+                <div className={getPropertyDifference('sustainability.score', getComparisonData()) ? 'bg-primary/10 p-3 rounded-md border-2 border-primary/30' : 'p-3'}>
+                  <div className="text-sm font-semibold text-muted-foreground mb-2">Sustainability Score</div>
+                  <div className="flex items-center gap-3">
+                    <Progress value={material.sustainability.score} className="flex-1" />
+                    <span className="text-2xl font-bold text-primary">{material.sustainability.score}</span>
+                  </div>
+                  <div className="mt-3 space-y-1">
+                    {Object.entries(material.sustainability.breakdown).map(([key, value]) => (
+                      <div key={key} className="flex justify-between text-xs">
+                        <span className="text-muted-foreground capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                        <span className="text-foreground font-medium">{String(value)}/100</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Applications */}
+                <div className={getPropertyDifference('applications', getComparisonData()) ? 'bg-primary/10 p-3 rounded-md border-2 border-primary/30' : ''}>
+                  <div className="text-sm font-semibold text-muted-foreground mb-2">Applications</div>
+                  <div className="flex flex-wrap gap-1">
+                    {material.applications.map((app: string) => (
+                      <Badge key={app} variant="outline" className="text-xs">{app}</Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Scale */}
+                <div className={getPropertyDifference('scale', getComparisonData()) ? 'bg-primary/10 p-3 rounded-md border-2 border-primary/30' : ''}>
+                  <div className="text-sm font-semibold text-muted-foreground mb-1">Production Scale</div>
+                  <div className="text-sm text-foreground flex items-center gap-2">
+                    <Scale className="h-4 w-4" />
+                    {material.scale}
+                  </div>
+                </div>
+
+                {/* Innovation Level */}
+                <div className={getPropertyDifference('innovation', getComparisonData()) ? 'bg-primary/10 p-3 rounded-md border-2 border-primary/30' : ''}>
+                  <div className="text-sm font-semibold text-muted-foreground mb-1">Innovation Level</div>
+                  <div className="text-sm text-foreground flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4" />
+                    {material.innovation}
+                  </div>
+                </div>
+
+                {/* Suppliers Count */}
+                <div>
+                  <div className="text-sm font-semibold text-muted-foreground mb-1">Available Suppliers</div>
+                  <div className="text-sm text-foreground flex items-center gap-2">
+                    <Factory className="h-4 w-4" />
+                    {material.suppliers.length} suppliers
+                  </div>
+                </div>
+
+                {/* Regulations */}
+                <div className={getPropertyDifference('regulations', getComparisonData()) ? 'bg-primary/10 p-3 rounded-md border-2 border-primary/30' : ''}>
+                  <div className="text-sm font-semibold text-muted-foreground mb-2">Regulations</div>
+                  <div className="flex flex-wrap gap-1">
+                    {material.regulations.map((reg: string) => (
+                      <Badge key={reg} variant="outline" className="text-xs">{reg}</Badge>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+            <div className="flex items-start gap-2 text-sm text-muted-foreground">
+              <Sparkles className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+              <span>
+                Highlighted sections indicate properties that differ between selected materials. 
+                This helps you quickly identify key differences.
+              </span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

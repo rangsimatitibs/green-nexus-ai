@@ -14,7 +14,7 @@ import SustainableMaterials from "./pages/blog/SustainableMaterials";
 import MaterialValidation from "./pages/blog/MaterialValidation";
 import MaterialScouting from "./pages/platform/MaterialScouting";
 import ApplicationMatching from "./pages/platform/ApplicationMatching";
-import PropertyPrediction from "./pages/platform/PropertyPrediction";
+import ResearchersTool from "./pages/platform/ResearchersTool";
 import ProcessOptimization from "./pages/platform/ProcessOptimization";
 import NotFound from "./pages/NotFound";
 
@@ -38,7 +38,7 @@ const App = () => (
           <Route path="/blog/material-validation" element={<MaterialValidation />} />
           <Route path="/platform/material-scouting" element={<MaterialScouting />} />
           <Route path="/platform/application-matching" element={<ApplicationMatching />} />
-          <Route path="/platform/property-prediction" element={<PropertyPrediction />} />
+          <Route path="/platform/researchers-tool" element={<ResearchersTool />} />
           <Route path="/platform/process-optimization" element={<ProcessOptimization />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

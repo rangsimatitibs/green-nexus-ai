@@ -55,6 +55,7 @@ const MaterialScouting = () => {
           country: "🇺🇸 USA",
           logo: "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=200&h=100&fit=crop",
           productImage: "https://images.unsplash.com/photo-1603400521630-9f2de124b33b?w=400&h=300&fit=crop",
+          uniqueness: "World's largest PLA producer - vertically integrated from feedstock to polymer with proprietary fermentation technology",
           properties: {
             tensileStrength: "65 MPa",
             meltingPoint: "155°C",
@@ -131,6 +132,7 @@ const MaterialScouting = () => {
           country: "🇬🇧 UK",
           logo: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=200&h=100&fit=crop",
           productImage: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=400&h=300&fit=crop",
+          uniqueness: "Patented extraction from root vegetables - upcycles food waste with zero chemicals, achieving highest purity CNF",
           properties: {
             tensileStrength: "280 MPa",
             modulus: "135 GPa",
@@ -192,6 +194,7 @@ const MaterialScouting = () => {
           country: "🇺🇸 USA",
           logo: "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=200&h=100&fit=crop",
           productImage: "https://images.unsplash.com/photo-1585571430840-52abb4c2beaf?w=400&h=300&fit=crop",
+          uniqueness: "Pioneer in mycelium technology - grow-to-shape manufacturing eliminates waste, carbon-negative with custom mechanical properties",
           properties: {
             density: "0.15 g/cm³",
             compressiveStrength: "50 kPa",
@@ -252,6 +255,7 @@ const MaterialScouting = () => {
           country: "🇧🇷 Brazil",
           logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200&h=100&fit=crop",
           productImage: "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?w=400&h=300&fit=crop",
+          uniqueness: "Only large-scale sugarcane-based PE producer - captures 3.09kg CO₂ per kg polymer, drop-in replacement for fossil PE",
           properties: {
             tensileStrength: "28 MPa",
             density: "0.95 g/cm³",
@@ -652,7 +656,7 @@ const MaterialScouting = () => {
                                         </div>
                                       </div>
 
-                                      {/* Product Image */}
+                                       {/* Product Image */}
                                       <div className="mb-4">
                                         <img 
                                           src={supplier.productImage} 
@@ -660,6 +664,19 @@ const MaterialScouting = () => {
                                           className="w-full h-48 object-cover rounded-lg"
                                         />
                                       </div>
+
+                                      {/* Uniqueness */}
+                                      {supplier.uniqueness && (
+                                        <Card className="p-3 bg-primary/5 border-primary/20 mb-4">
+                                          <div className="flex items-start gap-2 text-sm">
+                                            <Award className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                                            <div>
+                                              <span className="font-semibold text-primary">What Makes Them Unique: </span>
+                                              <span className="text-foreground">{supplier.uniqueness}</span>
+                                            </div>
+                                          </div>
+                                        </Card>
+                                      )}
 
                                       <div className="grid md:grid-cols-2 gap-4 mb-4">
                                         <div>

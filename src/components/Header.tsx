@@ -69,12 +69,12 @@ const Header = () => {
                       <li>
                         <NavigationMenuLink asChild>
                           <Link
-                            to="/platform/property-prediction"
+                            to="/platform/researchers-tool"
                             className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                           >
-                            <div className="text-sm font-medium leading-none">Property Prediction</div>
+                            <div className="text-sm font-medium leading-none">Researcher's Tool</div>
                             <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                              Predict material properties with machine learning
+                              Research tools for property prediction, lab recipes & material library
                             </p>
                           </Link>
                         </NavigationMenuLink>

@@ -1,4 +1,4 @@
-import { Target, Layers, Sparkles, CheckCircle, ArrowRight, Wand2 } from "lucide-react";
+import { Target, Layers, Sparkles, CheckCircle, ArrowRight, Wand2, Download, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -7,11 +7,25 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const ApplicationMatching = () => {
   const [application, setApplication] = useState("");
   const [matches, setMatches] = useState<any[]>([]);
   const [isMatching, setIsMatching] = useState(false);
+  
+  // Advanced search state
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [materialDescription, setMaterialDescription] = useState("");
+  const [targetIndustry, setTargetIndustry] = useState("");
+  const [manufacturingEquipment, setManufacturingEquipment] = useState("");
+  const [priorities, setPriorities] = useState({
+    costOptimization: false,
+    sustainability: false,
+    performance: false,
+    availability: false
+  });
+  const [deepSearch, setDeepSearch] = useState(false);
 
   const handleMatch = () => {
     setIsMatching(true);
@@ -122,32 +136,204 @@ const ApplicationMatching = () => {
             <div className="space-y-6">
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">
-                  Describe Your Application
+                  Material Description *
                 </label>
                 <Textarea
-                  placeholder="Example: I need a biodegradable material for food packaging that can withstand temperatures up to 60°C and has good moisture barrier properties..."
-                  value={application}
-                  onChange={(e) => setApplication(e.target.value)}
+                  placeholder="Describe your material in detail, including key properties, composition, and characteristics"
+                  value={materialDescription}
+                  onChange={(e) => setMaterialDescription(e.target.value)}
                   rows={4}
                   className="resize-none"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Please provide detailed information for better results
+                </p>
               </div>
-              
+
+              {/* Advanced Options Toggle */}
               <Button 
-                onClick={handleMatch}
-                disabled={isMatching || !application.trim()}
+                variant="outline" 
+                onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
                 className="w-full"
-                size="lg"
               >
-                {isMatching ? (
-                  <>Finding Matches...</>
+                {showAdvancedOptions ? (
+                  <>
+                    <ChevronUp className="h-4 w-4 mr-2" />
+                    Hide Advanced Options
+                  </>
                 ) : (
                   <>
-                    <Wand2 className="h-4 w-4 mr-2" />
-                    Find Material Matches
+                    <ChevronDown className="h-4 w-4 mr-2" />
+                    Show Advanced Options
                   </>
                 )}
               </Button>
+
+              {/* Advanced Options Panel */}
+              {showAdvancedOptions && (
+                <Card className="p-6 bg-muted/30 space-y-6">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-2 block">
+                        Target Industry
+                      </label>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        value={targetIndustry}
+                        onChange={(e) => setTargetIndustry(e.target.value)}
+                      >
+                        <option value="">Select target industry (optional)</option>
+                        <option value="packaging">Packaging</option>
+                        <option value="automotive">Automotive</option>
+                        <option value="medical">Medical Devices</option>
+                        <option value="textiles">Textiles & Fashion</option>
+                        <option value="construction">Construction</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="consumer-goods">Consumer Goods</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-2 block">
+                        Available Manufacturing Equipment
+                      </label>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        value={manufacturingEquipment}
+                        onChange={(e) => setManufacturingEquipment(e.target.value)}
+                      >
+                        <option value="">Select equipment (optional)</option>
+                        <option value="injection-molding">Injection Molding</option>
+                        <option value="extrusion">Extrusion</option>
+                        <option value="blow-molding">Blow Molding</option>
+                        <option value="3d-printing">3D Printing</option>
+                        <option value="thermoforming">Thermoforming</option>
+                        <option value="compression-molding">Compression Molding</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-3 block">
+                      Application Priorities
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="cost-optimization"
+                          checked={priorities.costOptimization}
+                          onCheckedChange={(checked) => setPriorities({...priorities, costOptimization: checked as boolean})}
+                        />
+                        <label
+                          htmlFor="cost-optimization"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Cost Optimization
+                        </label>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="sustainability"
+                          checked={priorities.sustainability}
+                          onCheckedChange={(checked) => setPriorities({...priorities, sustainability: checked as boolean})}
+                        />
+                        <label
+                          htmlFor="sustainability"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Sustainability
+                        </label>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="performance"
+                          checked={priorities.performance}
+                          onCheckedChange={(checked) => setPriorities({...priorities, performance: checked as boolean})}
+                        />
+                        <label
+                          htmlFor="performance"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Performance
+                        </label>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="availability"
+                          checked={priorities.availability}
+                          onCheckedChange={(checked) => setPriorities({...priorities, availability: checked as boolean})}
+                        />
+                        <label
+                          htmlFor="availability"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Availability
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="deep-search-app"
+                      checked={deepSearch}
+                      onCheckedChange={(checked) => setDeepSearch(checked as boolean)}
+                    />
+                    <label
+                      htmlFor="deep-search-app"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Deep Search (performs in-depth analysis across multiple databases)
+                    </label>
+                  </div>
+                  <p className="text-xs text-muted-foreground pl-6">
+                    Takes longer but provides more comprehensive results
+                  </p>
+                </Card>
+              )}
+              
+              <div className="flex gap-3">
+                <Button 
+                  onClick={handleMatch}
+                  disabled={isMatching || !materialDescription.trim()}
+                  className="flex-1"
+                  size="lg"
+                >
+                  {isMatching ? (
+                    <>Finding Potential Applications...</>
+                  ) : (
+                    <>
+                      <Wand2 className="h-4 w-4 mr-2" />
+                      Find Potential Applications
+                    </>
+                  )}
+                </Button>
+
+                {matches.length > 0 && (
+                  <Button 
+                    variant="secondary"
+                    size="lg"
+                    onClick={() => {
+                      // Export functionality
+                      const exportData = matches.map(match => ({
+                        Material: match.material,
+                        MatchScore: match.matchScore,
+                        Strengths: match.strengths.join(', '),
+                        Considerations: match.considerations.join(', '),
+                        Cost: match.cost
+                      }));
+                      console.log('Export data:', exportData);
+                      // Could add actual CSV download here
+                    }}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Results
+                  </Button>
+                )}
+              </div>
 
               {matches.length > 0 && (
                 <div className="space-y-4 animate-fade-in mt-8">

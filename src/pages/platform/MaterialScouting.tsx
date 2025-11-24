@@ -1,4 +1,4 @@
-import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X } from "lucide-react";
+import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download } from "lucide-react";
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 const MaterialScouting = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,6 +21,18 @@ const MaterialScouting = () => {
   const [viewMode, setViewMode] = useState<"overview" | "suppliers">("overview");
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [showComparison, setShowComparison] = useState(false);
+  
+  // Advanced search state
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [properties, setProperties] = useState<Array<{property: string, value: string, importance: string}>>([
+    {property: "", value: "", importance: "must-have"}
+  ]);
+  const [selectedIndustry, setSelectedIndustry] = useState("");
+  const [applicationFilter, setApplicationFilter] = useState("");
+  const [additionalRequirements, setAdditionalRequirements] = useState("");
+  const [deepSearch, setDeepSearch] = useState(false);
+  const [sortBy, setSortBy] = useState("relevance");
+  const [savedSearches, setSavedSearches] = useState<Array<{name: string, filters: any}>>([]);
 
   const sampleMaterials = [
     {
@@ -513,6 +526,202 @@ const MaterialScouting = () => {
                   )}
                 </Button>
               </div>
+
+              {/* Advanced Search Toggle */}
+              <Button 
+                variant="outline" 
+                onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+                className="w-full"
+              >
+                {showAdvancedSearch ? (
+                  <>
+                    <ChevronUp className="h-4 w-4 mr-2" />
+                    Hide Advanced Search
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4 mr-2" />
+                    Show Advanced Search
+                  </>
+                )}
+              </Button>
+
+              {/* Advanced Search Panel */}
+              {showAdvancedSearch && (
+                <Card className="p-6 bg-muted/30 space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Material Requirements</h3>
+                    
+                    {/* Property Requirements */}
+                    <div className="space-y-3">
+                      {properties.map((prop, index) => (
+                        <div key={index} className="grid grid-cols-12 gap-3">
+                          <div className="col-span-4">
+                            <Input
+                              placeholder="e.g., Tensile Strength"
+                              value={prop.property}
+                              onChange={(e) => {
+                                const newProps = [...properties];
+                                newProps[index].property = e.target.value;
+                                setProperties(newProps);
+                              }}
+                            />
+                          </div>
+                          <div className="col-span-4">
+                            <Input
+                              placeholder="e.g., 100-200 MPa"
+                              value={prop.value}
+                              onChange={(e) => {
+                                const newProps = [...properties];
+                                newProps[index].value = e.target.value;
+                                setProperties(newProps);
+                              }}
+                            />
+                          </div>
+                          <div className="col-span-3">
+                            <select
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              value={prop.importance}
+                              onChange={(e) => {
+                                const newProps = [...properties];
+                                newProps[index].importance = e.target.value;
+                                setProperties(newProps);
+                              }}
+                            >
+                              <option value="must-have">Must Have</option>
+                              <option value="preferred">Preferred</option>
+                              <option value="nice-to-have">Nice to Have</option>
+                            </select>
+                          </div>
+                          <div className="col-span-1">
+                            {index > 0 && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  const newProps = properties.filter((_, i) => i !== index);
+                                  setProperties(newProps);
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setProperties([...properties, {property: "", value: "", importance: "must-have"}])}
+                        className="text-primary"
+                      >
+                        + Add Property
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Industry and Application */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-2 block">Industry</label>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        value={selectedIndustry}
+                        onChange={(e) => setSelectedIndustry(e.target.value)}
+                      >
+                        <option value="">Select Industry</option>
+                        <option value="packaging">Packaging</option>
+                        <option value="automotive">Automotive</option>
+                        <option value="medical">Medical</option>
+                        <option value="textiles">Textiles</option>
+                        <option value="construction">Construction</option>
+                        <option value="electronics">Electronics</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-2 block">Application</label>
+                      <Input
+                        placeholder="e.g., Medical device housing"
+                        value={applicationFilter}
+                        onChange={(e) => setApplicationFilter(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Additional Requirements */}
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-2 block">
+                      Additional Requirements (Optional)
+                    </label>
+                    <Textarea
+                      placeholder="Describe any additional requirements or constraints..."
+                      value={additionalRequirements}
+                      onChange={(e) => setAdditionalRequirements(e.target.value)}
+                      rows={3}
+                      className="resize-none"
+                    />
+                  </div>
+
+                  {/* Deep Search and Sort Options */}
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="deep-search" 
+                        checked={deepSearch}
+                        onCheckedChange={(checked) => setDeepSearch(checked as boolean)}
+                      />
+                      <label
+                        htmlFor="deep-search"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Deep Search (searches additional databases and sources)
+                      </label>
+                    </div>
+                    <p className="text-xs text-muted-foreground pl-6">
+                      Takes longer but provides more comprehensive results
+                    </p>
+
+                    <div className="pt-3">
+                      <label className="text-sm font-medium text-foreground mb-2 block">Sort Results By</label>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                      >
+                        <option value="relevance">Relevance</option>
+                        <option value="sustainability">Sustainability Score</option>
+                        <option value="price-low">Price (Low to High)</option>
+                        <option value="price-high">Price (High to Low)</option>
+                        <option value="innovation">Innovation Level</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 pt-4 border-t">
+                    <Button 
+                      onClick={handleSearch}
+                      disabled={isSearching}
+                      className="flex-1"
+                    >
+                      {isSearching ? "Searching..." : "Search Materials"}
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        setProperties([{property: "", value: "", importance: "must-have"}]);
+                        setSelectedIndustry("");
+                        setApplicationFilter("");
+                        setAdditionalRequirements("");
+                        setDeepSearch(false);
+                        setSortBy("relevance");
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
+                  </div>
+                </Card>
+              )}
 
               {searchResults.length > 0 && (
                 <div className="space-y-4 animate-fade-in">

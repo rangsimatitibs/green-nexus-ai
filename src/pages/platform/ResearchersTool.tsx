@@ -15,6 +15,7 @@ const ResearchersTool = () => {
   const [predictions, setPredictions] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [recipeSearchQuery, setRecipeSearchQuery] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
 
   const sampleMaterials = {
@@ -173,6 +174,17 @@ const ResearchersTool = () => {
       sources: ["Biopolymers Journal 2023", "PHA Research Consortium", "ASTM D638 Data"]
     }
   ];
+
+  // Filter recipes based on search query
+  const filteredRecipes = labRecipes.filter((recipe) => {
+    if (!recipeSearchQuery.trim()) return true;
+    const query = recipeSearchQuery.toLowerCase();
+    return (
+      recipe.title.toLowerCase().includes(query) ||
+      recipe.authors.toLowerCase().includes(query) ||
+      recipe.materials.some(m => m.toLowerCase().includes(query))
+    );
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -403,57 +415,76 @@ const ResearchersTool = () => {
                 </p>
               </div>
 
+              <div className="max-w-5xl mx-auto mb-6">
+                <Input
+                  placeholder="Search recipes by title, authors, or materials..."
+                  value={recipeSearchQuery}
+                  onChange={(e) => setRecipeSearchQuery(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+
               <div className="grid gap-6 max-w-5xl mx-auto">
-                {labRecipes.map((recipe) => (
-                  <Card key={recipe.id} className="p-6">
-                    <CardHeader className="p-0 mb-4">
-                      <CardTitle className="text-xl mb-2">{recipe.title}</CardTitle>
-                      <CardDescription>
-                        <div className="flex flex-wrap gap-2 items-center text-sm">
-                          <Badge variant="outline">{recipe.source}</Badge>
-                          <span className="text-muted-foreground">{recipe.authors}</span>
-                          <a href={`https://doi.org/${recipe.doi}`} target="_blank" rel="noopener noreferrer" 
-                             className="text-accent hover:underline">
-                            DOI: {recipe.doi}
-                          </a>
+                {filteredRecipes.length > 0 ? (
+                  filteredRecipes.map((recipe) => (
+                    <Card key={recipe.id} className="p-6">
+                      <CardHeader className="p-0 mb-4">
+                        <CardTitle className="text-xl mb-2">{recipe.title}</CardTitle>
+                        <CardDescription>
+                          <div className="flex flex-wrap gap-2 items-center text-sm">
+                            <Badge variant="outline">{recipe.source}</Badge>
+                            <span className="text-muted-foreground">{recipe.authors}</span>
+                            <a href={`https://doi.org/${recipe.doi}`} target="_blank" rel="noopener noreferrer" 
+                               className="text-accent hover:underline">
+                              DOI: {recipe.doi}
+                            </a>
+                          </div>
+                        </CardDescription>
+                      </CardHeader>
+                      
+                      <CardContent className="p-0 space-y-4">
+                        <div>
+                          <h4 className="font-semibold text-foreground mb-2">Materials Required:</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {recipe.materials.map((material, idx) => (
+                              <Badge key={idx} variant="secondary">{material}</Badge>
+                            ))}
+                          </div>
                         </div>
-                      </CardDescription>
-                    </CardHeader>
-                    
-                    <CardContent className="p-0 space-y-4">
-                      <div>
-                        <h4 className="font-semibold text-foreground mb-2">Materials Required:</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {recipe.materials.map((material, idx) => (
-                            <Badge key={idx} variant="secondary">{material}</Badge>
-                          ))}
+
+                        <div>
+                          <h4 className="font-semibold text-foreground mb-2">Procedure:</h4>
+                          <ol className="space-y-2">
+                            {recipe.steps.map((step, idx) => (
+                              <li key={idx} className="flex gap-3">
+                                <span className="font-semibold text-accent">{idx + 1}.</span>
+                                <span className="text-muted-foreground">{step}</span>
+                              </li>
+                            ))}
+                          </ol>
                         </div>
-                      </div>
 
-                      <div>
-                        <h4 className="font-semibold text-foreground mb-2">Procedure:</h4>
-                        <ol className="space-y-2">
-                          {recipe.steps.map((step, idx) => (
-                            <li key={idx} className="flex gap-3">
-                              <span className="font-semibold text-accent">{idx + 1}.</span>
-                              <span className="text-muted-foreground">{step}</span>
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
+                        <div className="bg-accent/10 border-l-4 border-accent p-4 rounded">
+                          <h4 className="font-semibold text-foreground mb-2">Key Findings:</h4>
+                          <p className="text-muted-foreground">{recipe.keyFindings}</p>
+                        </div>
 
-                      <div className="bg-accent/10 border-l-4 border-accent p-4 rounded">
-                        <h4 className="font-semibold text-foreground mb-2">Key Findings:</h4>
-                        <p className="text-muted-foreground">{recipe.keyFindings}</p>
-                      </div>
-
-                      <div className="bg-primary/10 border-l-4 border-primary p-4 rounded">
-                        <h4 className="font-semibold text-foreground mb-2">Highlighted Section:</h4>
-                        <p className="text-muted-foreground italic">{recipe.highlightedSection}</p>
-                      </div>
-                    </CardContent>
+                        <div className="bg-primary/10 border-l-4 border-primary p-4 rounded">
+                          <h4 className="font-semibold text-foreground mb-2">Highlighted Section:</h4>
+                          <p className="text-muted-foreground italic">{recipe.highlightedSection}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <Card className="p-12 text-center">
+                    <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-foreground mb-2">No recipes found</h3>
+                    <p className="text-muted-foreground">
+                      Try adjusting your search terms or browse all available protocols
+                    </p>
                   </Card>
-                ))}
+                )}
               </div>
             </TabsContent>
 

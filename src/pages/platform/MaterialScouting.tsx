@@ -23,6 +23,90 @@ const MaterialScouting = () => {
 
   const sampleMaterials = [
     {
+      id: "sulapac",
+      name: "Sulapac Solid 2.0",
+      category: "Wood-based composite",
+      chemicalFormula: "Wood-based biopolymer blend",
+      chemicalStructure: "Proprietary wood composite + natural binder",
+      uniqueness: "100% biobased and biodegradable - microwave safe, dishwasher resistant, and compostable in all environments",
+      properties: {
+        tensileStrength: "65 MPa",
+        hardness: "91 Shore D",
+        density: "1.4 g/cm³",
+        biodegradability: "Yes (fully biodegradable)",
+        renewable: "100% bio-based"
+      },
+      sustainability: {
+        score: 98,
+        breakdown: {
+          renewable: 100,
+          carbonFootprint: 96,
+          biodegradability: 100,
+          toxicity: 96
+        },
+        calculation: "Weighted average: Renewable (30%), Carbon Footprint (30%), Biodegradability (25%), Toxicity (15%)"
+      },
+      applications: ["Cosmetic Packaging", "Caps & Closures", "Reusable Kitchenware"],
+      regulations: ["OK Compost", "OK Biodegradable Marine", "ASTM D6866"],
+      scale: "Commercial (500-5,000 tons/year)",
+      innovation: "Very High - First fully biodegradable wood-based alternative to plastics",
+      suppliers: [
+        {
+          company: "Sulapac Ltd",
+          country: "🇫🇮 Finland",
+          logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200&h=100&fit=crop",
+          productImage: "https://images.unsplash.com/photo-1603400521630-9f2de124b33b?w=400&h=300&fit=crop",
+          uniqueness: "Pioneer in wood-based biodegradable materials - fully compostable in all environments including marine",
+          properties: {
+            tensileStrength: "65 MPa",
+            hardness: "91 Shore D",
+            density: "1.4 g/cm³",
+            biobasedContent: "100%"
+          },
+          detailedProperties: {
+            physical: {
+              "Hardness (Shore D)": "91",
+              "Material density": "1.4 g/cm³",
+              "Shrinkage": "0.15%"
+            },
+            tensile: {
+              "Tensile strength at yield": "65 MPa",
+              "Tensile modulus": "7.8 GPa",
+              "Tensile strain at yield": "1.3%"
+            },
+            flexural: {
+              "Flexural strength at max load": "83 MPa",
+              "Flexural modulus": "8.5 GPa",
+              "Flexural strain at max load": "1.3%"
+            },
+            impact: {
+              "Charpy impact strength": "16 kJ/m²"
+            },
+            rheological: {
+              "MFI (190°C/2.16 kg)": "22 g/10min"
+            },
+            thermal: {
+              "HDT-B Hot mold": "135°C",
+              "HDT-B Cold mold": "56°C"
+            },
+            biobased: {
+              "Biobased content (ASTM D6866)": "100%"
+            },
+            processing: {
+              "Feed zone": "150-165°C",
+              "Compression zone": "180-200°C",
+              "Machine nozzle": "185-210°C",
+              "Tooling temperature": "100°C / 20°C"
+            }
+          },
+          pricing: "$4.50-6.00/kg",
+          minOrder: "500 kg",
+          leadTime: "8-10 weeks",
+          certifications: ["OK Compost", "OK Biodegradable Marine", "ASTM D6866"]
+        }
+      ]
+    },
+    {
       id: "pla",
       name: "Polylactic Acid (PLA)",
       category: "Biopolymer",
@@ -679,21 +763,144 @@ const MaterialScouting = () => {
                                       )}
 
                                       <div className="grid md:grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                          <div className="text-sm font-medium text-foreground mb-2">
-                                            Specific Properties:
+                                        {/* Properties Column */}
+                                        {supplier.detailedProperties ? (
+                                          <div className="md:col-span-2">
+                                            <div className="text-sm font-medium text-foreground mb-3">
+                                              Technical Data Sheet:
+                                            </div>
+                                            <div className="space-y-4">
+                                              {supplier.detailedProperties.physical && (
+                                                <div>
+                                                  <h6 className="text-xs font-semibold text-primary uppercase mb-2">Physical Properties</h6>
+                                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm pl-2">
+                                                    {Object.entries(supplier.detailedProperties.physical).map(([key, value]) => (
+                                                      <div key={key} className="flex justify-between py-1 border-b border-border/30">
+                                                        <span className="text-muted-foreground">{key}:</span>
+                                                        <span className="font-medium">{String(value)}</span>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              )}
+
+                                              {supplier.detailedProperties.tensile && (
+                                                <div>
+                                                  <h6 className="text-xs font-semibold text-primary uppercase mb-2">Tensile Properties (ISO 527-1)</h6>
+                                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm pl-2">
+                                                    {Object.entries(supplier.detailedProperties.tensile).map(([key, value]) => (
+                                                      <div key={key} className="flex justify-between py-1 border-b border-border/30">
+                                                        <span className="text-muted-foreground">{key}:</span>
+                                                        <span className="font-medium">{String(value)}</span>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              )}
+
+                                              {supplier.detailedProperties.flexural && (
+                                                <div>
+                                                  <h6 className="text-xs font-semibold text-primary uppercase mb-2">Flexural Properties (ISO 178)</h6>
+                                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm pl-2">
+                                                    {Object.entries(supplier.detailedProperties.flexural).map(([key, value]) => (
+                                                      <div key={key} className="flex justify-between py-1 border-b border-border/30">
+                                                        <span className="text-muted-foreground">{key}:</span>
+                                                        <span className="font-medium">{String(value)}</span>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              )}
+
+                                              {supplier.detailedProperties.impact && (
+                                                <div>
+                                                  <h6 className="text-xs font-semibold text-primary uppercase mb-2">Impact Properties</h6>
+                                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm pl-2">
+                                                    {Object.entries(supplier.detailedProperties.impact).map(([key, value]) => (
+                                                      <div key={key} className="flex justify-between py-1 border-b border-border/30">
+                                                        <span className="text-muted-foreground">{key}:</span>
+                                                        <span className="font-medium">{String(value)}</span>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              )}
+
+                                              {supplier.detailedProperties.rheological && (
+                                                <div>
+                                                  <h6 className="text-xs font-semibold text-primary uppercase mb-2">Rheological Properties</h6>
+                                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm pl-2">
+                                                    {Object.entries(supplier.detailedProperties.rheological).map(([key, value]) => (
+                                                      <div key={key} className="flex justify-between py-1 border-b border-border/30">
+                                                        <span className="text-muted-foreground">{key}:</span>
+                                                        <span className="font-medium">{String(value)}</span>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              )}
+
+                                              {supplier.detailedProperties.thermal && (
+                                                <div>
+                                                  <h6 className="text-xs font-semibold text-primary uppercase mb-2">Thermal Properties</h6>
+                                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm pl-2">
+                                                    {Object.entries(supplier.detailedProperties.thermal).map(([key, value]) => (
+                                                      <div key={key} className="flex justify-between py-1 border-b border-border/30">
+                                                        <span className="text-muted-foreground">{key}:</span>
+                                                        <span className="font-medium">{String(value)}</span>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              )}
+
+                                              {supplier.detailedProperties.biobased && (
+                                                <div>
+                                                  <h6 className="text-xs font-semibold text-primary uppercase mb-2">Biobased Content</h6>
+                                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm pl-2">
+                                                    {Object.entries(supplier.detailedProperties.biobased).map(([key, value]) => (
+                                                      <div key={key} className="flex justify-between py-1 border-b border-border/30">
+                                                        <span className="text-muted-foreground">{key}:</span>
+                                                        <span className="font-medium">{String(value)}</span>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              )}
+
+                                              {supplier.detailedProperties.processing && (
+                                                <div>
+                                                  <h6 className="text-xs font-semibold text-primary uppercase mb-2">Processing Conditions</h6>
+                                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm pl-2">
+                                                    {Object.entries(supplier.detailedProperties.processing).map(([key, value]) => (
+                                                      <div key={key} className="flex justify-between py-1 border-b border-border/30">
+                                                        <span className="text-muted-foreground">{key}:</span>
+                                                        <span className="font-medium">{String(value)}</span>
+                                                      </div>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              )}
+                                            </div>
                                           </div>
-                                          <div className="space-y-1 text-sm">
-                                            {Object.entries(supplier.properties).map(([key, value]) => (
-                                              <div key={key} className="flex justify-between">
-                                                <span className="text-muted-foreground capitalize">
-                                                  {key.replace(/([A-Z])/g, ' $1').trim()}:
-                                                </span>
-                                                <span className="font-medium">{String(value)}</span>
-                                              </div>
-                                            ))}
+                                        ) : (
+                                          <div>
+                                            <div className="text-sm font-medium text-foreground mb-2">
+                                              Specific Properties:
+                                            </div>
+                                            <div className="space-y-1 text-sm">
+                                              {Object.entries(supplier.properties).map(([key, value]) => (
+                                                <div key={key} className="flex justify-between">
+                                                  <span className="text-muted-foreground capitalize">
+                                                    {key.replace(/([A-Z])/g, ' $1').trim()}:
+                                                  </span>
+                                                  <span className="font-medium">{String(value)}</span>
+                                                </div>
+                                              ))}
+                                            </div>
                                           </div>
-                                        </div>
+                                        )}
+                                        
                                         <div>
                                           <div className="text-sm font-medium text-foreground mb-2">
                                             Order Details:

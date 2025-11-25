@@ -59,124 +59,6 @@ const ResearchersTool = () => {
     }, 1200);
   };
 
-  // Research materials database
-  const researchMaterials = [
-    {
-      id: 1,
-      name: "Mycelium-Based Composite",
-      status: "In Development",
-      institution: "MIT Materials Lab",
-      year: 2024,
-      properties: {
-        tensile: "12-18 MPa",
-        density: "0.15-0.25 g/cm³",
-        biodegradability: "100% in 45 days"
-      },
-      potentialApplications: ["Packaging", "Insulation", "Construction"],
-      fundingStage: "Series A",
-      contactEmail: "materials@mit.edu"
-    },
-    {
-      id: 2,
-      name: "Bacterial Cellulose Nanofibers",
-      status: "Lab Scale",
-      institution: "ETH Zurich",
-      year: 2024,
-      properties: {
-        tensile: "200-300 MPa",
-        waterRetention: "99%",
-        biocompatibility: "Excellent"
-      },
-      potentialApplications: ["Medical Textiles", "Wound Dressing", "Filtration"],
-      fundingStage: "Seed",
-      contactEmail: "biomat@ethz.ch"
-    },
-    {
-      id: 3,
-      name: "Algae-Derived Polyurethane",
-      status: "Pilot Production",
-      institution: "Stanford Bio-X",
-      year: 2023,
-      properties: {
-        tensile: "35-45 MPa",
-        elongation: "300-400%",
-        biodegradation: "90% in 6 months"
-      },
-      potentialApplications: ["Footwear", "Coatings", "Flexible Electronics"],
-      fundingStage: "Series B",
-      contactEmail: "biopolymers@stanford.edu"
-    }
-  ];
-
-  // Lab recipes database
-  const labRecipes = [
-    {
-      id: 1,
-      title: "Synthesis of PLA-PHA Blend with Enhanced Thermal Properties",
-      source: "Nature Materials, 2024",
-      authors: "Chen et al.",
-      doi: "10.1038/nmat.2024.123",
-      materials: ["PLA (Mw 150,000)", "PHA (P3HB-co-3HV)", "Dicumyl peroxide"],
-      steps: [
-        "Dry PLA and PHA at 60°C for 12h under vacuum",
-        "Mix in twin-screw extruder at 170°C, screw speed 100 rpm",
-        "Add 0.5 wt% dicumyl peroxide as compatibilizer",
-        "Extrude for 5 minutes, collect pellets",
-        "Injection mold at 180°C, mold temp 40°C"
-      ],
-      keyFindings: "Blend showed 25% increase in thermal stability compared to pure PLA",
-      highlightedSection: "The addition of 30% PHA significantly improved the crystallization kinetics of PLA"
-    },
-    {
-      id: 2,
-      title: "Green Synthesis of Cellulose Nanocrystals from Agricultural Waste",
-      source: "ACS Sustainable Chemistry & Engineering, 2024",
-      authors: "Rodriguez et al.",
-      doi: "10.1021/acssuschemeng.2024.456",
-      materials: ["Rice straw", "H2SO4 (64%)", "Distilled water", "NaOH"],
-      steps: [
-        "Clean and dry rice straw at 80°C for 24h",
-        "Treat with 2% NaOH at 80°C for 2h to remove lignin",
-        "Bleach with NaClO2 solution (pH 4.5) at 75°C for 4h",
-        "Hydrolyze with 64% H2SO4 at 45°C for 45 min",
-        "Neutralize with NaOH, wash, and dialyze",
-        "Sonicate for 15 min, lyophilize to obtain CNC powder"
-      ],
-      keyFindings: "Yield of 65% with average CNC length of 180nm and width of 8nm",
-      highlightedSection: "This method reduces chemical consumption by 40% compared to conventional methods"
-    }
-  ];
-
-  // Material properties search database
-  const materialPropertiesDb = [
-    {
-      name: "Polylactic Acid (PLA)",
-      chemicalStructure: "[-C(CH3)HC(=O)O-]n",
-      properties: {
-        tensileStrength: "50-70 MPa",
-        youngModulus: "3-4 GPa",
-        elongation: "2-10%",
-        glasTransition: "55-65°C",
-        meltingPoint: "150-160°C",
-        density: "1.24 g/cm³"
-      },
-      sources: ["Materials Database v3.2", "Polymer Handbook 5th Ed.", "ISO 527 Test Results"]
-    },
-    {
-      name: "Polyhydroxyalkanoates (PHA)",
-      chemicalStructure: "[-O-CHR-CH2-C(=O)-]n",
-      properties: {
-        tensileStrength: "20-40 MPa",
-        youngModulus: "1-3.5 GPa",
-        elongation: "5-50%",
-        glasTransition: "-5 to 5°C",
-        meltingPoint: "160-180°C",
-        density: "1.18-1.26 g/cm³"
-      },
-      sources: ["Biopolymers Journal 2023", "PHA Research Consortium", "ASTM D638 Data"]
-    }
-  ];
-
   // Filter recipes based on search query
   const filteredRecipes = labRecipes.filter((recipe) => {
     if (!recipeSearchQuery.trim()) return true;
@@ -376,7 +258,7 @@ const ResearchersTool = () => {
                           <div className="flex items-center gap-2">
                             <Atom className="h-4 w-4 text-accent" />
                             <code className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
-                              {material.chemicalStructure}
+                              {material.chemical_structure}
                             </code>
                           </div>
                         </div>
@@ -386,9 +268,9 @@ const ResearchersTool = () => {
                         {Object.entries(material.properties).map(([key, value]) => (
                           <div key={key} className="flex justify-between p-3 bg-muted/50 rounded">
                             <span className="text-sm font-medium text-foreground capitalize">
-                              {key.replace(/([A-Z])/g, ' $1').trim()}:
+                              {key}:
                             </span>
-                            <span className="text-sm text-muted-foreground">{String(value)}</span>
+                            <span className="text-sm text-muted-foreground">{value}</span>
                           </div>
                         ))}
                       </div>
@@ -466,8 +348,8 @@ const ResearchersTool = () => {
                         <div>
                           <h4 className="font-semibold text-foreground mb-2">Materials Required:</h4>
                           <div className="flex flex-wrap gap-2">
-                            {recipe.materials.map((material, idx) => (
-                              <Badge key={idx} variant="secondary">{material}</Badge>
+                            {recipe.materials.map((m, idx) => (
+                              <Badge key={idx} variant="secondary">{m}</Badge>
                             ))}
                           </div>
                         </div>
@@ -477,8 +359,8 @@ const ResearchersTool = () => {
                           <ol className="space-y-2">
                             {recipe.steps.map((step, idx) => (
                               <li key={idx} className="flex gap-3">
-                                <span className="font-semibold text-accent">{idx + 1}.</span>
-                                <span className="text-muted-foreground">{step}</span>
+                                <span className="font-semibold text-accent">{step.step_number}.</span>
+                                <span className="text-muted-foreground">{step.description}</span>
                               </li>
                             ))}
                           </ol>
@@ -486,12 +368,12 @@ const ResearchersTool = () => {
 
                         <div className="bg-accent/10 border-l-4 border-accent p-4 rounded">
                           <h4 className="font-semibold text-foreground mb-2">Key Findings:</h4>
-                          <p className="text-muted-foreground">{recipe.keyFindings}</p>
+                          <p className="text-muted-foreground">{recipe.key_findings}</p>
                         </div>
 
                         <div className="bg-primary/10 border-l-4 border-primary p-4 rounded">
                           <h4 className="font-semibold text-foreground mb-2">Highlighted Section:</h4>
-                          <p className="text-muted-foreground italic">{recipe.highlightedSection}</p>
+                          <p className="text-muted-foreground italic">{recipe.highlighted_section}</p>
                         </div>
                       </CardContent>
                     </Card>
@@ -527,7 +409,7 @@ const ResearchersTool = () => {
                         <h3 className="text-xl font-semibold text-foreground mb-2">{material.name}</h3>
                         <div className="flex flex-wrap gap-2 mb-2">
                           <Badge variant="outline">{material.status}</Badge>
-                          <Badge variant="secondary">{material.fundingStage}</Badge>
+                          <Badge variant="secondary">{material.funding_stage}</Badge>
                         </div>
                       </div>
                       <FlaskConical className="h-6 w-6 text-accent" />
@@ -545,9 +427,9 @@ const ResearchersTool = () => {
                           {Object.entries(material.properties).map(([key, value]) => (
                             <div key={key} className="flex justify-between text-sm">
                               <span className="text-muted-foreground capitalize">
-                                {key.replace(/([A-Z])/g, ' $1').trim()}:
+                                {key}:
                               </span>
-                              <span className="text-foreground font-medium">{String(value)}</span>
+                              <span className="text-foreground font-medium">{value}</span>
                             </div>
                           ))}
                         </div>
@@ -556,7 +438,7 @@ const ResearchersTool = () => {
                       <div>
                         <h4 className="text-sm font-semibold text-foreground mb-2">Potential Applications:</h4>
                         <div className="flex flex-wrap gap-2">
-                          {material.potentialApplications.map((app, idx) => (
+                          {material.potential_applications.map((app, idx) => (
                             <Badge key={idx} variant="outline" className="text-xs">{app}</Badge>
                           ))}
                         </div>

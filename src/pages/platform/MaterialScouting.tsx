@@ -1,4 +1,4 @@
-import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download } from "lucide-react";
+import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download, Loader2 } from "lucide-react";
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -12,8 +12,10 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { useMaterialsData } from "@/hooks/useMaterialsData";
 
 const MaterialScouting = () => {
+  const { materials: sampleMaterials, loading: materialsLoading, error: materialsError } = useMaterialsData();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -34,353 +36,6 @@ const MaterialScouting = () => {
   const [sortBy, setSortBy] = useState("relevance");
   const [savedSearches, setSavedSearches] = useState<Array<{name: string, filters: any}>>([]);
 
-  const sampleMaterials = [
-    {
-      id: "sulapac",
-      name: "Sulapac Solid 2.0",
-      category: "Wood-based composite",
-      chemicalFormula: "Wood-based biopolymer blend",
-      chemicalStructure: "Proprietary wood composite + natural binder",
-      uniqueness: "100% biobased and biodegradable - microwave safe, dishwasher resistant, and compostable in all environments",
-      properties: {
-        tensileStrength: "65 MPa",
-        hardness: "91 Shore D",
-        density: "1.4 g/cm³",
-        biodegradability: "Yes (fully biodegradable)",
-        renewable: "100% bio-based"
-      },
-      sustainability: {
-        score: 98,
-        breakdown: {
-          renewable: 100,
-          carbonFootprint: 96,
-          biodegradability: 100,
-          toxicity: 96
-        },
-        calculation: "Weighted average: Renewable (30%), Carbon Footprint (30%), Biodegradability (25%), Toxicity (15%)"
-      },
-      applications: ["Cosmetic Packaging", "Caps & Closures", "Reusable Kitchenware"],
-      regulations: ["OK Compost", "OK Biodegradable Marine", "ASTM D6866"],
-      scale: "Commercial (500-5,000 tons/year)",
-      innovation: "Very High - First fully biodegradable wood-based alternative to plastics",
-      suppliers: [
-        {
-          company: "Sulapac Ltd",
-          country: "🇫🇮 Finland",
-          logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200&h=100&fit=crop",
-          productImage: "https://images.unsplash.com/photo-1603400521630-9f2de124b33b?w=400&h=300&fit=crop",
-          uniqueness: "Pioneer in wood-based biodegradable materials - fully compostable in all environments including marine",
-          properties: {
-            tensileStrength: "65 MPa",
-            hardness: "91 Shore D",
-            density: "1.4 g/cm³",
-            biobasedContent: "100%"
-          },
-          detailedProperties: {
-            physical: {
-              "Hardness (Shore D)": "91",
-              "Material density": "1.4 g/cm³",
-              "Shrinkage": "0.15%"
-            },
-            tensile: {
-              "Tensile strength at yield": "65 MPa",
-              "Tensile modulus": "7.8 GPa",
-              "Tensile strain at yield": "1.3%"
-            },
-            flexural: {
-              "Flexural strength at max load": "83 MPa",
-              "Flexural modulus": "8.5 GPa",
-              "Flexural strain at max load": "1.3%"
-            },
-            impact: {
-              "Charpy impact strength": "16 kJ/m²"
-            },
-            rheological: {
-              "MFI (190°C/2.16 kg)": "22 g/10min"
-            },
-            thermal: {
-              "HDT-B Hot mold": "135°C",
-              "HDT-B Cold mold": "56°C"
-            },
-            biobased: {
-              "Biobased content (ASTM D6866)": "100%"
-            },
-            processing: {
-              "Feed zone": "150-165°C",
-              "Compression zone": "180-200°C",
-              "Machine nozzle": "185-210°C",
-              "Tooling temperature": "100°C / 20°C"
-            }
-          },
-          pricing: "$4.50-6.00/kg",
-          minOrder: "500 kg",
-          leadTime: "8-10 weeks",
-          certifications: ["OK Compost", "OK Biodegradable Marine", "ASTM D6866"]
-        }
-      ]
-    },
-    {
-      id: "pla",
-      name: "Polylactic Acid (PLA)",
-      category: "Biopolymer",
-      chemicalFormula: "(C₃H₄O₂)ₙ",
-      chemicalStructure: "[-O-CH(CH₃)-CO-]ₙ",
-      properties: {
-        tensileStrength: "50-70 MPa",
-        meltingPoint: "150-160°C",
-        density: "1.24 g/cm³",
-        biodegradability: "Yes (6-24 months)",
-        renewable: "100% bio-based"
-      },
-      sustainability: {
-        score: 92,
-        breakdown: {
-          renewable: 95,
-          carbonFootprint: 90,
-          biodegradability: 95,
-          toxicity: 88
-        },
-        calculation: "Weighted average: Renewable (30%), Carbon Footprint (30%), Biodegradability (25%), Toxicity (15%)"
-      },
-      applications: ["Packaging", "3D Printing", "Medical Implants"],
-      regulations: ["FDA Approved", "EU 10/2011", "ASTM D6400"],
-      scale: "Industrial (>10,000 tons/year)",
-      innovation: "High - Continuous development in additives and blends",
-      suppliers: [
-        {
-          company: "NatureWorks LLC",
-          country: "🇺🇸 USA",
-          logo: "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=200&h=100&fit=crop",
-          productImage: "https://images.unsplash.com/photo-1603400521630-9f2de124b33b?w=400&h=300&fit=crop",
-          uniqueness: "World's largest PLA producer - vertically integrated from feedstock to polymer with proprietary fermentation technology",
-          properties: {
-            tensileStrength: "65 MPa",
-            meltingPoint: "155°C",
-            additives: "None (Pure PLA)"
-          },
-          pricing: "$2.50-3.00/kg",
-          minOrder: "1000 kg",
-          leadTime: "4-6 weeks",
-          certifications: ["FDA", "EU", "ISO 9001"]
-        },
-        {
-          company: "Total Corbion PLA",
-          country: "🇳🇱 Netherlands",
-          logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200&h=100&fit=crop",
-          productImage: "https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?w=400&h=300&fit=crop",
-          properties: {
-            tensileStrength: "60 MPa",
-            meltingPoint: "158°C",
-            additives: "Impact modifiers"
-          },
-          pricing: "$2.80-3.20/kg",
-          minOrder: "500 kg",
-          leadTime: "3-5 weeks",
-          certifications: ["FDA", "EU", "ASTM"]
-        },
-        {
-          company: "Futerro",
-          country: "🇧🇪 Belgium",
-          logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200&h=100&fit=crop",
-          productImage: "https://images.unsplash.com/photo-1614741118887-7a4ee193a5fa?w=400&h=300&fit=crop",
-          properties: {
-            tensileStrength: "55 MPa",
-            meltingPoint: "152°C",
-            additives: "Plasticizers"
-          },
-          pricing: "$2.40-2.90/kg",
-          minOrder: "2000 kg",
-          leadTime: "5-7 weeks",
-          certifications: ["EU", "ASTM"]
-        }
-      ]
-    },
-    {
-      id: "cnf",
-      name: "Cellulose Nanofibers",
-      category: "Nanocellulose",
-      chemicalFormula: "(C₆H₁₀O₅)ₙ",
-      chemicalStructure: "[-C₆H₇O₂(OH)₃-]ₙ (β-1,4-glycosidic bonds)",
-      uniqueness: "Nano-scale reinforcement with exceptional strength-to-weight ratio, derived from abundant cellulose sources",
-      properties: {
-        tensileStrength: "200-300 MPa",
-        modulus: "130-140 GPa",
-        density: "1.5 g/cm³",
-        biodegradability: "Yes (3-12 months)",
-        renewable: "100% bio-based"
-      },
-      sustainability: {
-        score: 95,
-        breakdown: {
-          renewable: 100,
-          carbonFootprint: 92,
-          biodegradability: 95,
-          toxicity: 93
-        },
-        calculation: "Weighted average: Renewable (30%), Carbon Footprint (30%), Biodegradability (25%), Toxicity (15%)"
-      },
-      applications: ["Composites", "Packaging", "Coatings"],
-      regulations: ["FDA GRAS", "EU Novel Food", "ASTM E2456"],
-      scale: "Pilot/Commercial (100-5,000 tons/year)",
-      innovation: "Very High - Emerging material with novel applications",
-      suppliers: [
-        {
-          company: "CelluComp",
-          country: "🇬🇧 UK",
-          logo: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=200&h=100&fit=crop",
-          productImage: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=400&h=300&fit=crop",
-          uniqueness: "Patented extraction from root vegetables - upcycles food waste with zero chemicals, achieving highest purity CNF",
-          properties: {
-            tensileStrength: "280 MPa",
-            modulus: "135 GPa",
-            additives: "None"
-          },
-          pricing: "$15-20/kg",
-          minOrder: "50 kg",
-          leadTime: "2-4 weeks",
-          certifications: ["FDA GRAS", "EU"]
-        },
-        {
-          company: "Nippon Paper",
-          country: "🇯🇵 Japan",
-          logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200&h=100&fit=crop",
-          productImage: "https://images.unsplash.com/photo-1604871000636-074fa5117945?w=400&h=300&fit=crop",
-          properties: {
-            tensileStrength: "250 MPa",
-            modulus: "140 GPa",
-            additives: "Dispersants"
-          },
-          pricing: "$18-25/kg",
-          minOrder: "100 kg",
-          leadTime: "3-5 weeks",
-          certifications: ["FDA", "ASTM"]
-        }
-      ]
-    },
-    {
-      id: "mycelium",
-      name: "Mycelium-Based Composite",
-      category: "Fungal Material",
-      chemicalFormula: "Complex biopolymer matrix",
-      chemicalStructure: "Chitin (C₈H₁₃NO₅)ₙ + β-glucans + proteins",
-      uniqueness: "Grown rather than manufactured - carbon-negative production using agricultural waste as substrate",
-      properties: {
-        tensileStrength: "0.5-2 MPa",
-        density: "0.1-0.2 g/cm³",
-        compressiveStrength: "30-70 kPa",
-        biodegradability: "Yes (1-6 months)",
-        renewable: "100% bio-based"
-      },
-      sustainability: {
-        score: 98,
-        breakdown: {
-          renewable: 100,
-          carbonFootprint: 98,
-          biodegradability: 100,
-          toxicity: 95
-        },
-        calculation: "Weighted average: Renewable (30%), Carbon Footpoint (30%), Biodegradability (25%), Toxicity (15%)"
-      },
-      applications: ["Packaging", "Insulation", "Furniture"],
-      regulations: ["ASTM D6400", "EN 13432", "USDA BioPreferred"],
-      scale: "Small/Pilot (10-500 tons/year)",
-      innovation: "Very High - Revolutionary carbon-negative material",
-      suppliers: [
-        {
-          company: "Ecovative Design",
-          country: "🇺🇸 USA",
-          logo: "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=200&h=100&fit=crop",
-          productImage: "https://images.unsplash.com/photo-1585571430840-52abb4c2beaf?w=400&h=300&fit=crop",
-          uniqueness: "Pioneer in mycelium technology - grow-to-shape manufacturing eliminates waste, carbon-negative with custom mechanical properties",
-          properties: {
-            density: "0.15 g/cm³",
-            compressiveStrength: "50 kPa",
-            additives: "Agricultural waste substrate"
-          },
-          pricing: "$8-12/kg",
-          minOrder: "25 kg",
-          leadTime: "4-8 weeks",
-          certifications: ["ASTM", "USDA"]
-        },
-        {
-          company: "Magical Mushroom",
-          country: "🇩🇪 Germany",
-          logo: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=200&h=100&fit=crop",
-          productImage: "https://images.unsplash.com/photo-1564720595928-7cd6bb96c616?w=400&h=300&fit=crop",
-          properties: {
-            density: "0.18 g/cm³",
-            compressiveStrength: "60 kPa",
-            additives: "Hemp fibers"
-          },
-          pricing: "$10-15/kg",
-          minOrder: "50 kg",
-          leadTime: "5-10 weeks",
-          certifications: ["EN 13432"]
-        }
-      ]
-    },
-    {
-      id: "biope",
-      name: "Bio-based Polyethylene",
-      category: "Bio-plastic",
-      chemicalFormula: "(C₂H₄)ₙ",
-      chemicalStructure: "[-CH₂-CH₂-]ₙ",
-      properties: {
-        tensileStrength: "20-30 MPa",
-        density: "0.94-0.96 g/cm³",
-        meltingPoint: "120-130°C",
-        biodegradability: "No (recyclable)",
-        renewable: "Bio-based (from sugarcane)"
-      },
-      sustainability: {
-        score: 85,
-        breakdown: {
-          renewable: 90,
-          carbonFootprint: 85,
-          biodegradability: 70,
-          toxicity: 90
-        },
-        calculation: "Weighted average: Renewable (30%), Carbon Footprint (30%), Biodegradability (25%), Toxicity (15%)"
-      },
-      applications: ["Bottles", "Films", "Consumer Goods"],
-      regulations: ["FDA 21 CFR", "EU 10/2011", "ASTM D6866"],
-      scale: "Industrial (>50,000 tons/year)",
-      innovation: "Medium - Established drop-in replacement",
-      suppliers: [
-        {
-          company: "Braskem",
-          country: "🇧🇷 Brazil",
-          logo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200&h=100&fit=crop",
-          productImage: "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?w=400&h=300&fit=crop",
-          uniqueness: "Only large-scale sugarcane-based PE producer - captures 3.09kg CO₂ per kg polymer, drop-in replacement for fossil PE",
-          properties: {
-            tensileStrength: "28 MPa",
-            density: "0.95 g/cm³",
-            additives: "UV stabilizers"
-          },
-          pricing: "$1.80-2.20/kg",
-          minOrder: "5000 kg",
-          leadTime: "6-8 weeks",
-          certifications: ["FDA", "EU", "ASTM"]
-        },
-        {
-          company: "Dow Chemical",
-          country: "🇺🇸 USA",
-          logo: "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=200&h=100&fit=crop",
-          productImage: "https://images.unsplash.com/photo-1610056494052-6a4f83cc8d2f?w=400&h=300&fit=crop",
-          properties: {
-            tensileStrength: "25 MPa",
-            density: "0.94 g/cm³",
-            additives: "Antioxidants"
-          },
-          pricing: "$1.90-2.30/kg",
-          minOrder: "10000 kg",
-          leadTime: "4-6 weeks",
-          certifications: ["FDA", "ASTM"]
-        }
-      ]
-    }
-  ];
 
   const handleSearch = () => {
     setIsSearching(true);
@@ -392,7 +47,7 @@ const MaterialScouting = () => {
       const filtered = sampleMaterials.filter(mat => 
         mat.name.toLowerCase().includes(query) ||
         mat.category.toLowerCase().includes(query) ||
-        Object.values(mat.properties).some(p => p.toLowerCase().includes(query)) ||
+        Object.values(mat.properties).some(p => String(p).toLowerCase().includes(query)) ||
         mat.applications.some(a => a.toLowerCase().includes(query)) ||
         mat.regulations.some(r => r.toLowerCase().includes(query)) ||
         mat.suppliers.some(s => s.company.toLowerCase().includes(query))
@@ -501,6 +156,20 @@ const MaterialScouting = () => {
             </p>
           </div>
 
+          {materialsLoading && (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-3 text-muted-foreground">Loading materials database...</span>
+            </div>
+          )}
+
+          {materialsError && (
+            <Card className="p-8 max-w-4xl mx-auto bg-destructive/10 border-destructive/20">
+              <p className="text-destructive text-center">Error loading materials: {materialsError}</p>
+            </Card>
+          )}
+
+          {!materialsLoading && !materialsError && (
           <Card className="p-8 max-w-4xl mx-auto">
             <div className="space-y-6">
               <div className="flex gap-3">
@@ -1163,6 +832,7 @@ const MaterialScouting = () => {
               )}
             </div>
           </Card>
+          )}
         </div>
       </section>
 

@@ -1,4 +1,4 @@
-import { TrendingUp, Brain, BarChart3, CheckCircle, ArrowRight, Sparkles, Zap, Search, BookOpen, FlaskConical, Database, Users, TrendingUpIcon, Atom } from "lucide-react";
+import { TrendingUp, Brain, BarChart3, CheckCircle, ArrowRight, Sparkles, Zap, Search, BookOpen, FlaskConical, Database, Users, TrendingUpIcon, Atom, Loader2 } from "lucide-react";
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -9,8 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
+import { useResearchData } from "@/hooks/useResearchData";
 
 const ResearchersTool = () => {
+  const { researchMaterials, labRecipes, materialProperties: materialPropertiesDb, loading, error } = useResearchData();
   const [materialFormula, setMaterialFormula] = useState("");
   const [predictions, setPredictions] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
@@ -181,7 +183,7 @@ const ResearchersTool = () => {
     const query = recipeSearchQuery.toLowerCase();
     return (
       recipe.title.toLowerCase().includes(query) ||
-      recipe.authors.toLowerCase().includes(query) ||
+      (recipe.authors && recipe.authors.toLowerCase().includes(query)) ||
       recipe.materials.some(m => m.toLowerCase().includes(query))
     );
   });
@@ -189,6 +191,24 @@ const ResearchersTool = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+
+      {loading && (
+        <div className="flex justify-center items-center py-32">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-3 text-muted-foreground">Loading research database...</span>
+        </div>
+      )}
+
+      {error && (
+        <section className="py-32 px-6">
+          <Card className="p-8 max-w-4xl mx-auto bg-destructive/10 border-destructive/20">
+            <p className="text-destructive text-center">Error loading research data: {error}</p>
+          </Card>
+        </section>
+      )}
+
+      {!loading && !error && (
+      <>
       
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 bg-gradient-to-br from-accent/10 via-background to-primary/10">
@@ -594,6 +614,8 @@ const ResearchersTool = () => {
       </section>
 
       <Footer />
+      </>
+      )}
     </div>
   );
 };

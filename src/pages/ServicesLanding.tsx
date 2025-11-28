@@ -5,7 +5,6 @@ import { Search, CheckCircle, Zap, Target, ArrowRight, Leaf, Globe, TrendingUp }
 import materialScoutingBg from "@/assets/material-scouting-bg.jpg";
 import materialValidationBg from "@/assets/material-validation-bg.jpg";
 import bioprocessingBg from "@/assets/bioprocessing-bg.jpg";
-import applicationMatchingBg from "@/assets/application-matching-bg.jpg";
 
 const ServicesLanding = () => {
   const services = [
@@ -64,25 +63,6 @@ const ServicesLanding = () => {
         "Improve material yield and consistency",
         "Minimize environmental footprint",
         "Accelerate time to market"
-      ]
-    },
-    {
-      id: "application-matching",
-      icon: Target,
-      title: "Application Matching",
-      subtitle: "Connect Materials with Perfect Use Cases",
-      description: "Our intelligent application matching system analyzes material properties, market trends, and industry requirements to identify the most promising applications for sustainable materials. Whether you're a producer looking for markets or a manufacturer seeking solutions, we create the perfect connections.",
-      background: applicationMatchingBg,
-      features: [
-        { icon: Target, title: "Smart Recommendations", description: "AI-powered analysis to identify ideal material-application pairs" },
-        { icon: TrendingUp, title: "Market Insights", description: "Real-time market analysis and opportunity identification" },
-        { icon: Globe, title: "Industry Expertise", description: "Deep knowledge across sectors from packaging to automotive" }
-      ],
-      benefits: [
-        "Discover new market opportunities",
-        "Connect with ready-to-buy customers",
-        "Access industry-specific expertise",
-        "Accelerate market adoption"
       ]
     }
   ];

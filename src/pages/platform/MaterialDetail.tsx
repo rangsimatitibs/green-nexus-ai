@@ -53,10 +53,10 @@ const MaterialDetail = () => {
 
     // Helper function to add header to each page
     const addHeader = () => {
-      // Add logo with proper aspect ratio
+      // Add logo with proper aspect ratio (wider to prevent crushing)
       const img = new Image();
       img.src = logoImage;
-      doc.addImage(img, "PNG", 14, 8, 50, 15);
+      doc.addImage(img, "PNG", 14, 10, 60, 10);
       
       // Add company tagline
       doc.setFontSize(8);

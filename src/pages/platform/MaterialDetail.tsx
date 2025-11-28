@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ChevronDown, ChevronUp, Loader2, FileText } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Loader2, FileText, Download } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -36,6 +38,172 @@ const MaterialDetail = () => {
         ? prev.filter((s) => s !== section)
         : [...prev, section]
     );
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    let yPosition = 20;
+
+    // Title
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Advanced Data Sheet", pageWidth / 2, yPosition, { align: "center" });
+    yPosition += 10;
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`MAT_ID: ${material.id.slice(0, 8)}`, pageWidth / 2, yPosition, { align: "center" });
+    yPosition += 15;
+
+    // Record Information
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Record Information", 14, yPosition);
+    yPosition += 5;
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Field", "Value"]],
+      body: [
+        ["Material ID (MAT_ID)", material.id],
+        ["Material Name", material.name],
+        ["Category", material.category],
+        ["Entry Date", new Date().toLocaleDateString()],
+      ],
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    yPosition = (doc as any).lastAutoTable.finalY + 10;
+
+    // Material Information
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Material Information", 14, yPosition);
+    yPosition += 5;
+
+    const materialInfoBody = [
+      ["Chemical Formula", material.chemicalFormula],
+      ["Chemical Structure", material.chemicalStructure],
+      ["Scale", material.scale],
+      ["Innovation Level", material.innovation],
+    ];
+
+    if (material.uniqueness) {
+      materialInfoBody.push(["Unique Characteristics", material.uniqueness]);
+    }
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Field", "Value"]],
+      body: materialInfoBody,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    yPosition = (doc as any).lastAutoTable.finalY + 10;
+
+    // Material Properties
+    if (yPosition > 250) {
+      doc.addPage();
+      yPosition = 20;
+    }
+
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Material Properties", 14, yPosition);
+    yPosition += 5;
+
+    const propertiesBody = Object.entries(material.properties).map(([key, value]) => [
+      key.replace(/([A-Z])/g, " $1").trim(),
+      String(value),
+    ]);
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Property", "Value"]],
+      body: propertiesBody,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    yPosition = (doc as any).lastAutoTable.finalY + 10;
+
+    // Applications
+    if (yPosition > 250) {
+      doc.addPage();
+      yPosition = 20;
+    }
+
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Applications", 14, yPosition);
+    yPosition += 5;
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    const applicationsText = material.applications.join(", ");
+    const splitApplications = doc.splitTextToSize(applicationsText, pageWidth - 28);
+    doc.text(splitApplications, 14, yPosition);
+    yPosition += splitApplications.length * 5 + 10;
+
+    // Certifications & Regulations
+    if (yPosition > 250) {
+      doc.addPage();
+      yPosition = 20;
+    }
+
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Certifications & Regulations", 14, yPosition);
+    yPosition += 5;
+
+    const regulationsBody = material.regulations.map((reg: string, idx: number) => [
+      `Certification ${idx + 1}`,
+      reg,
+    ]);
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Field", "Value"]],
+      body: regulationsBody,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    yPosition = (doc as any).lastAutoTable.finalY + 10;
+
+    // Sustainability Metrics
+    if (yPosition > 250) {
+      doc.addPage();
+      yPosition = 20;
+    }
+
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Sustainability Metrics", 14, yPosition);
+    yPosition += 5;
+
+    const sustainabilityBody = [
+      ["Overall Score", `${material.sustainability.score}%`],
+      ...Object.entries(material.sustainability.breakdown).map(([key, value]) => [
+        key.replace(/([A-Z])/g, " $1").trim(),
+        `${String(value)}%`,
+      ]),
+      ["Calculation Method", material.sustainability.calculation],
+    ];
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Metric", "Value"]],
+      body: sustainabilityBody,
+      theme: "grid",
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    // Save the PDF
+    doc.save(`${material.name.replace(/\s+/g, "_")}_DataSheet.pdf`);
   };
 
   if (loading) {
@@ -90,9 +258,19 @@ const MaterialDetail = () => {
               <FileText className="h-6 w-6" />
               <h1 className="text-2xl font-bold uppercase">Advanced Data Sheet</h1>
             </div>
-            <Badge className="bg-primary-foreground text-primary text-lg px-4 py-1">
-              MAT_ID {material.id.slice(0, 8)}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={exportToPDF}
+                variant="secondary"
+                className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export PDF
+              </Button>
+              <Badge className="bg-primary-foreground text-primary text-lg px-4 py-1">
+                MAT_ID {material.id.slice(0, 8)}
+              </Badge>
+            </div>
           </div>
         </div>
 

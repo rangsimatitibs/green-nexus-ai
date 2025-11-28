@@ -10,11 +10,6 @@ import About from "./pages/About";
 import Auth from "./pages/Auth";
 import SignUp from "./pages/SignUp";
 import ServicesLanding from "./pages/ServicesLanding";
-import Blog from "./pages/Blog";
-import MaterialsInformatics from "./pages/blog/MaterialsInformatics";
-import BiomaterialsInnovation from "./pages/blog/BiomaterialsInnovation";
-import SustainableMaterials from "./pages/blog/SustainableMaterials";
-import MaterialValidation from "./pages/blog/MaterialValidation";
 import MaterialScouting from "./pages/platform/MaterialScouting";
 import MaterialDetail from "./pages/platform/MaterialDetail";
 import ApplicationMatching from "./pages/platform/ApplicationMatching";
@@ -43,11 +38,6 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/services" element={<ServicesLanding />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/materials-informatics" element={<MaterialsInformatics />} />
-            <Route path="/blog/biomaterials-innovation" element={<BiomaterialsInnovation />} />
-            <Route path="/blog/sustainable-materials" element={<SustainableMaterials />} />
-            <Route path="/blog/material-validation" element={<MaterialValidation />} />
             <Route path="/platform/material-scouting" element={<MaterialScouting />} />
             <Route path="/platform/material/:id" element={<MaterialDetail />} />
             <Route path="/platform/application-matching" element={<ApplicationMatching />} />

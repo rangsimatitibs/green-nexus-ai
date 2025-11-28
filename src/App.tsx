@@ -12,7 +12,6 @@ import SignUp from "./pages/SignUp";
 import ServicesLanding from "./pages/ServicesLanding";
 import MaterialScouting from "./pages/platform/MaterialScouting";
 import MaterialDetail from "./pages/platform/MaterialDetail";
-import ApplicationMatching from "./pages/platform/ApplicationMatching";
 import ResearchersTool from "./pages/platform/ResearchersTool";
 import ProcessOptimization from "./pages/platform/ProcessOptimization";
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -40,7 +39,6 @@ const App = () => (
             <Route path="/services" element={<ServicesLanding />} />
             <Route path="/platform/material-scouting" element={<MaterialScouting />} />
             <Route path="/platform/material/:id" element={<MaterialDetail />} />
-            <Route path="/platform/application-matching" element={<ApplicationMatching />} />
             <Route path="/platform/researchers-tool" element={<ResearchersTool />} />
             <Route path="/platform/process-optimization" element={<ProcessOptimization />} />
             <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>

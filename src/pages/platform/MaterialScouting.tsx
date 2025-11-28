@@ -499,12 +499,6 @@ const MaterialScouting = () => {
                         </div>
 
                         <div className="flex gap-2">
-                          <Link to={`/platform/material/${material.id}`} className="flex-1">
-                            <Button variant="default" className="w-full">
-                              <FileText className="h-4 w-4 mr-2" />
-                              Advanced Data Sheet
-                            </Button>
-                          </Link>
                           <Button
                             onClick={() => setExpandedMaterial(expandedMaterial === material.id ? null : material.id)}
                             variant="outline"
@@ -522,6 +516,12 @@ const MaterialScouting = () => {
                               </>
                             )}
                           </Button>
+                          <Link to={`/platform/material/${material.id}`} className="flex-1">
+                            <Button variant="default" className="w-full">
+                              <FileText className="h-4 w-4 mr-2" />
+                              Advanced Data Sheet
+                            </Button>
+                          </Link>
                         </div>
                       </div>
 

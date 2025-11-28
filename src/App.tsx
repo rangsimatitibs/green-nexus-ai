@@ -22,6 +22,9 @@ import ProcessOptimization from "./pages/platform/ProcessOptimization";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import MaterialsAdmin from "./pages/admin/MaterialsAdmin";
+import SuppliersAdmin from "./pages/admin/SuppliersAdmin";
+import ResearchMaterialsAdmin from "./pages/admin/ResearchMaterialsAdmin";
+import LabRecipesAdmin from "./pages/admin/LabRecipesAdmin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +54,9 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminLayout /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />
               <Route path="materials" element={<MaterialsAdmin />} />
+              <Route path="suppliers" element={<SuppliersAdmin />} />
+              <Route path="research-materials" element={<ResearchMaterialsAdmin />} />
+              <Route path="lab-recipes" element={<LabRecipesAdmin />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

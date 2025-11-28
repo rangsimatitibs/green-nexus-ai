@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, ChevronDown, ChevronUp, Loader2, FileText, Download } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import logoImage from "@/assets/materialink-logo.png";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -43,24 +44,71 @@ const MaterialDetail = () => {
   const exportToPDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    
+    // MaterialInk brand colors (HSL to RGB conversion)
+    const primaryColor: [number, number, number] = [34, 159, 143]; // Teal
+    const accentColor: [number, number, number] = [59, 183, 126]; // Green
     let yPosition = 20;
 
-    // Title
+    // Helper function to add header to each page
+    const addHeader = () => {
+      // Add logo
+      const img = new Image();
+      img.src = logoImage;
+      doc.addImage(img, "PNG", 14, 10, 40, 12);
+      
+      // Add company tagline
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text("Sustainable Materials Intelligence", pageWidth - 14, 16, { align: "right" });
+      
+      // Header line
+      doc.setDrawColor(...primaryColor);
+      doc.setLineWidth(0.5);
+      doc.line(14, 26, pageWidth - 14, 26);
+    };
+
+    // Helper function to add footer to each page
+    const addFooter = (pageNum: number) => {
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text(
+        `MaterialInk © ${new Date().getFullYear()} | Advanced Data Sheet`,
+        14,
+        pageHeight - 10
+      );
+      doc.text(`Page ${pageNum}`, pageWidth - 14, pageHeight - 10, { align: "right" });
+    };
+
+    let pageNum = 1;
+    addHeader();
+
+    yPosition = 35;
+
+    // Title section with brand styling
+    doc.setFillColor(...primaryColor);
+    doc.rect(14, yPosition, pageWidth - 28, 20, "F");
+    
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
-    doc.text("Advanced Data Sheet", pageWidth / 2, yPosition, { align: "center" });
-    yPosition += 10;
-
+    doc.setTextColor(255, 255, 255);
+    doc.text("ADVANCED DATA SHEET", pageWidth / 2, yPosition + 8, { align: "center" });
+    
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`MAT_ID: ${material.id.slice(0, 8)}`, pageWidth / 2, yPosition, { align: "center" });
-    yPosition += 15;
+    doc.text(`Material ID: ${material.id.slice(0, 8)}`, pageWidth / 2, yPosition + 15, { align: "center" });
+    
+    doc.setTextColor(0, 0, 0);
+    yPosition += 28;
 
     // Record Information
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("Record Information", 14, yPosition);
-    yPosition += 5;
+    doc.setTextColor(...primaryColor);
+    doc.text("RECORD INFORMATION", 14, yPosition);
+    doc.setTextColor(0, 0, 0);
+    yPosition += 2;
 
     autoTable(doc, {
       startY: yPosition,
@@ -71,17 +119,26 @@ const MaterialDetail = () => {
         ["Category", material.category],
         ["Entry Date", new Date().toLocaleDateString()],
       ],
-      theme: "grid",
-      headStyles: { fillColor: [59, 130, 246] },
+      theme: "striped",
+      headStyles: { 
+        fillColor: primaryColor,
+        fontSize: 10,
+        fontStyle: "bold",
+        textColor: [255, 255, 255]
+      },
+      alternateRowStyles: { fillColor: [245, 250, 248] },
+      styles: { fontSize: 9, cellPadding: 4 },
     });
 
-    yPosition = (doc as any).lastAutoTable.finalY + 10;
+    yPosition = (doc as any).lastAutoTable.finalY + 12;
 
     // Material Information
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("Material Information", 14, yPosition);
-    yPosition += 5;
+    doc.setTextColor(...primaryColor);
+    doc.text("MATERIAL INFORMATION", 14, yPosition);
+    doc.setTextColor(0, 0, 0);
+    yPosition += 2;
 
     const materialInfoBody = [
       ["Chemical Formula", material.chemicalFormula],
@@ -98,22 +155,34 @@ const MaterialDetail = () => {
       startY: yPosition,
       head: [["Field", "Value"]],
       body: materialInfoBody,
-      theme: "grid",
-      headStyles: { fillColor: [59, 130, 246] },
+      theme: "striped",
+      headStyles: { 
+        fillColor: primaryColor,
+        fontSize: 10,
+        fontStyle: "bold",
+        textColor: [255, 255, 255]
+      },
+      alternateRowStyles: { fillColor: [245, 250, 248] },
+      styles: { fontSize: 9, cellPadding: 4 },
     });
 
-    yPosition = (doc as any).lastAutoTable.finalY + 10;
+    yPosition = (doc as any).lastAutoTable.finalY + 12;
 
     // Material Properties
-    if (yPosition > 250) {
+    if (yPosition > 240) {
+      addFooter(pageNum);
       doc.addPage();
-      yPosition = 20;
+      pageNum++;
+      addHeader();
+      yPosition = 35;
     }
 
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("Material Properties", 14, yPosition);
-    yPosition += 5;
+    doc.setTextColor(...primaryColor);
+    doc.text("MATERIAL PROPERTIES", 14, yPosition);
+    doc.setTextColor(0, 0, 0);
+    yPosition += 2;
 
     const propertiesBody = Object.entries(material.properties).map(([key, value]) => [
       key.replace(/([A-Z])/g, " $1").trim(),
@@ -124,40 +193,63 @@ const MaterialDetail = () => {
       startY: yPosition,
       head: [["Property", "Value"]],
       body: propertiesBody,
-      theme: "grid",
-      headStyles: { fillColor: [59, 130, 246] },
+      theme: "striped",
+      headStyles: { 
+        fillColor: primaryColor,
+        fontSize: 10,
+        fontStyle: "bold",
+        textColor: [255, 255, 255]
+      },
+      alternateRowStyles: { fillColor: [245, 250, 248] },
+      styles: { fontSize: 9, cellPadding: 4 },
     });
 
-    yPosition = (doc as any).lastAutoTable.finalY + 10;
+    yPosition = (doc as any).lastAutoTable.finalY + 12;
 
     // Applications
-    if (yPosition > 250) {
+    if (yPosition > 240) {
+      addFooter(pageNum);
       doc.addPage();
-      yPosition = 20;
+      pageNum++;
+      addHeader();
+      yPosition = 35;
     }
 
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("Applications", 14, yPosition);
-    yPosition += 5;
+    doc.setTextColor(...primaryColor);
+    doc.text("APPLICATIONS", 14, yPosition);
+    doc.setTextColor(0, 0, 0);
+    yPosition += 7;
 
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    const applicationsText = material.applications.join(", ");
-    const splitApplications = doc.splitTextToSize(applicationsText, pageWidth - 28);
-    doc.text(splitApplications, 14, yPosition);
-    yPosition += splitApplications.length * 5 + 10;
+    
+    // Create a styled box for applications
+    const applicationsText = material.applications.join(" • ");
+    const splitApplications = doc.splitTextToSize(applicationsText, pageWidth - 36);
+    const boxHeight = splitApplications.length * 5 + 8;
+    
+    doc.setFillColor(245, 250, 248);
+    doc.roundedRect(14, yPosition - 3, pageWidth - 28, boxHeight, 2, 2, "F");
+    doc.text(splitApplications, 18, yPosition + 2);
+    yPosition += boxHeight + 10;
 
     // Certifications & Regulations
-    if (yPosition > 250) {
+    if (yPosition > 240) {
+      addFooter(pageNum);
       doc.addPage();
-      yPosition = 20;
+      pageNum++;
+      addHeader();
+      yPosition = 35;
     }
 
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("Certifications & Regulations", 14, yPosition);
-    yPosition += 5;
+    doc.setTextColor(...primaryColor);
+    doc.text("CERTIFICATIONS & REGULATIONS", 14, yPosition);
+    doc.setTextColor(0, 0, 0);
+    yPosition += 2;
 
     const regulationsBody = material.regulations.map((reg: string, idx: number) => [
       `Certification ${idx + 1}`,
@@ -168,22 +260,34 @@ const MaterialDetail = () => {
       startY: yPosition,
       head: [["Field", "Value"]],
       body: regulationsBody,
-      theme: "grid",
-      headStyles: { fillColor: [59, 130, 246] },
+      theme: "striped",
+      headStyles: { 
+        fillColor: primaryColor,
+        fontSize: 10,
+        fontStyle: "bold",
+        textColor: [255, 255, 255]
+      },
+      alternateRowStyles: { fillColor: [245, 250, 248] },
+      styles: { fontSize: 9, cellPadding: 4 },
     });
 
-    yPosition = (doc as any).lastAutoTable.finalY + 10;
+    yPosition = (doc as any).lastAutoTable.finalY + 12;
 
     // Sustainability Metrics
-    if (yPosition > 250) {
+    if (yPosition > 240) {
+      addFooter(pageNum);
       doc.addPage();
-      yPosition = 20;
+      pageNum++;
+      addHeader();
+      yPosition = 35;
     }
 
-    doc.setFontSize(14);
+    doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("Sustainability Metrics", 14, yPosition);
-    yPosition += 5;
+    doc.setTextColor(...accentColor);
+    doc.text("SUSTAINABILITY METRICS", 14, yPosition);
+    doc.setTextColor(0, 0, 0);
+    yPosition += 2;
 
     const sustainabilityBody = [
       ["Overall Score", `${material.sustainability.score}%`],
@@ -198,12 +302,22 @@ const MaterialDetail = () => {
       startY: yPosition,
       head: [["Metric", "Value"]],
       body: sustainabilityBody,
-      theme: "grid",
-      headStyles: { fillColor: [59, 130, 246] },
+      theme: "striped",
+      headStyles: { 
+        fillColor: accentColor,
+        fontSize: 10,
+        fontStyle: "bold",
+        textColor: [255, 255, 255]
+      },
+      alternateRowStyles: { fillColor: [245, 250, 248] },
+      styles: { fontSize: 9, cellPadding: 4 },
     });
 
+    // Add footer to last page
+    addFooter(pageNum);
+
     // Save the PDF
-    doc.save(`${material.name.replace(/\s+/g, "_")}_DataSheet.pdf`);
+    doc.save(`MaterialInk_${material.name.replace(/\s+/g, "_")}_DataSheet.pdf`);
   };
 
   if (loading) {

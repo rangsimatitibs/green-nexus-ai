@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { Upload, X, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -35,8 +36,12 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
     uniqueness: "",
     scale: "",
     innovation: "",
+    image_url: "",
   });
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -49,7 +54,11 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
         uniqueness: material.uniqueness || "",
         scale: material.scale || "",
         innovation: material.innovation || "",
+        image_url: material.image_url || "",
       });
+      if (material.image_url) {
+        setImagePreview(material.image_url);
+      }
     } else {
       setFormData({
         name: "",
@@ -59,19 +68,85 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
         uniqueness: "",
         scale: "",
         innovation: "",
+        image_url: "",
       });
+      setImagePreview(null);
     }
+    setImageFile(null);
   }, [material, open]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 20 * 1024 * 1024) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Image must be less than 20MB",
+        });
+        return;
+      }
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setFormData(prev => ({ ...prev, image_url: "" }));
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return formData.image_url || null;
+
+    setUploading(true);
+    try {
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('material-images')
+        .upload(fileName, imageFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('material-images')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error uploading image",
+        description: error.message,
+      });
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      const imageUrl = await uploadImage();
+      const dataToSave = {
+        ...formData,
+        image_url: imageUrl || formData.image_url,
+      };
+
       if (material) {
         const { error } = await supabase
           .from("materials")
-          .update(formData)
+          .update(dataToSave)
           .eq("id", material.id);
 
         if (error) throw error;
@@ -79,7 +154,7 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
       } else {
         const { error } = await supabase
           .from("materials")
-          .insert(formData);
+          .insert(dataToSave);
 
         if (error) throw error;
         toast({ title: "Success", description: "Material created successfully" });
@@ -105,6 +180,42 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
           <DialogTitle>{material ? "Edit Material" : "Add Material"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="image">Material Image</Label>
+            {imagePreview ? (
+              <div className="relative w-full h-48 border rounded-lg overflow-hidden">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2"
+                  onClick={handleRemoveImage}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
+                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                <Label htmlFor="image-upload" className="cursor-pointer">
+                  <span className="text-sm text-muted-foreground">Click to upload image</span>
+                </Label>
+                <Input
+                  id="image-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Name *</Label>
@@ -194,8 +305,9 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : material ? "Update" : "Create"}
+            <Button type="submit" disabled={loading || uploading}>
+              {uploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {uploading ? "Uploading..." : loading ? "Saving..." : material ? "Update" : "Create"}
             </Button>
           </div>
         </form>

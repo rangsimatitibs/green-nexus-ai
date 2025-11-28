@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, ChevronDown, ChevronUp, Loader2, FileText, Download } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import logoImage from "@/assets/materialink-logo-horizontal.png";
+import logoImage from "@/assets/materialink-logo-full.png";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -56,17 +56,17 @@ const MaterialDetail = () => {
       // Add logo with proper size and aspect ratio
       const img = new Image();
       img.src = logoImage;
-      doc.addImage(img, "PNG", 14, 8, 50, 50);
+      doc.addImage(img, "PNG", 14, 8, 50, 30);
       
       // Add company tagline
       doc.setFontSize(8);
       doc.setTextColor(100, 100, 100);
-      doc.text("Sustainable Materials Intelligence", pageWidth - 14, 50, { align: "right" });
+      doc.text("Sustainable Materials Intelligence", pageWidth - 14, 30, { align: "right" });
       
       // Header line
       doc.setDrawColor(...primaryColor);
       doc.setLineWidth(0.5);
-      doc.line(14, 62, pageWidth - 14, 62);
+      doc.line(14, 42, pageWidth - 14, 42);
     };
 
     // Helper function to add footer to each page
@@ -84,7 +84,7 @@ const MaterialDetail = () => {
     let pageNum = 1;
     addHeader();
 
-    yPosition = 70;
+    yPosition = 50;
 
     // Title section with brand styling
     doc.setFillColor(...primaryColor);
@@ -174,7 +174,7 @@ const MaterialDetail = () => {
       doc.addPage();
       pageNum++;
       addHeader();
-      yPosition = 70;
+      yPosition = 50;
     }
 
     doc.setFontSize(12);
@@ -212,7 +212,7 @@ const MaterialDetail = () => {
       doc.addPage();
       pageNum++;
       addHeader();
-      yPosition = 70;
+      yPosition = 50;
     }
 
     doc.setFontSize(12);
@@ -241,7 +241,7 @@ const MaterialDetail = () => {
       doc.addPage();
       pageNum++;
       addHeader();
-      yPosition = 70;
+      yPosition = 50;
     }
 
     doc.setFontSize(12);
@@ -279,7 +279,7 @@ const MaterialDetail = () => {
       doc.addPage();
       pageNum++;
       addHeader();
-      yPosition = 70;
+      yPosition = 50;
     }
 
     doc.setFontSize(12);

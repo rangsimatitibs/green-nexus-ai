@@ -35,18 +35,18 @@ const services = [
     backgroundImage: materialScoutingBg
   },
   {
-    icon: CheckCircle,
-    title: "Material Validation",
+    icon: Cog,
+    title: "Researcher's Tool",
     features: [
-      "Quality assurance",
-      "Performance testing",
-      "Compliance verification"
+      "Property prediction",
+      "Lab recipes database",
+      "Material library"
     ],
     backgroundImage: materialValidationBg
   },
   {
     icon: Cog,
-    title: "Bioprocessing Optimization",
+    title: "Bioprocess Optimization",
     features: [
       "Process optimization",
       "Efficiency improvements",
@@ -222,8 +222,8 @@ const SignUp = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="material-scouting">Material Scouting</SelectItem>
-                        <SelectItem value="material-validation">Material Validation</SelectItem>
-                        <SelectItem value="bioprocessing-optimization">Bioprocessing Optimization</SelectItem>
+                        <SelectItem value="researchers-tool">Researcher's Tool</SelectItem>
+                        <SelectItem value="bioprocess-optimization">Bioprocess Optimization</SelectItem>
                         <SelectItem value="all-services">All Services</SelectItem>
                       </SelectContent>
                     </Select>

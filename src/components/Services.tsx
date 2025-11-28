@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, CheckCircle, Zap, Target, ArrowRight } from "lucide-react";
+import { Search, CheckCircle, Zap, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Services = () => {
@@ -14,28 +14,20 @@ const Services = () => {
       gradient: "bg-gradient-primary"
     },
     {
-      id: "material-validation",
+      id: "researchers-tool",
       icon: CheckCircle,
-      title: "Material Validation",
-      description: "Comprehensive testing and validation processes to ensure sustainable materials meet your quality and performance standards.",
-      features: ["Quality assurance", "Performance testing", "Compliance verification"],
+      title: "Researcher's Tool",
+      description: "Comprehensive R&D platform with AI-powered property prediction, lab recipes database, and curated material library.",
+      features: ["Property prediction", "Lab recipes database", "Material library"],
       gradient: "bg-gradient-sustainable"
     },
     {
-      id: "bioprocessing",
+      id: "bioprocess-optimization",
       icon: Zap,
-      title: "Bioprocessing Optimization",
+      title: "Bioprocess Optimization",
       description: "Advanced bioprocessing techniques and optimization strategies to enhance the production of sustainable materials.",
       features: ["Process optimization", "Efficiency improvements", "Cost reduction"],
       gradient: "bg-gradient-innovation"
-    },
-    {
-      id: "application-matching",
-      icon: Target,
-      title: "Application Matching",
-      description: "Intelligent matching system that connects sustainable materials with the most suitable applications and use cases.",
-      features: ["Smart recommendations", "Use case analysis", "Market insights"],
-      gradient: "bg-gradient-primary"
     }
   ];
 
@@ -56,7 +48,7 @@ const Services = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service, index) => (
             <Card key={index} className="group hover:shadow-xl transition-all duration-500 border-2 border-transparent hover:border-primary/20 bg-card hover:-translate-y-1">
               <CardHeader className="pb-6">

@@ -28,28 +28,28 @@ const ServicesLanding = () => {
       ]
     },
     {
-      id: "material-validation",
+      id: "researchers-tool",
       icon: CheckCircle,
-      title: "Material Validation",
-      subtitle: "Ensure Quality & Performance Standards",
-      description: "Our comprehensive validation service ensures that sustainable materials meet your exact quality, performance, and regulatory requirements. Through rigorous testing protocols and detailed analysis, we provide the confidence you need to adopt new materials.",
+      title: "Researcher's Tool",
+      subtitle: "Advanced Research & Development Platform",
+      description: "Our comprehensive researcher's tool empowers R&D teams with AI-powered property prediction, an extensive lab recipes database, and a curated material library. Accelerate your research and innovation with data-driven insights and proven methodologies.",
       background: materialValidationBg,
       features: [
-        { icon: CheckCircle, title: "Quality Assurance", description: "Comprehensive testing against industry standards and custom requirements" },
-        { icon: Leaf, title: "Sustainability Verification", description: "Independent verification of environmental claims and certifications" },
-        { icon: Target, title: "Performance Testing", description: "Real-world application testing to validate material performance" }
+        { icon: CheckCircle, title: "Property Prediction", description: "AI-powered predictions for material properties before synthesis" },
+        { icon: Leaf, title: "Lab Recipes Database", description: "Access thousands of validated synthesis procedures and protocols" },
+        { icon: Target, title: "Material Library", description: "Comprehensive database of characterized materials with detailed properties" }
       ],
       benefits: [
-        "Eliminate risk in material adoption",
-        "Ensure regulatory compliance",
-        "Validate sustainability claims",
-        "Optimize material selection decisions"
+        "Accelerate R&D cycles by up to 60%",
+        "Reduce experimental costs and material waste",
+        "Access peer-reviewed synthesis protocols",
+        "Predict material properties with AI accuracy"
       ]
     },
     {
-      id: "bioprocessing",
+      id: "bioprocess-optimization",
       icon: Zap,
-      title: "Bioprocessing Optimization",
+      title: "Bioprocess Optimization",
       subtitle: "Enhance Production Efficiency",
       description: "Transform your bioprocessing operations with our advanced optimization strategies. We combine cutting-edge biotechnology with process engineering to enhance the production of sustainable materials, reduce costs, and improve yield.",
       background: bioprocessingBg,

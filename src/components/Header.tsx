@@ -106,10 +106,6 @@ const Header = () => {
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
-            
-            <Link to="/blog" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
-              Blog
-            </Link>
 
             <Link to="/about" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
               About

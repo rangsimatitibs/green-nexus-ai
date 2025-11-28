@@ -424,6 +424,108 @@ export type Database = {
         }
         Relationships: []
       }
+      optimization_runs: {
+        Row: {
+          agitation: number
+          baseline_energy: number
+          baseline_time: number
+          baseline_yield: number
+          created_at: string
+          energy_improvement: number
+          id: string
+          notes: string | null
+          opt_agitation: number
+          opt_oxygen_level: number | null
+          opt_ph: number
+          opt_retention_time: number | null
+          opt_substrate_concentration: number | null
+          opt_temperature: number
+          optimized_energy: number
+          optimized_time: number
+          optimized_yield: number
+          oxygen_level: number | null
+          ph: number
+          ph_max: number | null
+          ph_min: number | null
+          process_name: string
+          process_type: string
+          retention_time: number | null
+          substrate_concentration: number | null
+          temp_max: number | null
+          temp_min: number | null
+          temperature: number
+          time_improvement: number
+          user_id: string | null
+          yield_improvement: number
+        }
+        Insert: {
+          agitation: number
+          baseline_energy: number
+          baseline_time: number
+          baseline_yield: number
+          created_at?: string
+          energy_improvement: number
+          id?: string
+          notes?: string | null
+          opt_agitation: number
+          opt_oxygen_level?: number | null
+          opt_ph: number
+          opt_retention_time?: number | null
+          opt_substrate_concentration?: number | null
+          opt_temperature: number
+          optimized_energy: number
+          optimized_time: number
+          optimized_yield: number
+          oxygen_level?: number | null
+          ph: number
+          ph_max?: number | null
+          ph_min?: number | null
+          process_name: string
+          process_type: string
+          retention_time?: number | null
+          substrate_concentration?: number | null
+          temp_max?: number | null
+          temp_min?: number | null
+          temperature: number
+          time_improvement: number
+          user_id?: string | null
+          yield_improvement: number
+        }
+        Update: {
+          agitation?: number
+          baseline_energy?: number
+          baseline_time?: number
+          baseline_yield?: number
+          created_at?: string
+          energy_improvement?: number
+          id?: string
+          notes?: string | null
+          opt_agitation?: number
+          opt_oxygen_level?: number | null
+          opt_ph?: number
+          opt_retention_time?: number | null
+          opt_substrate_concentration?: number | null
+          opt_temperature?: number
+          optimized_energy?: number
+          optimized_time?: number
+          optimized_yield?: number
+          oxygen_level?: number | null
+          ph?: number
+          ph_max?: number | null
+          ph_min?: number | null
+          process_name?: string
+          process_type?: string
+          retention_time?: number | null
+          substrate_concentration?: number | null
+          temp_max?: number | null
+          temp_min?: number | null
+          temperature?: number
+          time_improvement?: number
+          user_id?: string | null
+          yield_improvement?: number
+        }
+        Relationships: []
+      }
       research_material_applications: {
         Row: {
           application: string

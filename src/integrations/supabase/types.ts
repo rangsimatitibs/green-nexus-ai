@@ -389,6 +389,7 @@ export type Database = {
           chemical_structure: string | null
           created_at: string
           id: string
+          image_url: string | null
           innovation: string | null
           name: string
           scale: string | null
@@ -401,6 +402,7 @@ export type Database = {
           chemical_structure?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           innovation?: string | null
           name: string
           scale?: string | null
@@ -413,6 +415,7 @@ export type Database = {
           chemical_structure?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           innovation?: string | null
           name?: string
           scale?: string | null

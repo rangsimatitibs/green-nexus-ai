@@ -32,6 +32,7 @@ interface Material {
   uniqueness: string | null;
   scale: string | null;
   innovation: string | null;
+  image_url: string | null;
 }
 
 export default function MaterialsAdmin() {
@@ -130,6 +131,7 @@ export default function MaterialsAdmin() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Image</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Chemical Formula</TableHead>
@@ -140,6 +142,19 @@ export default function MaterialsAdmin() {
           <TableBody>
             {filteredMaterials.map((material) => (
               <TableRow key={material.id}>
+                <TableCell>
+                  {material.image_url ? (
+                    <img
+                      src={material.image_url}
+                      alt={material.name}
+                      className="w-12 h-12 object-cover rounded"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 bg-muted rounded flex items-center justify-center text-muted-foreground text-xs">
+                      No image
+                    </div>
+                  )}
+                </TableCell>
                 <TableCell className="font-medium">{material.name}</TableCell>
                 <TableCell>{material.category}</TableCell>
                 <TableCell>{material.chemical_formula || "-"}</TableCell>

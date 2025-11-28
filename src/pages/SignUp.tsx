@@ -14,7 +14,6 @@ import { z } from "zod";
 import materialScoutingBg from "@/assets/material-scouting-bg.jpg";
 import materialValidationBg from "@/assets/material-validation-bg.jpg";
 import bioprocessingBg from "@/assets/bioprocessing-bg.jpg";
-import applicationMatchingBg from "@/assets/application-matching-bg.jpg";
 
 const signupSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address" }).max(255),
@@ -54,16 +53,6 @@ const services = [
       "Cost reduction"
     ],
     backgroundImage: bioprocessingBg
-  },
-  {
-    icon: Target,
-    title: "Application Matching",
-    features: [
-      "Smart recommendations",
-      "Use case analysis",
-      "Market insights"
-    ],
-    backgroundImage: applicationMatchingBg
   }
 ];
 
@@ -235,7 +224,6 @@ const SignUp = () => {
                         <SelectItem value="material-scouting">Material Scouting</SelectItem>
                         <SelectItem value="material-validation">Material Validation</SelectItem>
                         <SelectItem value="bioprocessing-optimization">Bioprocessing Optimization</SelectItem>
-                        <SelectItem value="application-matching">Application Matching</SelectItem>
                         <SelectItem value="all-services">All Services</SelectItem>
                       </SelectContent>
                     </Select>

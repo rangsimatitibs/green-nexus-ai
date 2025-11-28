@@ -1,4 +1,4 @@
-import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download, Loader2 } from "lucide-react";
+import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download, Loader2, FileText } from "lucide-react";
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -498,23 +498,31 @@ const MaterialScouting = () => {
                           </div>
                         </div>
 
-                        <Button
-                          onClick={() => setExpandedMaterial(expandedMaterial === material.id ? null : material.id)}
-                          variant="outline"
-                          className="w-full"
-                        >
-                          {expandedMaterial === material.id ? (
-                            <>
-                              <ChevronUp className="h-4 w-4 mr-2" />
-                              Hide Details
-                            </>
-                          ) : (
-                            <>
-                              <ChevronDown className="h-4 w-4 mr-2" />
-                              View Detailed Properties & Suppliers
-                            </>
-                          )}
-                        </Button>
+                        <div className="flex gap-2">
+                          <Link to={`/platform/material/${material.id}`} className="flex-1">
+                            <Button variant="default" className="w-full">
+                              <FileText className="h-4 w-4 mr-2" />
+                              Advanced Data Sheet
+                            </Button>
+                          </Link>
+                          <Button
+                            onClick={() => setExpandedMaterial(expandedMaterial === material.id ? null : material.id)}
+                            variant="outline"
+                            className="flex-1"
+                          >
+                            {expandedMaterial === material.id ? (
+                              <>
+                                <ChevronUp className="h-4 w-4 mr-2" />
+                                Hide Details
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="h-4 w-4 mr-2" />
+                                View Properties & Suppliers
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
 
                       {/* Expanded Details */}

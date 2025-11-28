@@ -16,6 +16,7 @@ import BiomaterialsInnovation from "./pages/blog/BiomaterialsInnovation";
 import SustainableMaterials from "./pages/blog/SustainableMaterials";
 import MaterialValidation from "./pages/blog/MaterialValidation";
 import MaterialScouting from "./pages/platform/MaterialScouting";
+import MaterialDetail from "./pages/platform/MaterialDetail";
 import ApplicationMatching from "./pages/platform/ApplicationMatching";
 import ResearchersTool from "./pages/platform/ResearchersTool";
 import ProcessOptimization from "./pages/platform/ProcessOptimization";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/blog/sustainable-materials" element={<SustainableMaterials />} />
             <Route path="/blog/material-validation" element={<MaterialValidation />} />
             <Route path="/platform/material-scouting" element={<MaterialScouting />} />
+            <Route path="/platform/material/:id" element={<MaterialDetail />} />
             <Route path="/platform/application-matching" element={<ApplicationMatching />} />
             <Route path="/platform/researchers-tool" element={<ResearchersTool />} />
             <Route path="/platform/process-optimization" element={<ProcessOptimization />} />

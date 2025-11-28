@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, ChevronDown, ChevronUp, Loader2, FileText, Download } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import logoImage from "@/assets/materialink-logo.png";
+import logoImage from "@/assets/materialink-logo-horizontal.png";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -53,15 +53,15 @@ const MaterialDetail = () => {
 
     // Helper function to add header to each page
     const addHeader = () => {
-      // Add logo
+      // Add logo with proper aspect ratio
       const img = new Image();
       img.src = logoImage;
-      doc.addImage(img, "PNG", 14, 10, 40, 12);
+      doc.addImage(img, "PNG", 14, 8, 50, 15);
       
       // Add company tagline
       doc.setFontSize(8);
       doc.setTextColor(100, 100, 100);
-      doc.text("Sustainable Materials Intelligence", pageWidth - 14, 16, { align: "right" });
+      doc.text("Sustainable Materials Intelligence", pageWidth - 14, 18, { align: "right" });
       
       // Header line
       doc.setDrawColor(...primaryColor);

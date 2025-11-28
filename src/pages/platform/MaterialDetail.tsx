@@ -53,20 +53,20 @@ const MaterialDetail = () => {
 
     // Helper function to add header to each page
     const addHeader = () => {
-      // Add logo with proper aspect ratio (wider to prevent crushing)
+      // Add logo with proper size and aspect ratio
       const img = new Image();
       img.src = logoImage;
-      doc.addImage(img, "PNG", 14, 10, 60, 10);
+      doc.addImage(img, "PNG", 14, 8, 50, 18);
       
       // Add company tagline
       doc.setFontSize(8);
       doc.setTextColor(100, 100, 100);
-      doc.text("Sustainable Materials Intelligence", pageWidth - 14, 18, { align: "right" });
+      doc.text("Sustainable Materials Intelligence", pageWidth - 14, 20, { align: "right" });
       
       // Header line
       doc.setDrawColor(...primaryColor);
       doc.setLineWidth(0.5);
-      doc.line(14, 26, pageWidth - 14, 26);
+      doc.line(14, 30, pageWidth - 14, 30);
     };
 
     // Helper function to add footer to each page
@@ -84,7 +84,7 @@ const MaterialDetail = () => {
     let pageNum = 1;
     addHeader();
 
-    yPosition = 35;
+    yPosition = 38;
 
     // Title section with brand styling
     doc.setFillColor(...primaryColor);
@@ -174,7 +174,7 @@ const MaterialDetail = () => {
       doc.addPage();
       pageNum++;
       addHeader();
-      yPosition = 35;
+      yPosition = 38;
     }
 
     doc.setFontSize(12);
@@ -212,7 +212,7 @@ const MaterialDetail = () => {
       doc.addPage();
       pageNum++;
       addHeader();
-      yPosition = 35;
+      yPosition = 38;
     }
 
     doc.setFontSize(12);
@@ -241,7 +241,7 @@ const MaterialDetail = () => {
       doc.addPage();
       pageNum++;
       addHeader();
-      yPosition = 35;
+      yPosition = 38;
     }
 
     doc.setFontSize(12);
@@ -279,7 +279,7 @@ const MaterialDetail = () => {
       doc.addPage();
       pageNum++;
       addHeader();
-      yPosition = 35;
+      yPosition = 38;
     }
 
     doc.setFontSize(12);

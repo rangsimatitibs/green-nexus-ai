@@ -26,6 +26,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ParameterInput } from "@/components/optimization/ParameterInput";
 import { OptimizationCharts } from "@/components/optimization/OptimizationCharts";
+import { BatchSimulation } from "@/components/optimization/BatchSimulation";
 import { processTemplates, ProcessTemplate } from "@/data/processTemplates";
 import { useOptimizationHistory } from "@/hooks/useOptimizationHistory";
 import { useToast } from "@/hooks/use-toast";
@@ -60,6 +61,7 @@ const ProcessOptimization = () => {
   const [notes, setNotes] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [resultsTab, setResultsTab] = useState("analysis");
 
   const loadTemplate = (template: ProcessTemplate) => {
     setProcessName(template.name);
@@ -570,7 +572,7 @@ const ProcessOptimization = () => {
 
                 {optimization && (
                   <div className="space-y-6 mt-8 animate-fade-in border-t pt-8">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center mb-4">
                       <h3 className="text-2xl font-semibold">Optimization Results</h3>
                       <div className="flex gap-2">
                         <Button onClick={handleSave} variant="outline" size="sm">
@@ -584,99 +586,119 @@ const ProcessOptimization = () => {
                       </div>
                     </div>
 
-                    <OptimizationCharts data={optimization} />
+                    <Tabs value={resultsTab} onValueChange={setResultsTab}>
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="analysis">Analysis & Charts</TabsTrigger>
+                        <TabsTrigger value="batch">Batch Simulation</TabsTrigger>
+                      </TabsList>
 
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <Card className="p-5 bg-muted/30">
-                        <h4 className="font-semibold mb-4">Baseline Performance</h4>
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <span className="text-sm text-muted-foreground">Yield</span>
-                            <span className="font-semibold">{optimization.baseline.yield.toFixed(1)}%</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm text-muted-foreground">Energy</span>
-                            <span className="font-semibold">{optimization.baseline.energy.toFixed(1)} kWh</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm text-muted-foreground">Time</span>
-                            <span className="font-semibold">{optimization.baseline.time.toFixed(1)} hrs</span>
-                          </div>
-                        </div>
-                      </Card>
+                      <TabsContent value="analysis" className="space-y-6 mt-4">
+                        <OptimizationCharts data={optimization} />
 
-                      <Card className="p-5 bg-primary/5 border-primary/20">
-                        <h4 className="font-semibold mb-4">Optimized Performance</h4>
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <span className="text-sm text-muted-foreground">Yield</span>
-                            <span className="font-semibold text-primary">{optimization.optimized.yield.toFixed(1)}%</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm text-muted-foreground">Energy</span>
-                            <span className="font-semibold text-primary">{optimization.optimized.energy.toFixed(1)} kWh</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm text-muted-foreground">Time</span>
-                            <span className="font-semibold text-primary">{optimization.optimized.time.toFixed(1)} hrs</span>
-                          </div>
-                        </div>
-                      </Card>
-                    </div>
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <Card className="p-5 bg-muted/30">
+                            <h4 className="font-semibold mb-4">Baseline Performance</h4>
+                            <div className="space-y-3">
+                              <div className="flex justify-between">
+                                <span className="text-sm text-muted-foreground">Yield</span>
+                                <span className="font-semibold">{optimization.baseline.yield.toFixed(1)}%</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-muted-foreground">Energy</span>
+                                <span className="font-semibold">{optimization.baseline.energy.toFixed(1)} kWh</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-muted-foreground">Time</span>
+                                <span className="font-semibold">{optimization.baseline.time.toFixed(1)} hrs</span>
+                              </div>
+                            </div>
+                          </Card>
 
-                    <Card className="p-5 bg-accent/5">
-                      <h4 className="font-semibold mb-4">Recommended Parameters</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div className="text-center">
-                          <div className="text-sm text-muted-foreground mb-1">Temperature</div>
-                          <div className="text-xl font-bold text-accent">{optimization.optimized.temperature}°C</div>
+                          <Card className="p-5 bg-primary/5 border-primary/20">
+                            <h4 className="font-semibold mb-4">Optimized Performance</h4>
+                            <div className="space-y-3">
+                              <div className="flex justify-between">
+                                <span className="text-sm text-muted-foreground">Yield</span>
+                                <span className="font-semibold text-primary">{optimization.optimized.yield.toFixed(1)}%</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-muted-foreground">Energy</span>
+                                <span className="font-semibold text-primary">{optimization.optimized.energy.toFixed(1)} kWh</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-muted-foreground">Time</span>
+                                <span className="font-semibold text-primary">{optimization.optimized.time.toFixed(1)} hrs</span>
+                              </div>
+                            </div>
+                          </Card>
                         </div>
-                        <div className="text-center">
-                          <div className="text-sm text-muted-foreground mb-1">pH</div>
-                          <div className="text-xl font-bold text-accent">{optimization.optimized.ph}</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-sm text-muted-foreground mb-1">Agitation</div>
-                          <div className="text-xl font-bold text-accent">{optimization.optimized.agitation} RPM</div>
-                        </div>
-                        {showAdvanced && (
-                          <>
+
+                        <Card className="p-5 bg-accent/5">
+                          <h4 className="font-semibold mb-4">Recommended Parameters</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             <div className="text-center">
-                              <div className="text-sm text-muted-foreground mb-1">Substrate</div>
-                              <div className="text-xl font-bold text-accent">{optimization.optimized.substrate_concentration} g/L</div>
+                              <div className="text-sm text-muted-foreground mb-1">Temperature</div>
+                              <div className="text-xl font-bold text-accent">{optimization.optimized.temperature}°C</div>
                             </div>
                             <div className="text-center">
-                              <div className="text-sm text-muted-foreground mb-1">Oxygen</div>
-                              <div className="text-xl font-bold text-accent">{optimization.optimized.oxygen_level}%</div>
+                              <div className="text-sm text-muted-foreground mb-1">pH</div>
+                              <div className="text-xl font-bold text-accent">{optimization.optimized.ph}</div>
                             </div>
                             <div className="text-center">
-                              <div className="text-sm text-muted-foreground mb-1">Time</div>
-                              <div className="text-xl font-bold text-accent">{optimization.optimized.retention_time.toFixed(1)} hrs</div>
+                              <div className="text-sm text-muted-foreground mb-1">Agitation</div>
+                              <div className="text-xl font-bold text-accent">{optimization.optimized.agitation} RPM</div>
                             </div>
-                          </>
-                        )}
-                      </div>
-                    </Card>
+                            {showAdvanced && (
+                              <>
+                                <div className="text-center">
+                                  <div className="text-sm text-muted-foreground mb-1">Substrate</div>
+                                  <div className="text-xl font-bold text-accent">{optimization.optimized.substrate_concentration} g/L</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-sm text-muted-foreground mb-1">Oxygen</div>
+                                  <div className="text-xl font-bold text-accent">{optimization.optimized.oxygen_level}%</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-sm text-muted-foreground mb-1">Time</div>
+                                  <div className="text-xl font-bold text-accent">{optimization.optimized.retention_time.toFixed(1)} hrs</div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </Card>
 
-                    <div className="flex gap-4 p-4 bg-green-500/10 rounded-lg border border-green-500/20">
-                      <TrendingUp className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm">
-                        <strong className="text-foreground">Expected Improvements:</strong>
-                        <span className="text-muted-foreground"> Yield +{Math.abs(optimization.improvements.yield).toFixed(1)}%, 
-                        Energy {optimization.improvements.energy > 0 ? '+' : ''}{optimization.improvements.energy.toFixed(1)}%, 
-                        Time {optimization.improvements.time > 0 ? '+' : ''}{optimization.improvements.time.toFixed(1)}%</span>
-                      </div>
-                    </div>
+                        <div className="flex gap-4 p-4 bg-green-500/10 rounded-lg border border-green-500/20">
+                          <TrendingUp className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                          <div className="text-sm">
+                            <strong className="text-foreground">Expected Improvements:</strong>
+                            <span className="text-muted-foreground"> Yield +{Math.abs(optimization.improvements.yield).toFixed(1)}%, 
+                            Energy {optimization.improvements.energy > 0 ? '+' : ''}{optimization.improvements.energy.toFixed(1)}%, 
+                            Time {optimization.improvements.time > 0 ? '+' : ''}{optimization.improvements.time.toFixed(1)}%</span>
+                          </div>
+                        </div>
 
-                    <div className="space-y-2">
-                      <Label>Notes</Label>
-                      <Textarea
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Add notes about this optimization run..."
-                        rows={4}
-                      />
-                    </div>
+                        <div className="space-y-2">
+                          <Label>Notes</Label>
+                          <Textarea
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            placeholder="Add notes about this optimization run..."
+                            rows={4}
+                          />
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="batch" className="mt-4">
+                        <BatchSimulation
+                          baselineYield={optimization.baseline.yield}
+                          baselineEnergy={optimization.baseline.energy}
+                          baselineTime={optimization.baseline.time}
+                          optimizedYield={optimization.optimized.yield}
+                          optimizedEnergy={optimization.optimized.energy}
+                          optimizedTime={optimization.optimized.time}
+                        />
+                      </TabsContent>
+                    </Tabs>
                   </div>
                 )}
               </Card>

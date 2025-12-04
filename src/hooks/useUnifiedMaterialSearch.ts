@@ -59,6 +59,7 @@ export interface SearchResult {
     certifications: string[];
   }>;
   synonyms?: string[];
+  iupac_name?: string | null;
   ai_summary?: string;
   sources_used?: string[];
 }
@@ -131,6 +132,7 @@ export const useUnifiedMaterialSearch = () => {
             certifications: []
           })) || [],
           synonyms: result.synonyms || [],
+          iupac_name: result.iupac_name || null,
           ai_summary: result.ai_summary,
           sources_used: result.sources_used || data.sourcesUsed || []
         };

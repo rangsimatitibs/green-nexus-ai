@@ -1,4 +1,4 @@
-import { Zap, Settings, LineChart, CheckCircle, ArrowRight, Sparkles, TrendingUp, Save, Download, History, X, Copy } from "lucide-react";
+import { Zap, Settings, LineChart, CheckCircle, ArrowRight, Sparkles, TrendingUp, Save, Download, History, X, Copy, Lock, Clock } from "lucide-react";
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -293,7 +293,7 @@ const ProcessOptimization = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      {/* Hero Section */}
+      {/* Hero Section with Coming Soon Gate */}
       <section className="pt-32 pb-20 px-6 bg-gradient-to-br from-primary/10 via-background to-accent/10">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8">
@@ -303,479 +303,87 @@ const ProcessOptimization = () => {
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
               Advanced AI-driven parameter tuning with real-time visualization, history tracking, and comprehensive analysis.
             </p>
-            <Link to="/signup">
-              <Button size="lg" variant="hero">
-                Start Optimizing
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
           </div>
         </div>
       </section>
 
-      {/* Interactive Optimizer */}
-      <section className="py-20 px-6 bg-gradient-to-br from-primary/5 to-accent/5">
-        <div className="container mx-auto max-w-7xl">
-          <div className="text-center mb-12">
-            <Badge className="mb-4" variant="outline">
-              <Sparkles className="h-3 w-3 mr-1" />
-              Advanced Optimizer
-            </Badge>
-            <h2 className="text-4xl font-bold text-foreground mb-4">
-              Optimize Your Bioprocess
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Configure parameters, apply constraints, and see AI-powered optimization recommendations
-            </p>
-          </div>
-
-          <Tabs defaultValue="optimizer" className="space-y-6">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-              <TabsTrigger value="optimizer">Optimizer</TabsTrigger>
-              <TabsTrigger value="templates">Templates</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="optimizer" className="space-y-6">
-              <Card className="p-8">
-                <div className="flex justify-between items-center mb-6">
-                  <div className="space-y-2 flex-1 mr-4">
-                    <Label>Process Name</Label>
-                    <input
-                      type="text"
-                      value={processName}
-                      onChange={(e) => setProcessName(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md"
-                      placeholder="Enter process name"
-                    />
-                  </div>
-                  <div className="space-y-2 w-48">
-                    <Label>Process Type</Label>
-                    <Select value={processType} onValueChange={(value: any) => setProcessType(value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="fermentation">Fermentation</SelectItem>
-                        <SelectItem value="enzymatic">Enzymatic</SelectItem>
-                        <SelectItem value="synthesis">Synthesis</SelectItem>
-                        <SelectItem value="custom">Custom</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="ml-4 flex gap-2">
-                    <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="icon">
-                          <History className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Optimization History</DialogTitle>
-                          <DialogDescription>
-                            Load previous optimization runs or delete them
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          {historyLoading ? (
-                            <p className="text-center text-muted-foreground">Loading...</p>
-                          ) : runs.length === 0 ? (
-                            <p className="text-center text-muted-foreground">No saved optimizations yet</p>
-                          ) : (
-                            runs.map((run) => (
-                              <Card key={run.id} className="p-4">
-                                <div className="flex justify-between items-start">
-                                  <div className="flex-1">
-                                    <h4 className="font-semibold">{run.process_name}</h4>
-                                    <p className="text-sm text-muted-foreground">
-                                      {new Date(run.created_at).toLocaleString()}
-                                    </p>
-                                    <div className="mt-2 text-sm">
-                                      <span className="text-green-600">Yield: +{run.yield_improvement.toFixed(1)}%</span>
-                                      {' • '}
-                                      <span>Energy: {run.energy_improvement.toFixed(1)}%</span>
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => loadFromHistory(run)}
-                                    >
-                                      <Copy className="h-4 w-4 mr-1" />
-                                      Load
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="destructive"
-                                      onClick={() => deleteRun(run.id)}
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </Card>
-                            ))
-                          )}
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <h3 className="text-lg font-semibold">Core Parameters</h3>
-                  
-                  <ParameterInput
-                    label="Temperature"
-                    value={temperature}
-                    onChange={setTemperature}
-                    min={15}
-                    max={80}
-                    step={1}
-                    unit="°C"
-                    tooltip="Optimal temperature range varies by process. Most bioprocesses operate between 25-50°C."
-                    constraintMin={tempMin}
-                    constraintMax={tempMax}
-                  />
-
-                  <ParameterInput
-                    label="pH Level"
-                    value={ph}
-                    onChange={setPh}
-                    min={2}
-                    max={12}
-                    step={0.5}
-                    unit=""
-                    tooltip="pH affects enzyme activity and microbial growth. Most processes prefer pH 5-8."
-                    constraintMin={phMin}
-                    constraintMax={phMax}
-                  />
-
-                  <ParameterInput
-                    label="Agitation Speed"
-                    value={agitation}
-                    onChange={setAgitation}
-                    min={0}
-                    max={600}
-                    step={50}
-                    unit="RPM"
-                    tooltip="Controls mixing and oxygen transfer. Higher speeds increase energy consumption."
-                  />
-
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="w-full"
-                  >
-                    {showAdvanced ? 'Hide' : 'Show'} Advanced Parameters
-                  </Button>
-
-                  {showAdvanced && (
-                    <div className="space-y-6 pt-4 border-t">
-                      <h3 className="text-lg font-semibold">Advanced Parameters</h3>
-                      
-                      <ParameterInput
-                        label="Substrate Concentration"
-                        value={substrateConc}
-                        onChange={setSubstrateConc}
-                        min={0}
-                        max={200}
-                        step={10}
-                        unit="g/L"
-                        tooltip="Initial substrate concentration. Higher values can increase yield but may cause inhibition."
-                      />
-
-                      <ParameterInput
-                        label="Oxygen Level"
-                        value={oxygenLevel}
-                        onChange={setOxygenLevel}
-                        min={0}
-                        max={100}
-                        step={5}
-                        unit="%"
-                        tooltip="Dissolved oxygen saturation. Critical for aerobic processes."
-                      />
-
-                      <ParameterInput
-                        label="Retention Time"
-                        value={retentionTime}
-                        onChange={setRetentionTime}
-                        min={1}
-                        max={168}
-                        step={1}
-                        unit="hours"
-                        tooltip="Total process duration. Longer times may increase yield but reduce productivity."
-                      />
-
-                      <div className="grid md:grid-cols-2 gap-4 pt-4">
-                        <div className="space-y-2">
-                          <Label>Temperature Constraints (°C)</Label>
-                          <div className="flex gap-2">
-                            <input
-                              type="number"
-                              value={tempMin}
-                              onChange={(e) => setTempMin(parseFloat(e.target.value))}
-                              className="w-full px-3 py-2 border rounded-md"
-                              placeholder="Min"
-                            />
-                            <input
-                              type="number"
-                              value={tempMax}
-                              onChange={(e) => setTempMax(parseFloat(e.target.value))}
-                              className="w-full px-3 py-2 border rounded-md"
-                              placeholder="Max"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>pH Constraints</Label>
-                          <div className="flex gap-2">
-                            <input
-                              type="number"
-                              value={phMin}
-                              onChange={(e) => setPhMin(parseFloat(e.target.value))}
-                              className="w-full px-3 py-2 border rounded-md"
-                              placeholder="Min"
-                              step="0.5"
-                            />
-                            <input
-                              type="number"
-                              value={phMax}
-                              onChange={(e) => setPhMax(parseFloat(e.target.value))}
-                              className="w-full px-3 py-2 border rounded-md"
-                              placeholder="Max"
-                              step="0.5"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <Button 
-                  onClick={handleOptimize}
-                  disabled={isOptimizing}
-                  className="w-full mt-6"
-                  size="lg"
-                >
-                  {isOptimizing ? (
-                    <>Optimizing...</>
-                  ) : (
-                    <>
-                      <TrendingUp className="h-4 w-4 mr-2" />
-                      Optimize Process
-                    </>
-                  )}
-                </Button>
-
-                {optimization && (
-                  <div className="space-y-6 mt-8 animate-fade-in border-t pt-8">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-2xl font-semibold">Optimization Results</h3>
-                      <div className="flex gap-2">
-                        <Button onClick={handleSave} variant="outline" size="sm">
-                          <Save className="h-4 w-4 mr-2" />
-                          Save
-                        </Button>
-                        <Button onClick={exportToPDF} variant="outline" size="sm">
-                          <Download className="h-4 w-4 mr-2" />
-                          Export PDF
-                        </Button>
-                      </div>
-                    </div>
-
-                    <Tabs value={resultsTab} onValueChange={setResultsTab}>
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="analysis">Analysis & Charts</TabsTrigger>
-                        <TabsTrigger value="batch">Batch Simulation</TabsTrigger>
-                      </TabsList>
-
-                      <TabsContent value="analysis" className="space-y-6 mt-4">
-                        <OptimizationCharts data={optimization} />
-
-                        <div className="grid md:grid-cols-2 gap-6">
-                          <Card className="p-5 bg-muted/30">
-                            <h4 className="font-semibold mb-4">Baseline Performance</h4>
-                            <div className="space-y-3">
-                              <div className="flex justify-between">
-                                <span className="text-sm text-muted-foreground">Yield</span>
-                                <span className="font-semibold">{optimization.baseline.yield.toFixed(1)}%</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-sm text-muted-foreground">Energy</span>
-                                <span className="font-semibold">{optimization.baseline.energy.toFixed(1)} kWh</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-sm text-muted-foreground">Time</span>
-                                <span className="font-semibold">{optimization.baseline.time.toFixed(1)} hrs</span>
-                              </div>
-                            </div>
-                          </Card>
-
-                          <Card className="p-5 bg-primary/5 border-primary/20">
-                            <h4 className="font-semibold mb-4">Optimized Performance</h4>
-                            <div className="space-y-3">
-                              <div className="flex justify-between">
-                                <span className="text-sm text-muted-foreground">Yield</span>
-                                <span className="font-semibold text-primary">{optimization.optimized.yield.toFixed(1)}%</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-sm text-muted-foreground">Energy</span>
-                                <span className="font-semibold text-primary">{optimization.optimized.energy.toFixed(1)} kWh</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-sm text-muted-foreground">Time</span>
-                                <span className="font-semibold text-primary">{optimization.optimized.time.toFixed(1)} hrs</span>
-                              </div>
-                            </div>
-                          </Card>
-                        </div>
-
-                        <Card className="p-5 bg-accent/5">
-                          <h4 className="font-semibold mb-4">Recommended Parameters</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            <div className="text-center">
-                              <div className="text-sm text-muted-foreground mb-1">Temperature</div>
-                              <div className="text-xl font-bold text-accent">{optimization.optimized.temperature}°C</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-sm text-muted-foreground mb-1">pH</div>
-                              <div className="text-xl font-bold text-accent">{optimization.optimized.ph}</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-sm text-muted-foreground mb-1">Agitation</div>
-                              <div className="text-xl font-bold text-accent">{optimization.optimized.agitation} RPM</div>
-                            </div>
-                            {showAdvanced && (
-                              <>
-                                <div className="text-center">
-                                  <div className="text-sm text-muted-foreground mb-1">Substrate</div>
-                                  <div className="text-xl font-bold text-accent">{optimization.optimized.substrate_concentration} g/L</div>
-                                </div>
-                                <div className="text-center">
-                                  <div className="text-sm text-muted-foreground mb-1">Oxygen</div>
-                                  <div className="text-xl font-bold text-accent">{optimization.optimized.oxygen_level}%</div>
-                                </div>
-                                <div className="text-center">
-                                  <div className="text-sm text-muted-foreground mb-1">Time</div>
-                                  <div className="text-xl font-bold text-accent">{optimization.optimized.retention_time.toFixed(1)} hrs</div>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        </Card>
-
-                        <div className="flex gap-4 p-4 bg-green-500/10 rounded-lg border border-green-500/20">
-                          <TrendingUp className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                          <div className="text-sm">
-                            <strong className="text-foreground">Expected Improvements:</strong>
-                            <span className="text-muted-foreground"> Yield +{Math.abs(optimization.improvements.yield).toFixed(1)}%, 
-                            Energy {optimization.improvements.energy > 0 ? '+' : ''}{optimization.improvements.energy.toFixed(1)}%, 
-                            Time {optimization.improvements.time > 0 ? '+' : ''}{optimization.improvements.time.toFixed(1)}%</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>Notes</Label>
-                          <Textarea
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            placeholder="Add notes about this optimization run..."
-                            rows={4}
-                          />
-                        </div>
-                      </TabsContent>
-
-                      <TabsContent value="batch" className="mt-4">
-                        <BatchSimulation
-                          baselineYield={optimization.baseline.yield}
-                          baselineEnergy={optimization.baseline.energy}
-                          baselineTime={optimization.baseline.time}
-                          optimizedYield={optimization.optimized.yield}
-                          optimizedEnergy={optimization.optimized.energy}
-                          optimizedTime={optimization.optimized.time}
-                        />
-                      </TabsContent>
-                    </Tabs>
-                  </div>
-                )}
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="templates" className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                {processTemplates.map((template) => (
-                  <Card key={template.id} className="p-6 hover:shadow-lg transition-shadow">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold mb-2">{template.name}</h3>
-                        <Badge variant="outline">{template.type}</Badge>
-                      </div>
-                      <Button onClick={() => loadTemplate(template)} size="sm">
-                        Load
-                      </Button>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-4">{template.description}</p>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Typical Yield:</span>
-                        <span className="font-medium">{template.typical_yield}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Typical Time:</span>
-                        <span className="font-medium">{template.typical_time}</span>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
+      {/* Coming Soon Premium Gate */}
+      <section className="py-20 px-6">
+        <div className="container mx-auto max-w-4xl">
+          <Card className="relative overflow-hidden border-2 border-primary/20">
+            {/* Background decoration */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute top-10 left-10 w-32 h-32 border-2 border-primary rounded-full" />
+              <div className="absolute bottom-10 right-10 w-24 h-24 border-2 border-accent rounded-full" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border border-primary/30 rounded-lg rotate-45" />
+            </div>
+            
+            <CardContent className="relative py-16 text-center">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6">
+                <Clock className="h-10 w-10 text-primary" />
               </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </section>
+              
+              <Badge className="mb-4" variant="secondary">
+                <Lock className="h-3 w-3 mr-1" />
+                Premium Feature
+              </Badge>
+              
+              <h2 className="text-3xl font-bold text-foreground mb-4">
+                Coming Soon
+              </h2>
+              
+              <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
+                Our advanced bioprocess optimization tool is currently under development. 
+                Get notified when this powerful feature becomes available to premium users.
+              </p>
 
-      {/* Features Section */}
-      <section className="py-20 px-6 bg-muted/30">
-        <div className="container mx-auto max-w-6xl">
-          <h2 className="text-4xl font-bold text-center mb-12">
-            Advanced Features
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="p-6">
-              <LineChart className="h-10 w-10 text-primary mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Real-time Visualization</h3>
-              <p className="text-muted-foreground">Interactive charts showing parameter impacts, sensitivity analysis, and performance comparisons.</p>
-            </Card>
-            <Card className="p-6">
-              <History className="h-10 w-10 text-primary mb-4" />
-              <h3 className="text-xl font-semibold mb-3">History Tracking</h3>
-              <p className="text-muted-foreground">Save, compare, and revisit previous optimization runs. Track improvements over time.</p>
-            </Card>
-            <Card className="p-6">
-              <Download className="h-10 w-10 text-primary mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Export Reports</h3>
-              <p className="text-muted-foreground">Generate professional PDF reports with all parameters, results, and recommendations.</p>
-            </Card>
-          </div>
-        </div>
-      </section>
+              <div className="grid md:grid-cols-3 gap-6 mb-10 text-left max-w-2xl mx-auto">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Zap className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm">AI-Powered Tuning</h4>
+                    <p className="text-xs text-muted-foreground">Intelligent parameter optimization</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <LineChart className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm">Real-time Analysis</h4>
+                    <p className="text-xs text-muted-foreground">Live visualization of results</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Settings className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm">Custom Templates</h4>
+                    <p className="text-xs text-muted-foreground">Pre-configured process types</p>
+                  </div>
+                </div>
+              </div>
 
-      {/* CTA */}
-      <section className="py-20 px-6 bg-gradient-to-br from-primary/10 to-accent/10">
-        <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-4xl font-bold mb-4">
-            Transform Your Bioprocessing Efficiency
-          </h2>
-          <p className="text-xl text-muted-foreground mb-8">
-            Join companies achieving breakthrough improvements with AI optimization
-          </p>
-          <Link to="/signup">
-            <Button size="lg" variant="hero">
-              Start Optimizing Today
-            </Button>
-          </Link>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/signup">
+                  <Button size="lg" variant="hero">
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    Join Waitlist for Early Access
+                  </Button>
+                </Link>
+                <Link to="/platform/material-scouting">
+                  <Button size="lg" variant="outline">
+                    Explore Material Scouting
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 

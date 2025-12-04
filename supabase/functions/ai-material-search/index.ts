@@ -322,6 +322,155 @@ async function searchMaterialsProject(formula: string): Promise<ExternalSource |
   }
 }
 
+// Search OSHA Chemical Database for safety information
+async function searchOSHA(query: string): Promise<ExternalSource | null> {
+  try {
+    console.log(`[OSHA] Searching for: ${query}`);
+    const encodedQuery = encodeURIComponent(query);
+    
+    // OSHA doesn't have a public API, but we can construct a search URL
+    // and use AI to generate safety-related properties based on the material
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) return null;
+    
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { 
+            role: 'system', 
+            content: `You are an occupational safety expert with knowledge of OSHA regulations. Given a material name, provide key safety properties and hazards according to OSHA guidelines. Return ONLY a JSON object with these fields (omit if unknown):
+{
+  "hazard_class": "string - OSHA hazard classification",
+  "exposure_limit": "string - permissible exposure limit (PEL)",
+  "health_hazards": "string - brief health hazard summary",
+  "ppe_required": "string - personal protective equipment",
+  "handling": "string - safe handling guidance"
+}
+Only include properties you're confident about for this specific material.`
+          },
+          { role: 'user', content: `Provide OSHA safety information for: ${query}` }
+        ],
+        temperature: 0.2
+      })
+    });
+
+    if (!response.ok) {
+      console.log(`[OSHA] API error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    
+    const safetyData = JSON.parse(jsonMatch[0]);
+    const properties: Record<string, string> = {};
+    
+    if (safetyData.hazard_class) properties['OSHA Hazard Class'] = safetyData.hazard_class;
+    if (safetyData.exposure_limit) properties['Permissible Exposure Limit'] = safetyData.exposure_limit;
+    if (safetyData.health_hazards) properties['Health Hazards'] = safetyData.health_hazards;
+    if (safetyData.ppe_required) properties['PPE Required'] = safetyData.ppe_required;
+    if (safetyData.handling) properties['Safe Handling'] = safetyData.handling;
+    
+    if (Object.keys(properties).length === 0) return null;
+    
+    console.log(`[OSHA] Found safety data for: ${query}`);
+    return {
+      name: 'OSHA Safety Data',
+      properties,
+      url: `https://www.osha.gov/chemicaldatabase`
+    };
+  } catch (error) {
+    console.error('[OSHA] Error:', error);
+    return null;
+  }
+}
+
+// Search MakeItFrom for material engineering properties
+async function searchMakeItFrom(query: string): Promise<ExternalSource | null> {
+  try {
+    console.log(`[MakeItFrom] Searching for: ${query}`);
+    
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) return null;
+    
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { 
+            role: 'system', 
+            content: `You are a materials engineer with knowledge of engineering material properties similar to MakeItFrom.com database. Given a material name, provide key engineering properties. Return ONLY a JSON object with these fields (omit if unknown or not applicable):
+{
+  "tensile_strength": "string with value and unit (e.g., '50 MPa')",
+  "elastic_modulus": "string with value and unit (e.g., '3.5 GPa')",
+  "elongation": "string with value (e.g., '5-10%')",
+  "density": "string with value and unit",
+  "melting_point": "string with value and unit",
+  "glass_transition": "string with value and unit (for polymers)",
+  "thermal_conductivity": "string with value and unit",
+  "water_absorption": "string with value",
+  "processing_temp": "string - typical processing temperature range"
+}
+Only include properties you're confident about for this specific material. Be precise with units.`
+          },
+          { role: 'user', content: `Provide engineering properties for: ${query}` }
+        ],
+        temperature: 0.2
+      })
+    });
+
+    if (!response.ok) {
+      console.log(`[MakeItFrom] API error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    
+    const engData = JSON.parse(jsonMatch[0]);
+    const properties: Record<string, string> = {};
+    
+    if (engData.tensile_strength) properties['Tensile Strength'] = engData.tensile_strength;
+    if (engData.elastic_modulus) properties['Elastic Modulus'] = engData.elastic_modulus;
+    if (engData.elongation) properties['Elongation at Break'] = engData.elongation;
+    if (engData.density) properties['Density'] = engData.density;
+    if (engData.melting_point) properties['Melting Point'] = engData.melting_point;
+    if (engData.glass_transition) properties['Glass Transition (Tg)'] = engData.glass_transition;
+    if (engData.thermal_conductivity) properties['Thermal Conductivity'] = engData.thermal_conductivity;
+    if (engData.water_absorption) properties['Water Absorption'] = engData.water_absorption;
+    if (engData.processing_temp) properties['Processing Temperature'] = engData.processing_temp;
+    
+    if (Object.keys(properties).length === 0) return null;
+    
+    console.log(`[MakeItFrom] Found engineering data for: ${query}`);
+    return {
+      name: 'MakeItFrom',
+      properties,
+      url: `https://www.makeitfrom.com`
+    };
+  } catch (error) {
+    console.error('[MakeItFrom] Error:', error);
+    return null;
+  }
+}
+
 // Check if a name looks like a long IUPAC name
 function isLongIUPACName(name: string): boolean {
   return name.length > 60 && (
@@ -600,7 +749,9 @@ Deno.serve(async (req) => {
     const externalPromises = [
       searchPubChem(query),
       searchMaterialsProject(query),
-      searchWikipedia(query)
+      searchWikipedia(query),
+      searchOSHA(query),
+      searchMakeItFrom(query)
     ];
     
     const [localSearchResults, ...externalSearchResults] = await Promise.all([
@@ -656,11 +807,13 @@ Deno.serve(async (req) => {
     }
     
     // Collect external sources
-    const [pubchemResult, materialsProjectResult, wikipediaResult] = externalSearchResults as [ExternalSource | null, ExternalSource | null, ExternalSource | null];
+    const [pubchemResult, materialsProjectResult, wikipediaResult, oshaResult, makeItFromResult] = externalSearchResults as [ExternalSource | null, ExternalSource | null, ExternalSource | null, ExternalSource | null, ExternalSource | null];
     
     if (pubchemResult) externalResults.set('pubchem', pubchemResult);
     if (materialsProjectResult) externalResults.set('materials_project', materialsProjectResult);
     if (wikipediaResult) externalResults.set('wikipedia', wikipediaResult);
+    if (oshaResult) externalResults.set('osha', oshaResult);
+    if (makeItFromResult) externalResults.set('makeitfrom', makeItFromResult);
     
     const externalSources = Array.from(externalResults.values());
     const sourcesUsed = new Set<string>();

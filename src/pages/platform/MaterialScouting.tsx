@@ -571,10 +571,12 @@ const MaterialScouting = () => {
                                       <TooltipProvider key={i}>
                                         <Tooltip>
                                           <TooltipTrigger asChild>
-                                            <Badge variant="outline" className="gap-1 cursor-help">
-                                              <Award className="h-3 w-3" />
-                                              {reg}
-                                            </Badge>
+                                            <span className="inline-flex">
+                                              <Badge variant="outline" className="gap-1 cursor-help">
+                                                <Award className="h-3 w-3" />
+                                                {reg}
+                                              </Badge>
+                                            </span>
                                           </TooltipTrigger>
                                           <TooltipContent className="max-w-xs">
                                             <p>{description}</p>
@@ -1276,7 +1278,9 @@ const MaterialScouting = () => {
                         <TooltipProvider key={reg}>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Badge variant="outline" className="text-xs cursor-help">{reg}</Badge>
+                              <span className="inline-flex">
+                                <Badge variant="outline" className="text-xs cursor-help">{reg}</Badge>
+                              </span>
                             </TooltipTrigger>
                             <TooltipContent className="max-w-xs">
                               <p>{description}</p>

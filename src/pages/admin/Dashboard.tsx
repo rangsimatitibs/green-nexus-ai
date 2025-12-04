@@ -1,15 +1,25 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, Beaker, Package, FileText } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Database, Beaker, Package, FileText, Globe, Server, Edit, Eye } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 interface RecentActivity {
   id: string;
   name: string;
   type: string;
   created_at: string;
+}
+
+interface DataSourceInfo {
+  name: string;
+  count: number;
+  icon: React.ElementType;
+  href: string;
+  editable: boolean;
 }
 
 export default function Dashboard() {
@@ -92,6 +102,19 @@ export default function Dashboard() {
     }
   };
 
+  const yourDataSources: DataSourceInfo[] = [
+    { name: "Materials", count: stats.materials, icon: Database, href: "/admin/materials", editable: true },
+    { name: "Suppliers", count: stats.suppliers, icon: Package, href: "/admin/suppliers", editable: true },
+    { name: "Research Materials", count: stats.researchMaterials, icon: Beaker, href: "/admin/research-materials", editable: true },
+    { name: "Lab Recipes", count: stats.labRecipes, icon: FileText, href: "/admin/lab-recipes", editable: true },
+  ];
+
+  const externalSources = [
+    { name: "PubChem", status: "Connected", description: "Chemical properties database" },
+    { name: "MakeItFrom", status: "Connected", description: "Engineering material properties" },
+    { name: "AI Analysis", status: "Active", description: "AI-generated descriptions & safety data" },
+  ];
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -104,6 +127,80 @@ export default function Dashboard() {
     <div className="p-8 space-y-8">
       <h1 className="text-3xl font-bold">Dashboard Overview</h1>
       
+      {/* Data Sources Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Your Data (Editable) */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Server className="h-5 w-5 text-primary" />
+              <CardTitle>Your Data</CardTitle>
+            </div>
+            <CardDescription>Manually managed data sources you can edit</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {yourDataSources.map((source) => (
+                <Link 
+                  key={source.name} 
+                  to={source.href}
+                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <source.icon className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">{source.name}</p>
+                      <p className="text-sm text-muted-foreground">{source.count} records</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="gap-1">
+                      <Edit className="h-3 w-3" />
+                      Editable
+                    </Badge>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* External Sources (Read-only) */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Globe className="h-5 w-5 text-accent" />
+              <CardTitle>External Sources</CardTitle>
+            </div>
+            <CardDescription>Connected databases used in Deep Search</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {externalSources.map((source) => (
+                <div 
+                  key={source.name} 
+                  className="flex items-center justify-between p-3 rounded-lg border bg-muted/20"
+                >
+                  <div className="flex items-center gap-3">
+                    <Globe className="h-5 w-5 text-accent" />
+                    <div>
+                      <p className="font-medium">{source.name}</p>
+                      <p className="text-sm text-muted-foreground">{source.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="gap-1">
+                      <Eye className="h-3 w-3" />
+                      {source.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>

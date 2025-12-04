@@ -479,45 +479,44 @@ async function searchMakeItFrom(query: string): Promise<ExternalSource | null> {
       return null;
     }
     
-    // Parse properties from HTML
+    // Parse properties from HTML - MakeItFrom uses structure like:
+    // <div class="mech"><p>Property Name</p>...<p>Value <i>Unit</i></p></div>
     const properties: Record<string, string> = {};
     
-    // Extract property rows - MakeItFrom uses table rows with property names and values
-    const propertyPatterns = [
-      { regex: /Tensile Strength.*?<td[^>]*>([^<]+)</is, name: 'Tensile Strength' },
-      { regex: /Elastic.*?Modulus.*?<td[^>]*>([^<]+)</is, name: 'Elastic Modulus' },
-      { regex: /Young.*?Modulus.*?<td[^>]*>([^<]+)</is, name: 'Elastic Modulus' },
-      { regex: /Elongation.*?Break.*?<td[^>]*>([^<]+)</is, name: 'Elongation at Break' },
-      { regex: /Density.*?<td[^>]*>([^<]+)</is, name: 'Density' },
-      { regex: /Melting.*?Point.*?<td[^>]*>([^<]+)</is, name: 'Melting Point' },
-      { regex: /Glass.*?Transition.*?<td[^>]*>([^<]+)</is, name: 'Glass Transition (Tg)' },
-      { regex: /Thermal.*?Conductivity.*?<td[^>]*>([^<]+)</is, name: 'Thermal Conductivity' },
-      { regex: /Water.*?Absorption.*?<td[^>]*>([^<]+)</is, name: 'Water Absorption' },
-      { regex: /Flexural.*?Strength.*?<td[^>]*>([^<]+)</is, name: 'Flexural Strength' },
-      { regex: /Hardness.*?<td[^>]*>([^<]+)</is, name: 'Hardness' },
-      { regex: /Heat.*?Deflection.*?<td[^>]*>([^<]+)</is, name: 'Heat Deflection Temperature' },
-      { regex: /Specific.*?Heat.*?<td[^>]*>([^<]+)</is, name: 'Specific Heat Capacity' },
-      { regex: /Dielectric.*?Constant.*?<td[^>]*>([^<]+)</is, name: 'Dielectric Constant' },
-      { regex: /Coefficient.*?Thermal.*?Expansion.*?<td[^>]*>([^<]+)</is, name: 'Thermal Expansion' },
-    ];
+    // Match property divs with classes mech, therm, ele, other, common
+    const propertyDivRegex = /<div class="(?:mech|therm|ele|other|common)"><p>([^<]+)<\/p>.*?<p>([^<]+)(?:<i>([^<]*)<\/i>)?/gs;
     
-    for (const pattern of propertyPatterns) {
-      const match = html.match(pattern.regex);
-      if (match && match[1]) {
-        const value = match[1].trim().replace(/&[^;]+;/g, '').replace(/\s+/g, ' ');
-        if (value && value !== '-' && value !== 'N/A') {
-          properties[pattern.name] = value;
-        }
-      }
-    }
-    
-    // Also try to extract from structured data or specific divs
-    const valuePatterns = html.matchAll(/<tr[^>]*>.*?<td[^>]*class="[^"]*property[^"]*"[^>]*>([^<]+)<\/td>.*?<td[^>]*>([^<]+)<\/td>/gis);
-    for (const match of valuePatterns) {
+    let match;
+    while ((match = propertyDivRegex.exec(html)) !== null) {
       const propName = match[1]?.trim();
-      const propValue = match[2]?.trim();
-      if (propName && propValue && propValue !== '-' && !properties[propName]) {
-        properties[propName] = propValue;
+      let propValue = match[2]?.trim();
+      const unit = match[3]?.trim();
+      
+      if (propName && propValue) {
+        // Clean up HTML entities and extra whitespace
+        propValue = propValue.replace(/&[^;]+;/g, '').replace(/\s+/g, ' ').trim();
+        
+        // Add unit if present
+        if (unit) {
+          // Clean up unit (handle superscripts like cm³)
+          const cleanUnit = unit.replace(/<[^>]+>/g, '').trim();
+          propValue = `${propValue} ${cleanUnit}`;
+        }
+        
+        // Map property names to our standard format
+        const nameMapping: Record<string, string> = {
+          "Elastic (Young's, Tensile) Modulus": "Elastic Modulus",
+          "Tensile Strength: Ultimate (UTS)": "Tensile Strength",
+          "Glass Transition Temperature": "Glass Transition (Tg)",
+          "Thermal Conductivity": "Thermal Conductivity",
+          "Specific Heat Capacity": "Specific Heat",
+          "Thermal Expansion": "Thermal Expansion",
+          "Dielectric Strength (Breakdown Potential)": "Dielectric Strength",
+          "Electrical Resistivity Order of Magnitude": "Electrical Resistivity",
+        };
+        
+        const standardName = nameMapping[propName] || propName;
+        properties[standardName] = propValue;
       }
     }
     

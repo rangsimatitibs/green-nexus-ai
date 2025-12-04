@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import { useResearchData } from "@/hooks/useResearchData";
 import { useUnifiedMaterialSearch } from "@/hooks/useUnifiedMaterialSearch";
 import PremiumGate from "@/components/PremiumGate";
+import { filterResearchProperties } from "@/data/researchProperties";
 
 const ResearchersTool = () => {
   const { researchMaterials, labRecipes, materialProperties: materialPropertiesDb, loading, error } = useResearchData();
@@ -132,7 +133,7 @@ const ResearchersTool = () => {
         name: materialFormula,
         source: "not_found",
         properties: [],
-        message: `"${materialFormula}" was not found in our databases${deepSearch ? ' or PubChem' : ''}. Try searching for common biopolymers like PLA, Cellulose, PHA, or check the spelling.`
+        message: `"${materialFormula}" was not found in our databases${deepSearch ? ' or external sources' : ''}. Try searching for common biopolymers like PLA, Cellulose, PHA, or check the spelling.`
       });
       setIsPredicting(false);
     } catch (err) {
@@ -263,7 +264,7 @@ const ResearchersTool = () => {
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <p className="text-xs text-muted-foreground">
-                        Searches local database first{deepSearch ? ', then PubChem if not found' : ''}
+                        Searches local database first{deepSearch ? ', then extended databases' : ''}
                       </p>
                       <label className="flex items-center gap-2 text-xs cursor-pointer">
                         <input 
@@ -272,7 +273,7 @@ const ResearchersTool = () => {
                           onChange={(e) => setDeepSearch(e.target.checked)}
                           className="rounded border-input"
                         />
-                        <span className="text-muted-foreground">Search PubChem</span>
+                        <span className="text-muted-foreground">Deep Search</span>
                       </label>
                     </div>
                   </div>
@@ -376,36 +377,22 @@ const ResearchersTool = () => {
                             )}
                             
                             {!showTableView ? (
-                              <div className="grid md:grid-cols-2 gap-6">
-                                {predictions.properties.map((prop: any, index: number) => (
-                                  <Card key={index} className="p-5">
-                                    <div className="flex justify-between items-start mb-3">
-                                      <div className="flex-1">
-                                        <h4 className="font-semibold text-foreground mb-1 capitalize">{prop.name}</h4>
-                                        <div className="text-2xl font-bold text-accent mb-2">
-                                          {prop.value} {prop.unit && <span className="text-sm font-normal text-muted-foreground">{prop.unit}</span>}
+                              <div className="grid md:grid-cols-2 gap-4">
+                                {filterResearchProperties(predictions.allProperties || {}).map((prop, index) => (
+                                  <Card key={index} className="p-4">
+                                    <div className="flex justify-between items-center">
+                                      <div className="flex-1 min-w-0">
+                                        <h4 className="font-medium text-sm text-muted-foreground capitalize truncate">{prop.name}</h4>
+                                        <div className="text-lg font-bold text-foreground truncate">
+                                          {prop.value}
                                         </div>
                                       </div>
                                       {predictions.source === "research" ? (
-                                        <FlaskConical className="h-5 w-5 text-primary" />
+                                        <FlaskConical className="h-4 w-4 text-primary flex-shrink-0 ml-2" />
                                       ) : (
-                                        <Database className="h-5 w-5 text-primary" />
+                                        <Database className="h-4 w-4 text-primary flex-shrink-0 ml-2" />
                                       )}
                                     </div>
-                                    
-                                    {prop.confidence ? (
-                                      <div>
-                                        <div className="flex justify-between text-xs text-muted-foreground mb-2">
-                                          <span>Confidence</span>
-                                          <span>{prop.confidence}%</span>
-                                        </div>
-                                        <Progress value={prop.confidence} className="h-2" />
-                                      </div>
-                                    ) : (
-                                      <div className="text-xs text-muted-foreground">
-                                        {predictions.source === "research" ? "Research data" : "Verified from database"}
-                                      </div>
-                                    )}
                                   </Card>
                                 ))}
                               </div>

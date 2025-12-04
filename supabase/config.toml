@@ -1,1 +1,4 @@
 project_id = "lwyiycipxiznkwimfqaq"
+
+[functions.fetch-material-data]
+verify_jwt = false

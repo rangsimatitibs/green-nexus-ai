@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Database, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import MaterialForm from "@/components/admin/MaterialForm";
 import {
@@ -24,6 +24,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+import { Badge } from "@/components/ui/badge";
+
 interface Material {
   id: string;
   name: string;
@@ -33,6 +35,9 @@ interface Material {
   scale: string | null;
   innovation: string | null;
   image_url: string | null;
+  data_source: string | null;
+  external_id: string | null;
+  last_synced_at: string | null;
 }
 
 export default function MaterialsAdmin() {
@@ -134,8 +139,8 @@ export default function MaterialsAdmin() {
               <TableHead>Image</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
+              <TableHead>Source</TableHead>
               <TableHead>Chemical Formula</TableHead>
-              <TableHead>Scale</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -157,8 +162,13 @@ export default function MaterialsAdmin() {
                 </TableCell>
                 <TableCell className="font-medium">{material.name}</TableCell>
                 <TableCell>{material.category}</TableCell>
+                <TableCell>
+                  <Badge variant={material.data_source === 'pubchem' ? 'secondary' : 'outline'} className="gap-1 text-xs">
+                    {material.data_source === 'pubchem' ? <Globe className="h-3 w-3" /> : <Database className="h-3 w-3" />}
+                    {material.data_source || 'manual'}
+                  </Badge>
+                </TableCell>
                 <TableCell>{material.chemical_formula || "-"}</TableCell>
-                <TableCell>{material.scale || "-"}</TableCell>
                 <TableCell className="text-right">
                   <Button
                     variant="ghost"

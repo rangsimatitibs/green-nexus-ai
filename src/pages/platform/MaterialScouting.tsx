@@ -1,4 +1,4 @@
-import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download, Loader2, FileText, Lock } from "lucide-react";
+import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download, Loader2, FileText, Lock, Globe } from "lucide-react";
 import PremiumGate from "@/components/PremiumGate";
 import { useState } from "react";
 import Header from "@/components/Header";
@@ -13,12 +13,12 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { useMaterialsData } from "@/hooks/useMaterialsData";
+import { useUnifiedMaterialSearch } from "@/hooks/useUnifiedMaterialSearch";
 
 const MaterialScouting = () => {
-  const { materials: sampleMaterials, loading: materialsLoading, error: materialsError } = useMaterialsData();
+  const { loading: materialsLoading, error: materialsError, search, lastSearchSource } = useUnifiedMaterialSearch();
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [displayResults, setDisplayResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [expandedMaterial, setExpandedMaterial] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"overview" | "suppliers">("overview");
@@ -38,72 +38,29 @@ const MaterialScouting = () => {
   const [savedSearches, setSavedSearches] = useState<Array<{name: string, filters: any}>>([]);
 
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     setIsSearching(true);
     setExpandedMaterial(null);
     setViewMode("overview");
     setSelectedMaterials([]);
     
-    setTimeout(() => {
-      const query = searchQuery.toLowerCase().trim();
-      
-      let filtered = sampleMaterials.filter(mat => {
-        // Basic text search
-        const matchesQuery = !query || 
-          mat.name.toLowerCase().includes(query) ||
-          mat.category.toLowerCase().includes(query) ||
-          Object.values(mat.properties).some(p => String(p).toLowerCase().includes(query)) ||
-          mat.applications.some(a => a.toLowerCase().includes(query)) ||
-          mat.regulations.some(r => r.toLowerCase().includes(query)) ||
-          (mat.uniqueness && mat.uniqueness.toLowerCase().includes(query));
+    try {
+      const filters = {
+        category: undefined,
+        source: undefined,
+        properties: properties.filter(p => p.property.trim()),
+        industry: selectedIndustry || undefined,
+        application: applicationFilter || undefined,
+      };
 
-        // Advanced property filters
-        const matchesProperties = properties.every(prop => {
-          if (!prop.property.trim()) return true;
-          const propName = prop.property.toLowerCase();
-          const propValue = prop.value.toLowerCase();
-          
-          // Check if material has this property
-          const materialProp = Object.entries(mat.properties).find(([key]) => 
-            key.toLowerCase().includes(propName)
-          );
-          
-          if (!materialProp) {
-            return prop.importance !== "must-have"; // Only fail if must-have
-          }
-          
-          // If value is specified, check it matches (allows ranges like "100-200")
-          if (propValue) {
-            const matValue = String(materialProp[1]).toLowerCase();
-            return matValue.includes(propValue) || propValue.includes(matValue);
-          }
-          
-          return true;
-        });
-
-        // Industry filter (maps to applications/category)
-        const matchesIndustry = !selectedIndustry || 
-          mat.category.toLowerCase().includes(selectedIndustry.toLowerCase()) ||
-          mat.applications.some(a => a.toLowerCase().includes(selectedIndustry.toLowerCase()));
-
-        // Application filter
-        const matchesApplication = !applicationFilter.trim() ||
-          mat.applications.some(a => a.toLowerCase().includes(applicationFilter.toLowerCase())) ||
-          mat.category.toLowerCase().includes(applicationFilter.toLowerCase());
-
-        return matchesQuery && matchesProperties && matchesIndustry && matchesApplication;
-      });
-
-      // Sort results based on sortBy
-      if (sortBy === "sustainability") {
-        filtered.sort((a, b) => b.sustainability.score - a.sustainability.score);
-      } else if (sortBy === "innovation") {
-        filtered.sort((a, b) => (b.innovation ? 1 : 0) - (a.innovation ? 1 : 0));
-      }
-
-      setSearchResults(filtered.length > 0 ? filtered : []);
+      const results = await search(searchQuery, filters, deepSearch);
+      setDisplayResults(results);
+    } catch (err) {
+      console.error('Search error:', err);
+      setDisplayResults([]);
+    } finally {
       setIsSearching(false);
-    }, 800);
+    }
   };
 
   const toggleMaterialSelection = (materialId: string) => {
@@ -115,7 +72,7 @@ const MaterialScouting = () => {
   };
 
   const getComparisonData = () => {
-    return searchResults.filter(m => selectedMaterials.includes(m.id));
+    return displayResults.filter(m => selectedMaterials.includes(m.id));
   };
 
   const getPropertyDifference = (property: string, materials: any[]) => {
@@ -441,11 +398,17 @@ const MaterialScouting = () => {
                 </Card>
               )}
 
-              {searchResults.length > 0 && (
+              {displayResults.length > 0 && (
                 <div className="space-y-4 animate-fade-in">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-semibold text-foreground">
-                      Found {searchResults.length} Materials
+                      Found {displayResults.length} Materials
+                      {lastSearchSource === 'external' && (
+                        <Badge variant="secondary" className="ml-2 gap-1">
+                          <Globe className="h-3 w-3" />
+                          From PubChem
+                        </Badge>
+                      )}
                     </h3>
                     {selectedMaterials.length > 0 && (
                       <Button 
@@ -458,7 +421,7 @@ const MaterialScouting = () => {
                       </Button>
                     )}
                   </div>
-                  {searchResults.map((material) => (
+                  {displayResults.map((material) => (
                     <Card key={material.id} className="overflow-hidden">
                       {/* Main Material Card */}
                       <div className="p-6">
@@ -482,11 +445,11 @@ const MaterialScouting = () => {
                                   <Atom className="h-4 w-4 text-primary" />
                                   <div>
                                     <span className="font-medium text-foreground">Formula: </span>
-                                    <span className="text-muted-foreground">{material.chemicalFormula}</span>
+                                    <span className="text-muted-foreground">{material.chemical_formula}</span>
                                   </div>
                                 </div>
                                 <div className="text-xs text-muted-foreground mt-1">
-                                  Structure: {material.chemicalStructure}
+                                  Structure: {material.chemical_structure}
                                 </div>
                               </Card>
                             </div>
@@ -893,9 +856,9 @@ const MaterialScouting = () => {
                 </div>
               )}
 
-              {searchResults.length === 0 && searchQuery && !isSearching && (
+              {displayResults.length === 0 && searchQuery && !isSearching && (
                 <div className="text-center py-8 text-muted-foreground">
-                  No materials found. Try a different search term.
+                  No materials found. Try a different search term or enable "Deep Search" to search external databases.
                 </div>
               )}
             </div>

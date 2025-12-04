@@ -326,14 +326,54 @@ async function searchMaterialsProject(formula: string): Promise<ExternalSource |
 async function searchOSHA(query: string): Promise<ExternalSource | null> {
   try {
     console.log(`[OSHA] Searching for: ${query}`);
-    const encodedQuery = encodeURIComponent(query);
     
-    // OSHA doesn't have a public API, but we can construct a search URL
-    // and use AI to generate safety-related properties based on the material
+    // Try to fetch from OSHA chemical database search
+    const encodedQuery = encodeURIComponent(query);
+    const searchUrl = `https://www.osha.gov/chemicaldatabase/search?q=${encodedQuery}`;
+    
+    const response = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; MaterialSearch/1.0)',
+        'Accept': 'text/html'
+      }
+    });
+    
+    if (!response.ok) {
+      console.log(`[OSHA] Search failed: ${response.status}`);
+      return null;
+    }
+    
+    const html = await response.text();
+    const properties: Record<string, string> = {};
+    
+    // Try to extract chemical info from the page
+    // Look for PEL (Permissible Exposure Limit)
+    const pelMatch = html.match(/PEL[^:]*:?\s*([^<\n]+)/i);
+    if (pelMatch) properties['Permissible Exposure Limit (PEL)'] = pelMatch[1].trim();
+    
+    // Look for hazard information
+    const hazardMatch = html.match(/hazard[^:]*:?\s*([^<\n]+)/i);
+    if (hazardMatch) properties['Hazard Classification'] = hazardMatch[1].trim();
+    
+    // Look for CAS number
+    const casMatch = html.match(/CAS[^:]*:?\s*([\d-]+)/i);
+    if (casMatch) properties['CAS Number'] = casMatch[1].trim();
+    
+    // If we found data, return it
+    if (Object.keys(properties).length > 0) {
+      console.log(`[OSHA] Found ${Object.keys(properties).length} properties`);
+      return {
+        name: 'OSHA',
+        properties,
+        url: searchUrl
+      };
+    }
+    
+    // Fallback: Use AI to provide safety guidance based on the material
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) return null;
     
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -344,47 +384,38 @@ async function searchOSHA(query: string): Promise<ExternalSource | null> {
         messages: [
           { 
             role: 'system', 
-            content: `You are an occupational safety expert with knowledge of OSHA regulations. Given a material name, provide key safety properties and hazards according to OSHA guidelines. Return ONLY a JSON object with these fields (omit if unknown):
+            content: `You are an occupational safety expert. Given a material, provide brief, factual safety information. Return ONLY a JSON object (omit unknown fields):
 {
-  "hazard_class": "string - OSHA hazard classification",
-  "exposure_limit": "string - permissible exposure limit (PEL)",
-  "health_hazards": "string - brief health hazard summary",
-  "ppe_required": "string - personal protective equipment",
-  "handling": "string - safe handling guidance"
-}
-Only include properties you're confident about for this specific material.`
+  "hazard_class": "OSHA/GHS hazard classification if applicable",
+  "health_effects": "brief health hazard summary",
+  "ppe": "recommended PPE"
+}`
           },
-          { role: 'user', content: `Provide OSHA safety information for: ${query}` }
+          { role: 'user', content: `Safety info for: ${query}` }
         ],
         temperature: 0.2
       })
     });
 
-    if (!response.ok) {
-      console.log(`[OSHA] API error: ${response.status}`);
-      return null;
-    }
+    if (!aiResponse.ok) return null;
 
-    const data = await response.json();
+    const data = await aiResponse.json();
     const content = data.choices?.[0]?.message?.content || '';
     
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return null;
     
     const safetyData = JSON.parse(jsonMatch[0]);
-    const properties: Record<string, string> = {};
     
-    if (safetyData.hazard_class) properties['OSHA Hazard Class'] = safetyData.hazard_class;
-    if (safetyData.exposure_limit) properties['Permissible Exposure Limit'] = safetyData.exposure_limit;
-    if (safetyData.health_hazards) properties['Health Hazards'] = safetyData.health_hazards;
-    if (safetyData.ppe_required) properties['PPE Required'] = safetyData.ppe_required;
-    if (safetyData.handling) properties['Safe Handling'] = safetyData.handling;
+    if (safetyData.hazard_class) properties['Hazard Classification'] = safetyData.hazard_class;
+    if (safetyData.health_effects) properties['Health Effects'] = safetyData.health_effects;
+    if (safetyData.ppe) properties['Recommended PPE'] = safetyData.ppe;
     
     if (Object.keys(properties).length === 0) return null;
     
-    console.log(`[OSHA] Found safety data for: ${query}`);
+    console.log(`[OSHA] Generated safety data for: ${query}`);
     return {
-      name: 'OSHA Safety Data',
+      name: 'OSHA Safety',
       properties,
       url: `https://www.osha.gov/chemicaldatabase`
     };
@@ -399,71 +430,107 @@ async function searchMakeItFrom(query: string): Promise<ExternalSource | null> {
   try {
     console.log(`[MakeItFrom] Searching for: ${query}`);
     
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) return null;
+    // Format query for URL - convert to URL-friendly slug
+    const formatForUrl = (name: string): string => {
+      return name
+        .trim()
+        .split(/\s+/)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join('-')
+        .replace(/[^a-zA-Z0-9-]/g, '');
+    };
     
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { 
-            role: 'system', 
-            content: `You are a materials engineer with knowledge of engineering material properties similar to MakeItFrom.com database. Given a material name, provide key engineering properties. Return ONLY a JSON object with these fields (omit if unknown or not applicable):
-{
-  "tensile_strength": "string with value and unit (e.g., '50 MPa')",
-  "elastic_modulus": "string with value and unit (e.g., '3.5 GPa')",
-  "elongation": "string with value (e.g., '5-10%')",
-  "density": "string with value and unit",
-  "melting_point": "string with value and unit",
-  "glass_transition": "string with value and unit (for polymers)",
-  "thermal_conductivity": "string with value and unit",
-  "water_absorption": "string with value",
-  "processing_temp": "string - typical processing temperature range"
-}
-Only include properties you're confident about for this specific material. Be precise with units.`
-          },
-          { role: 'user', content: `Provide engineering properties for: ${query}` }
-        ],
-        temperature: 0.2
-      })
-    });
-
-    if (!response.ok) {
-      console.log(`[MakeItFrom] API error: ${response.status}`);
+    // Try different URL variations
+    const urlVariations = [
+      formatForUrl(query),
+      query.replace(/\s+/g, '-'),
+      query.toUpperCase(),
+      query.toLowerCase().replace(/\s+/g, '-')
+    ];
+    
+    let html: string | null = null;
+    let successUrl = '';
+    
+    for (const urlSlug of urlVariations) {
+      const url = `https://www.makeitfrom.com/material-properties/${urlSlug}`;
+      console.log(`[MakeItFrom] Trying URL: ${url}`);
+      
+      try {
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; MaterialSearch/1.0)',
+            'Accept': 'text/html'
+          }
+        });
+        
+        if (response.ok) {
+          html = await response.text();
+          successUrl = url;
+          console.log(`[MakeItFrom] Found page at: ${url}`);
+          break;
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+    
+    if (!html) {
+      console.log(`[MakeItFrom] No page found for: ${query}`);
       return null;
     }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
     
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return null;
-    
-    const engData = JSON.parse(jsonMatch[0]);
+    // Parse properties from HTML
     const properties: Record<string, string> = {};
     
-    if (engData.tensile_strength) properties['Tensile Strength'] = engData.tensile_strength;
-    if (engData.elastic_modulus) properties['Elastic Modulus'] = engData.elastic_modulus;
-    if (engData.elongation) properties['Elongation at Break'] = engData.elongation;
-    if (engData.density) properties['Density'] = engData.density;
-    if (engData.melting_point) properties['Melting Point'] = engData.melting_point;
-    if (engData.glass_transition) properties['Glass Transition (Tg)'] = engData.glass_transition;
-    if (engData.thermal_conductivity) properties['Thermal Conductivity'] = engData.thermal_conductivity;
-    if (engData.water_absorption) properties['Water Absorption'] = engData.water_absorption;
-    if (engData.processing_temp) properties['Processing Temperature'] = engData.processing_temp;
+    // Extract property rows - MakeItFrom uses table rows with property names and values
+    const propertyPatterns = [
+      { regex: /Tensile Strength.*?<td[^>]*>([^<]+)</is, name: 'Tensile Strength' },
+      { regex: /Elastic.*?Modulus.*?<td[^>]*>([^<]+)</is, name: 'Elastic Modulus' },
+      { regex: /Young.*?Modulus.*?<td[^>]*>([^<]+)</is, name: 'Elastic Modulus' },
+      { regex: /Elongation.*?Break.*?<td[^>]*>([^<]+)</is, name: 'Elongation at Break' },
+      { regex: /Density.*?<td[^>]*>([^<]+)</is, name: 'Density' },
+      { regex: /Melting.*?Point.*?<td[^>]*>([^<]+)</is, name: 'Melting Point' },
+      { regex: /Glass.*?Transition.*?<td[^>]*>([^<]+)</is, name: 'Glass Transition (Tg)' },
+      { regex: /Thermal.*?Conductivity.*?<td[^>]*>([^<]+)</is, name: 'Thermal Conductivity' },
+      { regex: /Water.*?Absorption.*?<td[^>]*>([^<]+)</is, name: 'Water Absorption' },
+      { regex: /Flexural.*?Strength.*?<td[^>]*>([^<]+)</is, name: 'Flexural Strength' },
+      { regex: /Hardness.*?<td[^>]*>([^<]+)</is, name: 'Hardness' },
+      { regex: /Heat.*?Deflection.*?<td[^>]*>([^<]+)</is, name: 'Heat Deflection Temperature' },
+      { regex: /Specific.*?Heat.*?<td[^>]*>([^<]+)</is, name: 'Specific Heat Capacity' },
+      { regex: /Dielectric.*?Constant.*?<td[^>]*>([^<]+)</is, name: 'Dielectric Constant' },
+      { regex: /Coefficient.*?Thermal.*?Expansion.*?<td[^>]*>([^<]+)</is, name: 'Thermal Expansion' },
+    ];
     
-    if (Object.keys(properties).length === 0) return null;
+    for (const pattern of propertyPatterns) {
+      const match = html.match(pattern.regex);
+      if (match && match[1]) {
+        const value = match[1].trim().replace(/&[^;]+;/g, '').replace(/\s+/g, ' ');
+        if (value && value !== '-' && value !== 'N/A') {
+          properties[pattern.name] = value;
+        }
+      }
+    }
     
-    console.log(`[MakeItFrom] Found engineering data for: ${query}`);
+    // Also try to extract from structured data or specific divs
+    const valuePatterns = html.matchAll(/<tr[^>]*>.*?<td[^>]*class="[^"]*property[^"]*"[^>]*>([^<]+)<\/td>.*?<td[^>]*>([^<]+)<\/td>/gis);
+    for (const match of valuePatterns) {
+      const propName = match[1]?.trim();
+      const propValue = match[2]?.trim();
+      if (propName && propValue && propValue !== '-' && !properties[propName]) {
+        properties[propName] = propValue;
+      }
+    }
+    
+    if (Object.keys(properties).length === 0) {
+      console.log(`[MakeItFrom] Could not parse properties from page`);
+      return null;
+    }
+    
+    console.log(`[MakeItFrom] Extracted ${Object.keys(properties).length} properties`);
     return {
       name: 'MakeItFrom',
       properties,
-      url: `https://www.makeitfrom.com`
+      url: successUrl
     };
   } catch (error) {
     console.error('[MakeItFrom] Error:', error);

@@ -7,6 +7,7 @@ const corsHeaders = {
 
 interface MaterialData {
   name: string;
+  iupac_name: string | null;
   synonyms: string[];
   chemical_formula: string | null;
   category: string;
@@ -38,10 +39,10 @@ async function searchLocalDatabase(supabase: any, query: string): Promise<any[]>
   
   const synonymMaterialIds = synonymMatches?.map((s: any) => s.material_id) || [];
   
-  // Search materials by name, formula, or through synonyms
+  // Search materials by name, formula, or through synonyms - increased limit to 50
   const { data: materials, error } = await supabase.rpc('search_materials', {
     search_term: query,
-    result_limit: 20
+    result_limit: 50
   });
   
   if (error) {
@@ -193,18 +194,30 @@ async function searchMaterialsProject(formula: string): Promise<ExternalSource |
   }
 }
 
-// Use AI to generate summary and fill gaps
+// Check if a name looks like a long IUPAC name
+function isLongIUPACName(name: string): boolean {
+  return name.length > 60 && (
+    name.includes('oxan') || 
+    name.includes('yl]') || 
+    name.includes('hydroxy') ||
+    name.includes('amino') ||
+    /\[\d[SR],\d[SR]/.test(name)
+  );
+}
+
+// Use AI to generate summary, common name, and synonyms
 async function generateAISummary(
   materialName: string,
   localData: any | null,
   externalSources: ExternalSource[]
-): Promise<{ summary: string; synonyms: string[] }> {
+): Promise<{ summary: string; synonyms: string[]; commonName: string | null }> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
-    return { summary: '', synonyms: [] };
+    return { summary: '', synonyms: [], commonName: null };
   }
   
   try {
+    const isLongName = isLongIUPACName(materialName);
     const context = {
       name: materialName,
       localProperties: localData?.properties?.map((p: any) => `${p.property_name}: ${p.property_value}`).join(', ') || 'None',
@@ -213,6 +226,14 @@ async function generateAISummary(
         `${s.name}: ${Object.entries(s.properties).map(([k, v]) => `${k}=${v}`).join(', ')}`
       ).join('; ')
     };
+    
+    const systemPrompt = isLongName
+      ? `You are a materials science expert. The material name provided is a long IUPAC systematic name. Your MOST IMPORTANT task is to identify the common/trivial name for this compound. Return JSON: {"commonName": "short common name like Chitosan, Cellulose, etc.", "summary": "2-3 sentence description", "synonyms": ["abbreviation", "other names"]}`
+      : `You are a materials science expert. Generate a concise 2-3 sentence summary and list common synonyms/abbreviations. Return JSON: {"commonName": null, "summary": "...", "synonyms": ["...", "..."]}`;
+    
+    const userPrompt = isLongName
+      ? `This is a long IUPAC name: ${materialName}\n\nWhat is the COMMON NAME for this compound? For example, if it's a polysaccharide chain with amino groups, it might be Chitosan. If it contains glucose units, it might be Cellulose or Starch.\n\nExternal Data: ${context.externalProperties}\n\nProvide the common name, a brief summary, and synonyms.`
+      : `Material: ${materialName}\nLocal Data: Properties: ${context.localProperties}, Applications: ${context.localApplications}\nExternal Data: ${context.externalProperties}\n\nProvide a summary and list of synonyms/alternative names for this material.`;
     
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -223,14 +244,8 @@ async function generateAISummary(
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          {
-            role: 'system',
-            content: `You are a materials science expert. Generate a concise 2-3 sentence summary of the material and list common synonyms/abbreviations. Return JSON: {"summary": "...", "synonyms": ["...", "..."]}`
-          },
-          {
-            role: 'user',
-            content: `Material: ${materialName}\nLocal Data: Properties: ${context.localProperties}, Applications: ${context.localApplications}\nExternal Data: ${context.externalProperties}\n\nProvide a summary and list of synonyms/alternative names for this material.`
-          }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
         ],
         temperature: 0.3
       })
@@ -238,7 +253,7 @@ async function generateAISummary(
     
     if (!response.ok) {
       console.log('[AI] API error:', response.status);
-      return { summary: '', synonyms: [] };
+      return { summary: '', synonyms: [], commonName: null };
     }
     
     const data = await response.json();
@@ -250,14 +265,15 @@ async function generateAISummary(
       const parsed = JSON.parse(jsonMatch[0]);
       return {
         summary: parsed.summary || '',
-        synonyms: parsed.synonyms || []
+        synonyms: parsed.synonyms || [],
+        commonName: parsed.commonName || null
       };
     }
     
-    return { summary: content, synonyms: [] };
+    return { summary: content, synonyms: [], commonName: null };
   } catch (error) {
     console.error('[AI] Error:', error);
-    return { summary: '', synonyms: [] };
+    return { summary: '', synonyms: [], commonName: null };
   }
 }
 
@@ -322,16 +338,22 @@ Deno.serve(async (req) => {
       // Generate AI summary if enabled
       let aiSummary = '';
       let aiSynonyms: string[] = [];
+      let aiCommonName: string | null = null;
       if (includeAISummary) {
         const aiResult = await generateAISummary(local.name, local, externalSources);
         aiSummary = aiResult.summary;
         aiSynonyms = aiResult.synonyms;
+        aiCommonName = aiResult.commonName;
         if (aiSummary) sourcesUsed.add('AI Analysis');
       }
       
+      // Use common name if available and original name is long IUPAC
+      const displayName = (aiCommonName && isLongIUPACName(local.name)) ? aiCommonName : local.name;
+      
       results.push({
-        name: local.name,
-        synonyms: [...new Set([...local.synonyms, ...aiSynonyms])],
+        name: displayName,
+        iupac_name: isLongIUPACName(local.name) ? local.name : null,
+        synonyms: [...new Set([...local.synonyms, ...aiSynonyms, ...(aiCommonName ? [aiCommonName] : [])])],
         chemical_formula: local.chemical_formula || pubchemResult?.formula || null,
         category: local.category,
         properties,
@@ -370,16 +392,26 @@ Deno.serve(async (req) => {
       
       let aiSummary = '';
       let aiSynonyms: string[] = [];
+      let aiCommonName: string | null = null;
+      
+      // Get the raw name from PubChem
+      const rawName = pubchemResult?.properties['IUPAC Name'] || query;
+      
       if (includeAISummary) {
-        const aiResult = await generateAISummary(query, null, externalSources);
+        const aiResult = await generateAISummary(rawName, null, externalSources);
         aiSummary = aiResult.summary;
         aiSynonyms = aiResult.synonyms;
+        aiCommonName = aiResult.commonName;
         if (aiSummary) sourcesUsed.add('AI Analysis');
       }
       
+      // Use common name if available and original name is long IUPAC
+      const displayName = (aiCommonName && isLongIUPACName(rawName)) ? aiCommonName : rawName;
+      
       results.push({
-        name: pubchemResult?.properties['IUPAC Name'] || query,
-        synonyms: aiSynonyms,
+        name: displayName,
+        iupac_name: isLongIUPACName(rawName) ? rawName : null,
+        synonyms: [...new Set([...aiSynonyms, ...(aiCommonName ? [aiCommonName] : [])])],
         chemical_formula: pubchemResult?.formula || materialsProjectResult?.formula || null,
         category: 'Chemical Compound',
         properties,

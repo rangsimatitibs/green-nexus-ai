@@ -30,7 +30,7 @@ interface ExternalSource {
 
 // Categories and use-cases that should NOT be treated as materials
 const NON_MATERIAL_TERMS = new Set([
-  // Categories
+  // Material Categories - General
   'metals', 'metal', 'plastics', 'plastic', 'ceramics', 'ceramic', 'composites', 'composite',
   'polymers', 'polymer', 'alloys', 'alloy', 'fibers', 'fiber', 'fibres', 'fibre',
   'bioplastics', 'bioplastic', 'thermoplastics', 'thermoplastic', 'thermosets', 'thermoset',
@@ -38,8 +38,37 @@ const NON_MATERIAL_TERMS = new Set([
   'nanomaterials', 'nanomaterial', 'biomaterials', 'biomaterial', 'smart materials',
   'natural materials', 'synthetic materials', 'organic materials', 'inorganic materials',
   'raw materials', 'advanced materials', 'engineering materials', 'construction materials',
+  'ferrous metals', 'non-ferrous metals', 'precious metals', 'noble metals', 'rare earth metals',
+  'heavy metals', 'light metals', 'transition metals', 'alkali metals', 'alkaline earth metals',
+  'refractory metals', 'base metals', 'industrial metals',
   
-  // Use cases / Applications
+  // Polymer Categories
+  'engineering plastics', 'commodity plastics', 'specialty plastics', 'high-performance plastics',
+  'biodegradable plastics', 'bio-based plastics', 'petroleum-based plastics',
+  'amorphous polymers', 'crystalline polymers', 'semi-crystalline polymers',
+  'copolymers', 'homopolymers', 'block copolymers', 'graft copolymers',
+  'thermoplastic elastomers', 'liquid crystal polymers', 'fluoropolymers',
+  'polyolefins', 'polyesters', 'polyamides', 'polyurethanes', 'silicones',
+  'resins', 'resin', 'epoxies', 'epoxy resins', 'phenolic resins', 'acrylic resins',
+  
+  // Ceramic/Glass Categories
+  'technical ceramics', 'advanced ceramics', 'structural ceramics', 'functional ceramics',
+  'oxide ceramics', 'non-oxide ceramics', 'carbide ceramics', 'nitride ceramics',
+  'glasses', 'glass', 'glass ceramics', 'porcelain', 'earthenware', 'stoneware',
+  'refractories', 'refractory materials', 'abrasives', 'abrasive materials',
+  
+  // Composite Categories
+  'fiber reinforced plastics', 'carbon fiber composites', 'glass fiber composites',
+  'metal matrix composites', 'ceramic matrix composites', 'polymer matrix composites',
+  'laminates', 'laminate', 'sandwich composites', 'particulate composites',
+  
+  // Natural Material Categories
+  'wood', 'woods', 'timber', 'lumber', 'hardwoods', 'softwoods',
+  'natural fibers', 'plant fibers', 'animal fibers', 'mineral fibers',
+  'leather', 'leathers', 'paper', 'papers', 'cardboard',
+  'natural rubber', 'natural polymers', 'biopolymers',
+  
+  // Use Cases / Applications - Industrial
   'electrical wires', 'electrical wire', 'wires', 'wire', 'cables', 'cable',
   'packaging', 'packaging materials', 'insulation', 'insulation materials',
   'coatings', 'coating', 'adhesives', 'adhesive', 'sealants', 'sealant',
@@ -47,18 +76,61 @@ const NON_MATERIAL_TERMS = new Set([
   'construction', 'building materials', 'structural materials',
   'automotive', 'automotive materials', 'aerospace materials',
   'medical devices', 'medical implants', 'biomedical',
-  'electronics', 'electronic components', 'circuit boards',
-  'batteries', 'battery materials', 'energy storage',
-  'solar panels', 'solar cells', 'photovoltaic',
-  'pipes', 'piping', 'tubing', 'tubes',
-  'containers', 'bottles', 'films', 'sheets',
+  'electronics', 'electronic components', 'circuit boards', 'pcb materials',
+  'batteries', 'battery materials', 'energy storage', 'fuel cells',
+  'solar panels', 'solar cells', 'photovoltaic', 'pv materials',
+  'pipes', 'piping', 'tubing', 'tubes', 'hoses', 'hose',
+  'containers', 'bottles', 'films', 'sheets', 'foils',
+  'gaskets', 'seals', 'o-rings', 'bearings', 'bushings',
+  'fasteners', 'screws', 'bolts', 'nuts', 'rivets',
+  'springs', 'gears', 'shafts', 'housings', 'enclosures',
   
-  // General terms
+  // Use Cases / Applications - Consumer
+  'furniture', 'flooring', 'roofing', 'siding', 'windows', 'doors',
+  'appliances', 'cookware', 'utensils', 'cutlery',
+  'toys', 'sporting goods', 'footwear', 'eyewear',
+  'jewelry', 'watches', 'cosmetics', 'personal care',
+  
+  // Use Cases / Applications - Specialized
+  'implants', 'prosthetics', 'dental materials', 'surgical instruments',
+  'drug delivery', 'tissue engineering', 'scaffolds',
+  'catalysts', 'catalyst supports', 'adsorbents', 'absorbents',
+  'sensors', 'actuators', 'transducers',
+  'magnets', 'magnetic materials', 'optical materials', 'acoustic materials',
+  'thermal materials', 'heat exchangers', 'heat sinks',
+  'filtration', 'membranes', 'filters', 'separation materials',
+  
+  // Property-Based Categories
   'sustainable materials', 'eco-friendly materials', 'green materials',
   'recyclable materials', 'biodegradable materials', 'compostable materials',
   'high strength materials', 'lightweight materials', 'durable materials',
   'conductive materials', 'insulating materials', 'transparent materials',
-  'food grade', 'food safe', 'medical grade'
+  'food grade', 'food safe', 'medical grade', 'pharmaceutical grade',
+  'flame retardant materials', 'fire resistant materials', 'heat resistant materials',
+  'corrosion resistant materials', 'wear resistant materials', 'chemical resistant materials',
+  'waterproof materials', 'moisture resistant materials', 'uv resistant materials',
+  'flexible materials', 'rigid materials', 'soft materials', 'hard materials',
+  'porous materials', 'dense materials', 'cellular materials', 'foam materials',
+  'brittle materials', 'ductile materials', 'malleable materials',
+  'conductive', 'insulating', 'magnetic', 'optical', 'acoustic',
+  
+  // Process/Form Categories
+  'powder materials', 'granules', 'pellets', 'flakes',
+  'rods', 'bars', 'plates', 'ingots', 'billets',
+  'castings', 'forgings', 'extrusions', 'moldings',
+  'coatings', 'thin films', 'thick films', 'surface treatments',
+  'woven', 'nonwoven', 'knitted', 'braided',
+  
+  // Generic/Vague Terms
+  'materials', 'material', 'substances', 'substance', 'compounds', 'compound',
+  'elements', 'element', 'chemicals', 'chemical', 'products', 'product',
+  'components', 'component', 'parts', 'part', 'items', 'item',
+  'stuff', 'things', 'goods', 'supplies', 'resources',
+  'alternatives', 'alternative', 'substitutes', 'substitute', 'replacements',
+  'options', 'solutions', 'types', 'kinds', 'varieties', 'grades',
+  'best materials', 'good materials', 'cheap materials', 'expensive materials',
+  'new materials', 'old materials', 'modern materials', 'traditional materials',
+  'common materials', 'rare materials', 'exotic materials', 'standard materials'
 ]);
 
 // Check if a query is a category/use-case rather than a specific material

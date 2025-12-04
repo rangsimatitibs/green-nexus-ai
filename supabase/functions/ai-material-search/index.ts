@@ -18,6 +18,7 @@ interface MaterialData {
   suppliers: Array<{ company: string; country: string; source: string }>;
   ai_summary: string;
   sources_used: string[];
+  matchScore?: number;
 }
 
 interface ExternalSource {
@@ -25,6 +26,125 @@ interface ExternalSource {
   properties: Record<string, string>;
   formula?: string;
   url?: string;
+}
+
+// Use AI to expand query into related search terms
+async function expandQueryWithAI(query: string): Promise<string[]> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    console.log('[AI-Expand] No API key, returning original query');
+    return [query];
+  }
+
+  try {
+    console.log(`[AI-Expand] Expanding query: ${query}`);
+    
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { 
+            role: 'system', 
+            content: `You are a materials science expert. Given a search query about materials, expand it into specific material names that should be searched. 
+            
+For category queries like "bioplastics", return specific materials in that category (e.g., PLA, PHA, PBS, PBAT, PCL, PVA, starch).
+For specific materials, return the material name plus common abbreviations and synonyms.
+For property queries like "biodegradable plastics", return materials with that property.
+
+Return ONLY a JSON array of strings, no explanation. Maximum 15 terms. Example: ["PLA", "polylactic acid", "PHA", "polyhydroxyalkanoates", "PBS"]`
+          },
+          { 
+            role: 'user', 
+            content: `Expand this material search query into specific searchable terms: "${query}"` 
+          }
+        ],
+        temperature: 0.3
+      })
+    });
+
+    if (!response.ok) {
+      console.log(`[AI-Expand] API error: ${response.status}`);
+      return [query];
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    
+    // Parse JSON array from response
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      const terms = JSON.parse(jsonMatch[0]);
+      console.log(`[AI-Expand] Expanded to ${terms.length} terms:`, terms.slice(0, 5));
+      return [...new Set([query, ...terms])]; // Include original query
+    }
+    
+    return [query];
+  } catch (error) {
+    console.error('[AI-Expand] Error:', error);
+    return [query];
+  }
+}
+
+// Search Wikipedia for material information
+async function searchWikipedia(query: string): Promise<ExternalSource | null> {
+  try {
+    console.log(`[Wikipedia] Searching for: ${query}`);
+    const encodedQuery = encodeURIComponent(query);
+    
+    // First, search for the page
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodedQuery}&format=json&origin=*`;
+    const searchResponse = await fetch(searchUrl);
+    
+    if (!searchResponse.ok) {
+      console.log(`[Wikipedia] Search error: ${searchResponse.status}`);
+      return null;
+    }
+    
+    const searchData = await searchResponse.json();
+    const firstResult = searchData.query?.search?.[0];
+    
+    if (!firstResult) {
+      console.log(`[Wikipedia] No results for: ${query}`);
+      return null;
+    }
+    
+    // Get page extract
+    const pageTitle = encodeURIComponent(firstResult.title);
+    const extractUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${pageTitle}&prop=extracts&exintro=true&explaintext=true&format=json&origin=*`;
+    const extractResponse = await fetch(extractUrl);
+    
+    if (!extractResponse.ok) {
+      return null;
+    }
+    
+    const extractData = await extractResponse.json();
+    const pages = extractData.query?.pages;
+    const pageId = Object.keys(pages)[0];
+    const extract = pages[pageId]?.extract;
+    
+    if (!extract || extract.length < 50) {
+      return null;
+    }
+    
+    // Extract useful properties from the text
+    const properties: Record<string, string> = {};
+    properties['Description'] = extract.substring(0, 500) + (extract.length > 500 ? '...' : '');
+    
+    console.log(`[Wikipedia] Found: ${firstResult.title}`);
+    return {
+      name: 'Wikipedia',
+      properties,
+      url: `https://en.wikipedia.org/wiki/${pageTitle}`
+    };
+  } catch (error) {
+    console.error('[Wikipedia] Error:', error);
+    return null;
+  }
 }
 
 // Search local database including synonyms
@@ -39,7 +159,7 @@ async function searchLocalDatabase(supabase: any, query: string): Promise<any[]>
   
   const synonymMaterialIds = synonymMatches?.map((s: any) => s.material_id) || [];
   
-  // Search materials by name, formula, or through synonyms - increased limit to 50
+  // Search materials by name, formula, or through synonyms
   const { data: materials, error } = await supabase.rpc('search_materials', {
     search_term: query,
     result_limit: 50
@@ -50,10 +170,19 @@ async function searchLocalDatabase(supabase: any, query: string): Promise<any[]>
     return [];
   }
   
+  // Also search by category
+  const { data: categoryMatches } = await supabase
+    .from('materials')
+    .select('id')
+    .ilike('category', `%${query}%`);
+  
+  const categoryMaterialIds = categoryMatches?.map((m: any) => m.id) || [];
+  
   // Combine results and fetch full details
   const materialIds = new Set([
     ...(materials || []).map((m: any) => m.id),
-    ...synonymMaterialIds
+    ...synonymMaterialIds,
+    ...categoryMaterialIds
   ]);
   
   if (materialIds.size === 0) {
@@ -142,7 +271,6 @@ async function searchPubChem(query: string): Promise<ExternalSource | null> {
 async function searchMaterialsProject(formula: string): Promise<ExternalSource | null> {
   const apiKey = Deno.env.get('MATERIALS_PROJECT_API_KEY');
   if (!apiKey || !formula) {
-    console.log('[MaterialsProject] No API key or formula');
     return null;
   }
   
@@ -277,6 +405,71 @@ async function generateAISummary(
   }
 }
 
+// Build MaterialData from local result
+function buildMaterialData(
+  local: any,
+  externalSources: ExternalSource[],
+  sourcesUsed: Set<string>,
+  aiSummary: string,
+  aiSynonyms: string[],
+  aiCommonName: string | null,
+  pubchemResult: ExternalSource | null,
+  matchScore: number
+): MaterialData {
+  sourcesUsed.add('Your Database');
+  
+  const properties: MaterialData['properties'] = local.properties.map((p: any) => ({
+    name: p.property_name,
+    value: p.property_value,
+    source: 'Your Database',
+    source_url: undefined
+  }));
+  
+  // Add external properties
+  for (const ext of externalSources) {
+    sourcesUsed.add(ext.name);
+    for (const [name, value] of Object.entries(ext.properties)) {
+      if (!properties.find(p => p.name.toLowerCase() === name.toLowerCase())) {
+        properties.push({ name, value, source: ext.name, source_url: ext.url });
+      }
+    }
+  }
+  
+  if (aiSummary) sourcesUsed.add('AI Analysis');
+  
+  // Use common name if available and original name is long IUPAC
+  const displayName = (aiCommonName && isLongIUPACName(local.name)) ? aiCommonName : local.name;
+  
+  return {
+    name: displayName,
+    iupac_name: isLongIUPACName(local.name) ? local.name : null,
+    synonyms: [...new Set([...local.synonyms, ...aiSynonyms, ...(aiCommonName ? [aiCommonName] : [])])],
+    chemical_formula: local.chemical_formula || pubchemResult?.formula || null,
+    category: local.category,
+    properties,
+    applications: local.applications.map((a: any) => ({ name: a.application, source: 'Your Database' })),
+    regulations: local.regulations.map((r: any) => ({ name: r.regulation, source: 'Your Database' })),
+    sustainability: local.sustainability ? {
+      score: local.sustainability.overall_score,
+      breakdown: {
+        renewable: local.sustainability.renewable_score,
+        carbonFootprint: local.sustainability.carbon_footprint_score,
+        biodegradability: local.sustainability.biodegradability_score,
+        toxicity: local.sustainability.toxicity_score
+      },
+      source: 'Your Database'
+    } : null,
+    suppliers: local.suppliers.map((s: any) => ({
+      company: s.company_name,
+      country: s.country,
+      source: 'Your Database'
+    })),
+    ai_summary: aiSummary,
+    sources_used: Array.from(sourcesUsed),
+    matchScore
+  };
+}
+
 // Main handler
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -299,88 +492,90 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Search all sources in parallel
-    const [localResults, pubchemResult, materialsProjectResult] = await Promise.all([
-      searchLocalDatabase(supabase, query),
+    // Step 1: Expand query using AI to get related terms
+    const expandedTerms = await expandQueryWithAI(query);
+    console.log(`[AI-Search] Searching ${expandedTerms.length} terms`);
+    
+    // Step 2: Search all sources in parallel for all expanded terms
+    const allLocalResults: Map<string, any> = new Map(); // Use map to dedupe by ID
+    const externalResults: Map<string, ExternalSource> = new Map();
+    
+    // Search local database for all expanded terms in parallel
+    const localSearchPromises = expandedTerms.slice(0, 10).map(term => 
+      searchLocalDatabase(supabase, term).then(results => ({ term, results }))
+    );
+    
+    // Also search external sources for the original query
+    const externalPromises = [
       searchPubChem(query),
-      searchMaterialsProject(query)
+      searchMaterialsProject(query),
+      searchWikipedia(query)
+    ];
+    
+    const [localSearchResults, ...externalSearchResults] = await Promise.all([
+      Promise.all(localSearchPromises),
+      ...externalPromises
     ]);
     
-    const externalSources: ExternalSource[] = [];
-    if (pubchemResult) externalSources.push(pubchemResult);
-    if (materialsProjectResult) externalSources.push(materialsProjectResult);
-    
-    // Build consolidated results
-    const results: MaterialData[] = [];
-    const sourcesUsed = new Set<string>();
-    
-    // Process local results first (primary source)
-    for (const local of localResults) {
-      sourcesUsed.add('Your Database');
-      
-      const properties: MaterialData['properties'] = local.properties.map((p: any) => ({
-        name: p.property_name,
-        value: p.property_value,
-        source: 'Your Database',
-        source_url: undefined
-      }));
-      
-      // Add external properties
-      for (const ext of externalSources) {
-        sourcesUsed.add(ext.name);
-        for (const [name, value] of Object.entries(ext.properties)) {
-          if (!properties.find(p => p.name.toLowerCase() === name.toLowerCase())) {
-            properties.push({ name, value, source: ext.name, source_url: ext.url });
-          }
+    // Merge local results with match scoring
+    for (const { term, results } of localSearchResults) {
+      for (const result of results) {
+        const existing = allLocalResults.get(result.id);
+        const isExactMatch = term.toLowerCase() === query.toLowerCase();
+        const newScore = isExactMatch ? 100 : 70;
+        
+        if (!existing || (existing.matchScore || 0) < newScore) {
+          allLocalResults.set(result.id, { ...result, matchScore: newScore });
         }
       }
-      
-      // Generate AI summary if enabled
+    }
+    
+    // Collect external sources
+    const [pubchemResult, materialsProjectResult, wikipediaResult] = externalSearchResults as [ExternalSource | null, ExternalSource | null, ExternalSource | null];
+    
+    if (pubchemResult) externalResults.set('pubchem', pubchemResult);
+    if (materialsProjectResult) externalResults.set('materials_project', materialsProjectResult);
+    if (wikipediaResult) externalResults.set('wikipedia', wikipediaResult);
+    
+    const externalSources = Array.from(externalResults.values());
+    const sourcesUsed = new Set<string>();
+    const results: MaterialData[] = [];
+    
+    // Process local results
+    const localResultsArray = Array.from(allLocalResults.values())
+      .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+    
+    console.log(`[AI-Search] Processing ${localResultsArray.length} unique local results`);
+    
+    // Generate AI summaries in batches (skip for large result sets to save time)
+    const shouldGenerateSummaries = includeAISummary && localResultsArray.length <= 5;
+    
+    for (const local of localResultsArray) {
       let aiSummary = '';
       let aiSynonyms: string[] = [];
       let aiCommonName: string | null = null;
-      if (includeAISummary) {
+      
+      if (shouldGenerateSummaries) {
         const aiResult = await generateAISummary(local.name, local, externalSources);
         aiSummary = aiResult.summary;
         aiSynonyms = aiResult.synonyms;
         aiCommonName = aiResult.commonName;
-        if (aiSummary) sourcesUsed.add('AI Analysis');
       }
       
-      // Use common name if available and original name is long IUPAC
-      const displayName = (aiCommonName && isLongIUPACName(local.name)) ? aiCommonName : local.name;
-      
-      results.push({
-        name: displayName,
-        iupac_name: isLongIUPACName(local.name) ? local.name : null,
-        synonyms: [...new Set([...local.synonyms, ...aiSynonyms, ...(aiCommonName ? [aiCommonName] : [])])],
-        chemical_formula: local.chemical_formula || pubchemResult?.formula || null,
-        category: local.category,
-        properties,
-        applications: local.applications.map((a: any) => ({ name: a.application, source: 'Your Database' })),
-        regulations: local.regulations.map((r: any) => ({ name: r.regulation, source: 'Your Database' })),
-        sustainability: local.sustainability ? {
-          score: local.sustainability.overall_score,
-          breakdown: {
-            renewable: local.sustainability.renewable_score,
-            carbonFootprint: local.sustainability.carbon_footprint_score,
-            biodegradability: local.sustainability.biodegradability_score,
-            toxicity: local.sustainability.toxicity_score
-          },
-          source: 'Your Database'
-        } : null,
-        suppliers: local.suppliers.map((s: any) => ({
-          company: s.company_name,
-          country: s.country,
-          source: 'Your Database'
-        })),
-        ai_summary: aiSummary,
-        sources_used: Array.from(sourcesUsed)
-      });
+      results.push(buildMaterialData(
+        local,
+        externalSources,
+        sourcesUsed,
+        aiSummary,
+        aiSynonyms,
+        aiCommonName,
+        pubchemResult,
+        local.matchScore || 50
+      ));
     }
     
     // If no local results, create entry from external sources
-    if (localResults.length === 0 && externalSources.length > 0) {
+    if (localResultsArray.length === 0 && externalSources.length > 0) {
       const properties: MaterialData['properties'] = [];
       
       for (const ext of externalSources) {
@@ -394,7 +589,6 @@ Deno.serve(async (req) => {
       let aiSynonyms: string[] = [];
       let aiCommonName: string | null = null;
       
-      // Get the raw name from PubChem
       const rawName = pubchemResult?.properties['IUPAC Name'] || query;
       
       if (includeAISummary) {
@@ -405,7 +599,6 @@ Deno.serve(async (req) => {
         if (aiSummary) sourcesUsed.add('AI Analysis');
       }
       
-      // Use common name if available and original name is long IUPAC
       const displayName = (aiCommonName && isLongIUPACName(rawName)) ? aiCommonName : rawName;
       
       results.push({
@@ -420,15 +613,20 @@ Deno.serve(async (req) => {
         sustainability: null,
         suppliers: [],
         ai_summary: aiSummary,
-        sources_used: Array.from(sourcesUsed)
+        sources_used: Array.from(sourcesUsed),
+        matchScore: 30
       });
     }
+    
+    // Sort by match score
+    results.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
     
     console.log(`[AI-Search] Returning ${results.length} results from ${sourcesUsed.size} sources`);
     
     return new Response(
       JSON.stringify({
         query,
+        expandedTerms,
         results,
         totalResults: results.length,
         sourcesUsed: Array.from(sourcesUsed)

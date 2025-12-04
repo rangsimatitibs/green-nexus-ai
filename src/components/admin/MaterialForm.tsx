@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, X, Loader2, Plus, Trash2 } from "lucide-react";
+import { Upload, X, Loader2, Plus, Trash2, Database, Globe, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface MaterialProperty {
   id?: string;
@@ -283,7 +284,29 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{material ? "Edit Material" : "Add Material"}</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>{material ? "Edit Material" : "Add Material"}</DialogTitle>
+            {material?.data_source && material.data_source !== 'manual' && (
+              <Badge variant="secondary" className="gap-1">
+                {material.data_source === 'pubchem' ? (
+                  <>
+                    <Globe className="h-3 w-3" />
+                    PubChem (CID: {material.external_id})
+                  </>
+                ) : (
+                  <>
+                    <Database className="h-3 w-3" />
+                    {material.data_source}
+                  </>
+                )}
+              </Badge>
+            )}
+          </div>
+          {material?.last_synced_at && (
+            <p className="text-xs text-muted-foreground">
+              Last synced: {new Date(material.last_synced_at).toLocaleDateString()}
+            </p>
+          )}
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs defaultValue="basic" className="w-full">

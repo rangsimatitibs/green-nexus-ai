@@ -1,4 +1,4 @@
-import { TrendingUp, Brain, BarChart3, CheckCircle, ArrowRight, Sparkles, Zap, Search, BookOpen, FlaskConical, Database, Users, TrendingUpIcon, Atom, Loader2, Lock, Table } from "lucide-react";
+import { TrendingUp, Brain, BarChart3, CheckCircle, ArrowRight, Sparkles, Zap, Search, BookOpen, FlaskConical, Database, Users, TrendingUpIcon, Atom, Loader2, Lock, Table, Globe } from "lucide-react";
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -10,12 +10,12 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 import { useResearchData } from "@/hooks/useResearchData";
-import { useMaterialsData } from "@/hooks/useMaterialsData";
+import { useUnifiedMaterialSearch } from "@/hooks/useUnifiedMaterialSearch";
 import PremiumGate from "@/components/PremiumGate";
 
 const ResearchersTool = () => {
   const { researchMaterials, labRecipes, materialProperties: materialPropertiesDb, loading, error } = useResearchData();
-  const { materials: scoutingMaterials } = useMaterialsData();
+  const { search: unifiedSearch, loading: searchLoading, lastSearchSource } = useUnifiedMaterialSearch();
   const [materialFormula, setMaterialFormula] = useState("");
   const [predictions, setPredictions] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
@@ -23,6 +23,7 @@ const ResearchersTool = () => {
   const [recipeSearchQuery, setRecipeSearchQuery] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
   const [showTableView, setShowTableView] = useState(false);
+  const [deepSearch, setDeepSearch] = useState(true);
 
   // Filter recipes based on search query
   const filteredRecipes = labRecipes.filter((recipe) => {
@@ -35,12 +36,12 @@ const ResearchersTool = () => {
     );
   });
 
-  // Combined search handler for Property Finder - searches multiple databases
-  const handleCombinedSearch = () => {
+  // Combined search handler for Property Finder - uses unified search
+  const handleCombinedSearch = async () => {
     setIsPredicting(true);
     const searchTerm = materialFormula.toLowerCase().trim();
     
-    setTimeout(() => {
+    try {
       // 1. First check material_properties_database (verified scientific data)
       const dbMatch = materialPropertiesDb.find(m => 
         m.name.toLowerCase().includes(searchTerm) ||
@@ -69,36 +70,7 @@ const ResearchersTool = () => {
         return;
       }
 
-      // 2. Check materials from scouting database
-      const scoutingMatch = scoutingMaterials.find(m =>
-        m.name.toLowerCase().includes(searchTerm) ||
-        searchTerm.includes(m.name.toLowerCase()) ||
-        (m.chemical_formula && m.chemical_formula.toLowerCase().includes(searchTerm)) ||
-        (m.chemical_structure && m.chemical_structure.toLowerCase().includes(searchTerm))
-      );
-
-      if (scoutingMatch) {
-        // Found in scouting database
-        const scoutProperties = Object.entries(scoutingMatch.properties).map(([key, value]) => ({
-          name: key,
-          value: value,
-          unit: "",
-          confidence: null,
-          source: "database"
-        }));
-        setPredictions({
-          name: scoutingMatch.name,
-          source: "database",
-          chemical_structure: scoutingMatch.chemical_structure,
-          properties: scoutProperties.slice(0, 4),
-          allProperties: scoutingMatch.properties,
-          sources: ["MaterialInk Database"]
-        });
-        setIsPredicting(false);
-        return;
-      }
-
-      // 3. Check research materials (novel materials in development)
+      // 2. Check research materials (novel materials in development)
       const researchMatch = researchMaterials.find(m =>
         m.name.toLowerCase().includes(searchTerm) ||
         searchTerm.includes(m.name.toLowerCase())
@@ -129,15 +101,50 @@ const ResearchersTool = () => {
         return;
       }
 
+      // 3. Use unified search (searches local materials + optional external PubChem)
+      const searchResults = await unifiedSearch(searchTerm, {}, deepSearch);
+      
+      if (searchResults.length > 0) {
+        const match = searchResults[0];
+        const scoutProperties = Object.entries(match.properties).map(([key, value]) => ({
+          name: key,
+          value: value,
+          unit: "",
+          confidence: null,
+          source: match.data_source === 'pubchem' ? 'pubchem' : 'database'
+        }));
+        setPredictions({
+          name: match.name,
+          source: match.data_source === 'pubchem' ? 'pubchem' : 'database',
+          chemical_structure: match.chemical_structure,
+          chemical_formula: match.chemical_formula,
+          properties: scoutProperties.slice(0, 4),
+          allProperties: match.properties,
+          sources: match.data_source === 'pubchem' ? ['PubChem'] : ['MaterialInk Database'],
+          external_id: match.external_id
+        });
+        setIsPredicting(false);
+        return;
+      }
+
       // 4. No match found - show helpful message
       setPredictions({
         name: materialFormula,
         source: "not_found",
         properties: [],
-        message: `"${materialFormula}" was not found in our databases. Try searching for common biopolymers like PLA, Cellulose, PHA, or check the spelling.`
+        message: `"${materialFormula}" was not found in our databases${deepSearch ? ' or PubChem' : ''}. Try searching for common biopolymers like PLA, Cellulose, PHA, or check the spelling.`
       });
       setIsPredicting(false);
-    }, 600);
+    } catch (err) {
+      console.error('Search error:', err);
+      setPredictions({
+        name: materialFormula,
+        source: "not_found",
+        properties: [],
+        message: `Error searching for "${materialFormula}". Please try again.`
+      });
+      setIsPredicting(false);
+    }
   };
 
   return (
@@ -254,9 +261,20 @@ const ResearchersTool = () => {
                         )}
                       </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Searches verified database first, then provides AI predictions if not found
-                    </p>
+                    <div className="flex items-center justify-between mt-2">
+                      <p className="text-xs text-muted-foreground">
+                        Searches local database first{deepSearch ? ', then PubChem if not found' : ''}
+                      </p>
+                      <label className="flex items-center gap-2 text-xs cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={deepSearch} 
+                          onChange={(e) => setDeepSearch(e.target.checked)}
+                          className="rounded border-input"
+                        />
+                        <span className="text-muted-foreground">Search PubChem</span>
+                      </label>
+                    </div>
                   </div>
 
                   {predictions && (
@@ -297,13 +315,18 @@ const ResearchersTool = () => {
                                   Results for {predictions.name}
                                 </h3>
                                 <Badge 
-                                  variant={predictions.source === "database" ? "default" : predictions.source === "research" ? "secondary" : "outline"}
+                                  variant={predictions.source === "database" || predictions.source === "pubchem" ? "default" : predictions.source === "research" ? "secondary" : "outline"}
                                   className="gap-1"
                                 >
                                   {predictions.source === "database" ? (
                                     <>
                                       <Database className="h-3 w-3" />
                                       Database Verified
+                                    </>
+                                  ) : predictions.source === "pubchem" ? (
+                                    <>
+                                      <Globe className="h-3 w-3" />
+                                      PubChem Data
                                     </>
                                   ) : predictions.source === "research" ? (
                                     <>

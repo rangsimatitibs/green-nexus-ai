@@ -90,65 +90,68 @@ Return ONLY a JSON array of strings, no explanation. Maximum 15 terms. Example: 
   }
 }
 
-// Search Wikipedia for material information
-async function searchWikipedia(query: string): Promise<ExternalSource | null> {
+// Generate AI description for a material
+async function generateAIDescription(query: string): Promise<ExternalSource | null> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    return null;
+  }
+
   try {
-    console.log(`[Wikipedia] Searching for: ${query}`);
-    const encodedQuery = encodeURIComponent(query);
+    console.log(`[AI-Description] Generating for: ${query}`);
     
-    // First, search for the page
-    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodedQuery}&format=json&origin=*`;
-    const searchResponse = await fetch(searchUrl);
-    
-    if (!searchResponse.ok) {
-      console.log(`[Wikipedia] Search error: ${searchResponse.status}`);
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { 
+            role: 'system', 
+            content: `You are a materials science expert. Given a material name, provide a brief, factual description in 1-2 sentences (max 150 characters). Focus on what the material IS and its primary use/property. Be concise and scientific.
+
+Example outputs:
+- "A biodegradable thermoplastic derived from renewable resources like corn starch, widely used in packaging and 3D printing."
+- "A thermoset polymer known for excellent adhesion, chemical resistance, and electrical insulation properties."
+- "A natural polysaccharide extracted from crustacean shells, valued for its biocompatibility and antimicrobial properties."
+
+Return ONLY the description text, no JSON or formatting.`
+          },
+          { role: 'user', content: `Describe: ${query}` }
+        ],
+        temperature: 0.3
+      })
+    });
+
+    if (!response.ok) {
+      console.log(`[AI-Description] API error: ${response.status}`);
       return null;
     }
+
+    const data = await response.json();
+    const description = data.choices?.[0]?.message?.content?.trim() || '';
     
-    const searchData = await searchResponse.json();
-    const firstResult = searchData.query?.search?.[0];
-    
-    if (!firstResult) {
-      console.log(`[Wikipedia] No results for: ${query}`);
+    if (!description || description.length < 20) {
       return null;
     }
-    
-    // Get page extract
-    const pageTitle = encodeURIComponent(firstResult.title);
-    const extractUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${pageTitle}&prop=extracts&exintro=true&explaintext=true&format=json&origin=*`;
-    const extractResponse = await fetch(extractUrl);
-    
-    if (!extractResponse.ok) {
-      return null;
-    }
-    
-    const extractData = await extractResponse.json();
-    const pages = extractData.query?.pages;
-    const pageId = Object.keys(pages)[0];
-    const extract = pages[pageId]?.extract;
-    
-    if (!extract || extract.length < 50) {
-      return null;
-    }
-    
-    // Extract useful properties from the text - get first 1-2 sentences only
-    const properties: Record<string, string> = {};
-    
-    // Split into sentences and take first 1-2 meaningful ones
-    const sentences = extract.split(/(?<=[.!?])\s+/).filter((s: string) => s.length > 20);
-    const shortDescription = sentences.slice(0, 2).join(' ').trim();
-    properties['Description'] = shortDescription.length > 200 
-      ? shortDescription.substring(0, 200).replace(/\s+\S*$/, '') + '...'
-      : shortDescription;
-    
-    console.log(`[Wikipedia] Found: ${firstResult.title}`);
+
+    // Truncate if too long
+    const finalDescription = description.length > 180 
+      ? description.substring(0, 180).replace(/\s+\S*$/, '') + '...'
+      : description;
+
+    console.log(`[AI-Description] Generated description`);
     return {
-      name: 'Wikipedia',
-      properties,
-      url: `https://en.wikipedia.org/wiki/${pageTitle}`
+      name: 'AI Analysis',
+      properties: {
+        'Description': finalDescription
+      }
     };
   } catch (error) {
-    console.error('[Wikipedia] Error:', error);
+    console.error('[AI-Description] Error:', error);
     return null;
   }
 }
@@ -328,58 +331,15 @@ async function searchMaterialsProject(formula: string): Promise<ExternalSource |
   }
 }
 
-// Search OSHA Chemical Database for safety information
-async function searchOSHA(query: string): Promise<ExternalSource | null> {
+// Generate AI-based safety information for a material
+async function generateSafetyInfo(query: string): Promise<ExternalSource | null> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) return null;
+
   try {
-    console.log(`[OSHA] Searching for: ${query}`);
+    console.log(`[Safety] Generating safety info for: ${query}`);
     
-    // Try to fetch from OSHA chemical database search
-    const encodedQuery = encodeURIComponent(query);
-    const searchUrl = `https://www.osha.gov/chemicaldatabase/search?q=${encodedQuery}`;
-    
-    const response = await fetch(searchUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; MaterialSearch/1.0)',
-        'Accept': 'text/html'
-      }
-    });
-    
-    if (!response.ok) {
-      console.log(`[OSHA] Search failed: ${response.status}`);
-      return null;
-    }
-    
-    const html = await response.text();
-    const properties: Record<string, string> = {};
-    
-    // Try to extract chemical info from the page
-    // Look for PEL (Permissible Exposure Limit)
-    const pelMatch = html.match(/PEL[^:]*:?\s*([^<\n]+)/i);
-    if (pelMatch) properties['Permissible Exposure Limit (PEL)'] = pelMatch[1].trim();
-    
-    // Look for hazard information
-    const hazardMatch = html.match(/hazard[^:]*:?\s*([^<\n]+)/i);
-    if (hazardMatch) properties['Hazard Classification'] = hazardMatch[1].trim();
-    
-    // Look for CAS number
-    const casMatch = html.match(/CAS[^:]*:?\s*([\d-]+)/i);
-    if (casMatch) properties['CAS Number'] = casMatch[1].trim();
-    
-    // If we found data, return it
-    if (Object.keys(properties).length > 0) {
-      console.log(`[OSHA] Found ${Object.keys(properties).length} properties`);
-      return {
-        name: 'OSHA',
-        properties,
-        url: searchUrl
-      };
-    }
-    
-    // Fallback: Use AI to provide safety guidance based on the material
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) return null;
-    
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -390,43 +350,50 @@ async function searchOSHA(query: string): Promise<ExternalSource | null> {
         messages: [
           { 
             role: 'system', 
-            content: `You are an occupational safety expert. Given a material, provide brief, factual safety information. Return ONLY a JSON object (omit unknown fields):
+            content: `You are an occupational safety expert. Given a material name, provide brief, factual safety information. Return ONLY a JSON object with these fields (omit fields if unknown or not applicable):
 {
-  "hazard_class": "OSHA/GHS hazard classification if applicable",
-  "health_effects": "brief health hazard summary",
-  "ppe": "recommended PPE"
-}`
+  "hazard_class": "GHS hazard classification (e.g., 'Irritant', 'Flammable', 'Non-hazardous')",
+  "health_effects": "Brief health hazard summary (max 100 chars)",
+  "ppe": "Recommended PPE (max 80 chars)",
+  "cas_number": "CAS registry number if known"
+}
+
+Be concise and factual. Only include fields you're confident about.`
           },
-          { role: 'user', content: `Safety info for: ${query}` }
+          { role: 'user', content: `Safety information for: ${query}` }
         ],
         temperature: 0.2
       })
     });
 
-    if (!aiResponse.ok) return null;
+    if (!response.ok) {
+      console.log(`[Safety] API error: ${response.status}`);
+      return null;
+    }
 
-    const data = await aiResponse.json();
+    const data = await response.json();
     const content = data.choices?.[0]?.message?.content || '';
     
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return null;
     
     const safetyData = JSON.parse(jsonMatch[0]);
+    const properties: Record<string, string> = {};
     
     if (safetyData.hazard_class) properties['Hazard Classification'] = safetyData.hazard_class;
     if (safetyData.health_effects) properties['Health Effects'] = safetyData.health_effects;
     if (safetyData.ppe) properties['Recommended PPE'] = safetyData.ppe;
+    if (safetyData.cas_number) properties['CAS Number'] = safetyData.cas_number;
     
     if (Object.keys(properties).length === 0) return null;
     
-    console.log(`[OSHA] Generated safety data for: ${query}`);
+    console.log(`[Safety] Generated ${Object.keys(properties).length} safety properties`);
     return {
-      name: 'OSHA Safety',
-      properties,
-      url: `https://www.osha.gov/chemicaldatabase`
+      name: 'Safety Analysis',
+      properties
     };
   } catch (error) {
-    console.error('[OSHA] Error:', error);
+    console.error('[Safety] Error:', error);
     return null;
   }
 }
@@ -814,8 +781,8 @@ Deno.serve(async (req) => {
     const externalPromises = [
       searchPubChem(query),
       searchMaterialsProject(query),
-      searchWikipedia(query),
-      searchOSHA(query),
+      generateAIDescription(query),
+      generateSafetyInfo(query),
       searchMakeItFrom(query)
     ];
     
@@ -872,12 +839,12 @@ Deno.serve(async (req) => {
     }
     
     // Collect external sources
-    const [pubchemResult, materialsProjectResult, wikipediaResult, oshaResult, makeItFromResult] = externalSearchResults as [ExternalSource | null, ExternalSource | null, ExternalSource | null, ExternalSource | null, ExternalSource | null];
+    const [pubchemResult, materialsProjectResult, aiDescriptionResult, safetyResult, makeItFromResult] = externalSearchResults as [ExternalSource | null, ExternalSource | null, ExternalSource | null, ExternalSource | null, ExternalSource | null];
     
     if (pubchemResult) externalResults.set('pubchem', pubchemResult);
     if (materialsProjectResult) externalResults.set('materials_project', materialsProjectResult);
-    if (wikipediaResult) externalResults.set('wikipedia', wikipediaResult);
-    if (oshaResult) externalResults.set('osha', oshaResult);
+    if (aiDescriptionResult) externalResults.set('ai_description', aiDescriptionResult);
+    if (safetyResult) externalResults.set('safety', safetyResult);
     if (makeItFromResult) externalResults.set('makeitfrom', makeItFromResult);
     
     const externalSources = Array.from(externalResults.values());

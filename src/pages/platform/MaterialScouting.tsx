@@ -684,31 +684,6 @@ const MaterialScouting = () => {
                                   </div>
                                 </div>
 
-                                {/* Sustainability Breakdown */}
-                                <div>
-                                  <h5 className="text-lg font-semibold text-foreground mb-4">
-                                    Sustainability Score Breakdown
-                                  </h5>
-                                  <Card className="p-4">
-                                    <div className="space-y-4">
-                                      {Object.entries(material.sustainability.breakdown).map(([key, value]) => (
-                                        <div key={key}>
-                                          <div className="flex justify-between text-sm mb-2">
-                                            <span className="text-foreground capitalize">
-                                              {key.replace(/([A-Z])/g, ' $1').trim()}
-                                            </span>
-                                            <span className="font-semibold text-primary">{String(value)}%</span>
-                                          </div>
-                                          <Progress value={value as number} className="h-2" />
-                                        </div>
-                                      ))}
-                                      <Separator className="my-3" />
-                                      <div className="text-xs text-muted-foreground">
-                                        <strong>Calculation:</strong> {material.sustainability.calculation}
-                                      </div>
-                                    </div>
-                                  </Card>
-                                </div>
                               </>
                             ) : (
                               /* Suppliers View - Premium Gated */

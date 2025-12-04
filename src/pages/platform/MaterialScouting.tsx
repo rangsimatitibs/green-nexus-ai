@@ -542,7 +542,27 @@ const MaterialScouting = () => {
                           {material.sustainability?.score !== undefined && material.sustainability.score > 0 && (
                             <div className="text-right">
                               <div className="text-sm text-muted-foreground mb-1">Sustainability</div>
-                              <div className="text-3xl font-bold text-primary">{material.sustainability.score}%</div>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex items-center gap-1 cursor-help justify-end">
+                                      <span className="text-3xl font-bold text-primary">{material.sustainability.score}%</span>
+                                      {material.sustainability.source === 'AI Analysis' && (
+                                        <Bot className="h-4 w-4 text-muted-foreground" />
+                                      )}
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-xs">
+                                    <p className="text-sm">
+                                      {material.sustainability.justification || 
+                                        `Based on ${material.sustainability.source?.toLowerCase() || 'available data'}`}
+                                    </p>
+                                    {material.sustainability.source === 'AI Analysis' && (
+                                      <p className="text-xs text-muted-foreground mt-1">AI-estimated score</p>
+                                    )}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </div>
                           )}
                         </div>
@@ -1216,13 +1236,23 @@ const MaterialScouting = () => {
 
                 {/* Sustainability Score */}
                 <div className={getPropertyDifference('sustainability.score', getComparisonData()) ? 'bg-primary/10 p-3 rounded-md border-2 border-primary/30' : 'p-3'}>
-                  <div className="text-sm font-semibold text-muted-foreground mb-2">Sustainability Score</div>
-                  <div className="flex items-center gap-3">
-                    <Progress value={material.sustainability.score} className="flex-1" />
-                    <span className="text-2xl font-bold text-primary">{material.sustainability.score}</span>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm font-semibold text-muted-foreground">Sustainability Score</span>
+                    {material.sustainability?.source === 'AI Analysis' && (
+                      <Bot className="h-3 w-3 text-muted-foreground" />
+                    )}
                   </div>
+                  <div className="flex items-center gap-3">
+                    <Progress value={material.sustainability?.score || 0} className="flex-1" />
+                    <span className="text-2xl font-bold text-primary">{material.sustainability?.score || 0}</span>
+                  </div>
+                  {material.sustainability?.justification && (
+                    <p className="text-xs text-muted-foreground mt-2 italic">
+                      {material.sustainability.justification}
+                    </p>
+                  )}
                   <div className="mt-3 space-y-1">
-                    {Object.entries(material.sustainability.breakdown).map(([key, value]) => (
+                    {material.sustainability?.breakdown && Object.entries(material.sustainability.breakdown).map(([key, value]) => (
                       <div key={key} className="flex justify-between text-xs">
                         <span className="text-muted-foreground capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
                         <span className="text-foreground font-medium">{String(value)}/100</span>

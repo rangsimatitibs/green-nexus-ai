@@ -43,6 +43,7 @@ export interface SearchResult {
     breakdown: Record<string, number>;
     calculation: string | null;
     source?: string;
+    justification?: string;
   };
   suppliers: Array<{
     id: string;

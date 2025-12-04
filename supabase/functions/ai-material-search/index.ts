@@ -14,7 +14,7 @@ interface MaterialData {
   properties: Array<{ name: string; value: string; source: string; source_url?: string }>;
   applications: Array<{ name: string; source: string }>;
   regulations: Array<{ name: string; source: string }>;
-  sustainability: { score: number; breakdown: Record<string, number>; source: string } | null;
+  sustainability: { score: number; breakdown: Record<string, number>; source: string; justification?: string } | null;
   suppliers: Array<{ company: string; country: string; source: string }>;
   ai_summary: string;
   sources_used: string[];
@@ -660,6 +660,101 @@ What regulatory standards likely apply to this material?`
   }
 }
 
+// Generate sustainability score with AI
+async function generateAISustainability(material: {
+  name: string;
+  category: string;
+  properties: Array<{ name: string; value: string }>;
+}): Promise<{ score: number; breakdown: Record<string, number>; justification: string } | null> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    console.log('[AI-Sustainability] No API key');
+    return null;
+  }
+
+  try {
+    console.log(`[AI-Sustainability] Generating for: ${material.name}`);
+    
+    const propertiesText = material.properties
+      .slice(0, 10)
+      .map(p => `${p.name}: ${p.value}`)
+      .join(', ');
+    
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { 
+            role: 'system', 
+            content: `You are a sustainability expert for materials science. Given a material, estimate sustainability scores (0-100) based on available data and scientific knowledge.
+
+Score dimensions:
+- renewable: How renewable is the raw material source? (bio-based = high, fossil-based = low)
+- carbonFootprint: Inverse of carbon footprint during production (low CO2 = high score)
+- biodegradability: How readily does it biodegrade? (industrial compost = 70-85, home compost = 85-100, non-biodegradable = 0-30)
+- toxicity: Inverse of toxicity (food-safe = high, toxic chemicals = low)
+
+Consider the material category, known properties, and scientific consensus.
+
+Return ONLY valid JSON:
+{
+  "overall": <number 0-100>,
+  "renewable": <number 0-100>,
+  "carbonFootprint": <number 0-100>,
+  "biodegradability": <number 0-100>,
+  "toxicity": <number 0-100>,
+  "justification": "<brief 1-sentence explanation, max 100 chars>"
+}`
+          },
+          { 
+            role: 'user', 
+            content: `Material: ${material.name}
+Category: ${material.category}
+Known Properties: ${propertiesText || 'None available'}
+
+Estimate sustainability scores for this material.` 
+          }
+        ],
+        temperature: 0.3
+      })
+    });
+
+    if (!response.ok) {
+      console.log(`[AI-Sustainability] API error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      console.log(`[AI-Sustainability] Generated score: ${parsed.overall}`);
+      return {
+        score: parsed.overall || 50,
+        breakdown: {
+          renewable: parsed.renewable || 50,
+          carbonFootprint: parsed.carbonFootprint || 50,
+          biodegradability: parsed.biodegradability || 50,
+          toxicity: parsed.toxicity || 50
+        },
+        justification: parsed.justification || 'Estimated based on material category and known properties.'
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('[AI-Sustainability] Error:', error);
+    return null;
+  }
+}
+
 // Build MaterialData from local result
 async function buildMaterialData(
   local: any,
@@ -712,6 +807,37 @@ async function buildMaterialData(
     }
   }
   
+  // Get sustainability - use local if available, otherwise generate with AI
+  let sustainability: MaterialData['sustainability'] = null;
+  if (local.sustainability) {
+    sustainability = {
+      score: local.sustainability.overall_score,
+      breakdown: {
+        renewable: local.sustainability.renewable_score,
+        carbonFootprint: local.sustainability.carbon_footprint_score,
+        biodegradability: local.sustainability.biodegradability_score,
+        toxicity: local.sustainability.toxicity_score
+      },
+      source: 'Your Database'
+    };
+  } else {
+    // Generate sustainability with AI
+    const aiSustainability = await generateAISustainability({
+      name: displayName,
+      category: local.category,
+      properties: properties.map(p => ({ name: p.name, value: p.value }))
+    });
+    if (aiSustainability) {
+      sustainability = {
+        score: aiSustainability.score,
+        breakdown: aiSustainability.breakdown,
+        source: 'AI Analysis',
+        justification: aiSustainability.justification
+      };
+      sourcesUsed.add('AI Analysis');
+    }
+  }
+  
   return {
     name: displayName,
     iupac_name: isLongIUPACName(local.name) ? local.name : null,
@@ -721,16 +847,7 @@ async function buildMaterialData(
     properties,
     applications: local.applications.map((a: any) => ({ name: a.application, source: 'Your Database' })),
     regulations,
-    sustainability: local.sustainability ? {
-      score: local.sustainability.overall_score,
-      breakdown: {
-        renewable: local.sustainability.renewable_score,
-        carbonFootprint: local.sustainability.carbon_footprint_score,
-        biodegradability: local.sustainability.biodegradability_score,
-        toxicity: local.sustainability.toxicity_score
-      },
-      source: 'Your Database'
-    } : null,
+    sustainability,
     suppliers: local.suppliers.map((s: any) => ({
       company: s.company_name,
       country: s.country,
@@ -921,6 +1038,23 @@ Deno.serve(async (req) => {
         sourcesUsed.add('AI Analysis');
       }
       
+      // Generate AI sustainability for external-only results
+      const aiSustainability = await generateAISustainability({
+        name: displayName,
+        category: 'Chemical Compound',
+        properties: properties.map(p => ({ name: p.name, value: p.value }))
+      });
+      let sustainability: MaterialData['sustainability'] = null;
+      if (aiSustainability) {
+        sustainability = {
+          score: aiSustainability.score,
+          breakdown: aiSustainability.breakdown,
+          source: 'AI Analysis',
+          justification: aiSustainability.justification
+        };
+        sourcesUsed.add('AI Analysis');
+      }
+      
       results.push({
         name: displayName,
         iupac_name: isLongIUPACName(rawName) ? rawName : null,
@@ -930,7 +1064,7 @@ Deno.serve(async (req) => {
         properties,
         applications: [],
         regulations: aiRegulations,
-        sustainability: null,
+        sustainability,
         suppliers: [],
         ai_summary: aiSummary,
         sources_used: Array.from(sourcesUsed),

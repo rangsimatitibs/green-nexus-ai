@@ -16,6 +16,46 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUnifiedMaterialSearch } from "@/hooks/useUnifiedMaterialSearch";
 import { SourceBadge, SourcesList } from "@/components/ui/SourceBadge";
 
+// Helper to get a readable display name for materials with long IUPAC names
+const getDisplayName = (name: string, synonyms?: string[]): string => {
+  // If name is reasonable length, use it
+  if (name.length <= 60) return name;
+  
+  // Look for a shorter synonym to use as display name
+  if (synonyms && synonyms.length > 0) {
+    // Prefer abbreviations or short aliases
+    const shortSynonym = synonyms.find(s => s.length <= 30 && !s.includes('(') && !s.includes('['));
+    if (shortSynonym) return shortSynonym;
+    // Otherwise use first synonym if it's shorter than the name
+    if (synonyms[0].length < name.length) return synonyms[0];
+  }
+  
+  // Fallback: truncate the name
+  return name.slice(0, 50) + '...';
+};
+
+// Component for truncated long text with "read more"
+const TruncatedText = ({ text, maxLines = 2, label }: { text: string; maxLines?: number; label?: string }) => {
+  const [expanded, setExpanded] = useState(false);
+  
+  if (text.length <= 100) return null;
+  
+  return (
+    <div className="mb-2">
+      {label && <span className="text-xs text-muted-foreground">{label}: </span>}
+      <span className={`text-xs text-muted-foreground ${!expanded ? 'line-clamp-2' : ''}`}>
+        {text}
+      </span>
+      <button 
+        onClick={() => setExpanded(!expanded)}
+        className="text-xs text-primary hover:underline ml-1"
+      >
+        {expanded ? '(show less)' : '(read more...)'}
+      </button>
+    </div>
+  );
+};
+
 const MaterialScouting = () => {
   const { loading: materialsLoading, error: materialsError, search, lastSearchSource, canLoadMore, loadMore, isLoadingMore, results } = useUnifiedMaterialSearch();
   const [searchQuery, setSearchQuery] = useState("");
@@ -421,7 +461,7 @@ const MaterialScouting = () => {
                             <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2 flex-wrap">
                               <h4 className="text-xl font-semibold text-foreground">
-                                {material.name}
+                                {getDisplayName(material.name, material.synonyms)}
                               </h4>
                               <Badge variant="secondary">{material.category}</Badge>
                               {material.sources_used && material.sources_used.length > 0 ? (
@@ -430,6 +470,10 @@ const MaterialScouting = () => {
                                 <SourceBadge source={material.data_source} />
                               )}
                             </div>
+                            {/* Long IUPAC name truncated */}
+                            {material.name.length > 80 && (
+                              <TruncatedText text={material.name} maxLines={2} label="IUPAC Name" />
+                            )}
                             {/* AI Summary */}
                             {material.ai_summary && (
                               <Card className="p-3 bg-orange-500/5 border-orange-500/20 mb-3">

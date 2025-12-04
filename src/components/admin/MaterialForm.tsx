@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, Plus, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+
+interface MaterialProperty {
+  id?: string;
+  property_name: string;
+  property_value: string;
+  property_category: string;
+}
+
+interface MaterialApplication {
+  id?: string;
+  application: string;
+}
 
 interface MaterialFormProps {
   open: boolean;
@@ -38,6 +52,8 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
     innovation: "",
     image_url: "",
   });
+  const [properties, setProperties] = useState<MaterialProperty[]>([]);
+  const [applications, setApplications] = useState<MaterialApplication[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -59,21 +75,43 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
       if (material.image_url) {
         setImagePreview(material.image_url);
       }
+      // Fetch existing properties and applications
+      fetchRelatedData(material.id);
     } else {
-      setFormData({
-        name: "",
-        category: "",
-        chemical_formula: "",
-        chemical_structure: "",
-        uniqueness: "",
-        scale: "",
-        innovation: "",
-        image_url: "",
-      });
-      setImagePreview(null);
+      resetForm();
     }
     setImageFile(null);
   }, [material, open]);
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      category: "",
+      chemical_formula: "",
+      chemical_structure: "",
+      uniqueness: "",
+      scale: "",
+      innovation: "",
+      image_url: "",
+    });
+    setProperties([]);
+    setApplications([]);
+    setImagePreview(null);
+  };
+
+  const fetchRelatedData = async (materialId: string) => {
+    try {
+      const [propsRes, appsRes] = await Promise.all([
+        supabase.from("material_properties").select("*").eq("material_id", materialId),
+        supabase.from("material_applications").select("*").eq("material_id", materialId),
+      ]);
+
+      if (propsRes.data) setProperties(propsRes.data);
+      if (appsRes.data) setApplications(appsRes.data);
+    } catch (error) {
+      console.error("Error fetching related data:", error);
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -132,6 +170,36 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
     }
   };
 
+  // Property management
+  const addProperty = () => {
+    setProperties([...properties, { property_name: "", property_value: "", property_category: "Physical" }]);
+  };
+
+  const updateProperty = (index: number, field: keyof MaterialProperty, value: string) => {
+    const updated = [...properties];
+    updated[index] = { ...updated[index], [field]: value };
+    setProperties(updated);
+  };
+
+  const removeProperty = (index: number) => {
+    setProperties(properties.filter((_, i) => i !== index));
+  };
+
+  // Application management
+  const addApplication = () => {
+    setApplications([...applications, { application: "" }]);
+  };
+
+  const updateApplication = (index: number, value: string) => {
+    const updated = [...applications];
+    updated[index] = { ...updated[index], application: value };
+    setApplications(updated);
+  };
+
+  const removeApplication = (index: number) => {
+    setApplications(applications.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -143,6 +211,8 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
         image_url: imageUrl || formData.image_url,
       };
 
+      let materialId = material?.id;
+
       if (material) {
         const { error } = await supabase
           .from("materials")
@@ -150,16 +220,52 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
           .eq("id", material.id);
 
         if (error) throw error;
-        toast({ title: "Success", description: "Material updated successfully" });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("materials")
-          .insert(dataToSave);
+          .insert(dataToSave)
+          .select()
+          .single();
 
         if (error) throw error;
-        toast({ title: "Success", description: "Material created successfully" });
+        materialId = data.id;
       }
 
+      // Save properties - delete existing and insert new
+      if (materialId) {
+        await supabase.from("material_properties").delete().eq("material_id", materialId);
+        if (properties.length > 0) {
+          const propsToInsert = properties
+            .filter(p => p.property_name && p.property_value)
+            .map(p => ({
+              material_id: materialId,
+              property_name: p.property_name,
+              property_value: p.property_value,
+              property_category: p.property_category || "Physical",
+            }));
+          if (propsToInsert.length > 0) {
+            const { error: propsError } = await supabase.from("material_properties").insert(propsToInsert);
+            if (propsError) throw propsError;
+          }
+        }
+
+        // Save applications - delete existing and insert new
+        await supabase.from("material_applications").delete().eq("material_id", materialId);
+        if (applications.length > 0) {
+          const appsToInsert = applications
+            .filter(a => a.application)
+            .map(a => ({
+              material_id: materialId,
+              application: a.application,
+            }));
+          if (appsToInsert.length > 0) {
+            const { error: appsError } = await supabase.from("material_applications").insert(appsToInsert);
+            if (appsError) throw appsError;
+          }
+        }
+      }
+
+      toast({ title: "Success", description: material ? "Material updated successfully" : "Material created successfully" });
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
@@ -175,133 +281,262 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{material ? "Edit Material" : "Add Material"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="image">Material Image</Label>
-            {imagePreview ? (
-              <div className="relative w-full h-48 border rounded-lg overflow-hidden">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
+          <Tabs defaultValue="basic" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="basic">Basic Info</TabsTrigger>
+              <TabsTrigger value="properties">Properties ({properties.length})</TabsTrigger>
+              <TabsTrigger value="applications">Applications ({applications.length})</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="basic" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="image">Material Image</Label>
+                {imagePreview ? (
+                  <div className="relative w-full h-48 border rounded-lg overflow-hidden">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={handleRemoveImage}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
+                    <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <Label htmlFor="image-upload" className="cursor-pointer">
+                      <span className="text-sm text-muted-foreground">Click to upload image</span>
+                    </Label>
+                    <Input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageChange}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category *</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Bio-based Polymers">Bio-based Polymers</SelectItem>
+                      <SelectItem value="Composites">Composites</SelectItem>
+                      <SelectItem value="Natural Materials">Natural Materials</SelectItem>
+                      <SelectItem value="Recycled Materials">Recycled Materials</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="chemical_formula">Chemical Formula</Label>
+                <Input
+                  id="chemical_formula"
+                  value={formData.chemical_formula}
+                  onChange={(e) => setFormData({ ...formData, chemical_formula: e.target.value })}
                 />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  className="absolute top-2 right-2"
-                  onClick={handleRemoveImage}
-                >
-                  <X className="h-4 w-4" />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="chemical_structure">Chemical Structure</Label>
+                <Textarea
+                  id="chemical_structure"
+                  value={formData.chemical_structure}
+                  onChange={(e) => setFormData({ ...formData, chemical_structure: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="scale">Scale</Label>
+                  <Select
+                    value={formData.scale}
+                    onValueChange={(value) => setFormData({ ...formData, scale: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select scale" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Lab-scale">Lab-scale</SelectItem>
+                      <SelectItem value="Pilot-scale">Pilot-scale</SelectItem>
+                      <SelectItem value="Commercial">Commercial</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="uniqueness">Uniqueness</Label>
+                  <Input
+                    id="uniqueness"
+                    value={formData.uniqueness}
+                    onChange={(e) => setFormData({ ...formData, uniqueness: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="innovation">Innovation</Label>
+                  <Input
+                    id="innovation"
+                    value={formData.innovation}
+                    onChange={(e) => setFormData({ ...formData, innovation: e.target.value })}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="properties" className="space-y-4 mt-4">
+              <div className="flex justify-between items-center">
+                <Label>Material Properties</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addProperty}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Property
                 </Button>
               </div>
-            ) : (
-              <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
-                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <Label htmlFor="image-upload" className="cursor-pointer">
-                  <span className="text-sm text-muted-foreground">Click to upload image</span>
-                </Label>
-                <Input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageChange}
-                />
+              
+              {properties.length === 0 ? (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    No properties added. Click "Add Property" to start.
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {properties.map((prop, index) => (
+                    <Card key={index}>
+                      <CardContent className="pt-4">
+                        <div className="grid grid-cols-12 gap-3 items-end">
+                          <div className="col-span-3 space-y-1">
+                            <Label className="text-xs">Category</Label>
+                            <Select
+                              value={prop.property_category}
+                              onValueChange={(value) => updateProperty(index, "property_category", value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Physical">Physical</SelectItem>
+                                <SelectItem value="Mechanical">Mechanical</SelectItem>
+                                <SelectItem value="Thermal">Thermal</SelectItem>
+                                <SelectItem value="Chemical">Chemical</SelectItem>
+                                <SelectItem value="Optical">Optical</SelectItem>
+                                <SelectItem value="Environmental">Environmental</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="col-span-4 space-y-1">
+                            <Label className="text-xs">Property Name</Label>
+                            <Input
+                              placeholder="e.g., Tensile Strength"
+                              value={prop.property_name}
+                              onChange={(e) => updateProperty(index, "property_name", e.target.value)}
+                            />
+                          </div>
+                          <div className="col-span-4 space-y-1">
+                            <Label className="text-xs">Value</Label>
+                            <Input
+                              placeholder="e.g., 50-70 MPa"
+                              value={prop.property_value}
+                              onChange={(e) => updateProperty(index, "property_value", e.target.value)}
+                            />
+                          </div>
+                          <div className="col-span-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeProperty(index)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="applications" className="space-y-4 mt-4">
+              <div className="flex justify-between items-center">
+                <Label>Material Applications</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addApplication}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Application
+                </Button>
               </div>
-            )}
-          </div>
+              
+              {applications.length === 0 ? (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    No applications added. Click "Add Application" to start.
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {applications.map((app, index) => (
+                    <Card key={index}>
+                      <CardContent className="pt-4">
+                        <div className="flex gap-3 items-center">
+                          <Input
+                            placeholder="e.g., Packaging, Automotive, Textiles"
+                            value={app.application}
+                            onChange={(e) => updateApplication(index, e.target.value)}
+                            className="flex-1"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeApplication(index)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => setFormData({ ...formData, category: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Bio-based Polymers">Bio-based Polymers</SelectItem>
-                  <SelectItem value="Composites">Composites</SelectItem>
-                  <SelectItem value="Natural Materials">Natural Materials</SelectItem>
-                  <SelectItem value="Recycled Materials">Recycled Materials</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="chemical_formula">Chemical Formula</Label>
-            <Input
-              id="chemical_formula"
-              value={formData.chemical_formula}
-              onChange={(e) => setFormData({ ...formData, chemical_formula: e.target.value })}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="chemical_structure">Chemical Structure</Label>
-            <Textarea
-              id="chemical_structure"
-              value={formData.chemical_structure}
-              onChange={(e) => setFormData({ ...formData, chemical_structure: e.target.value })}
-              rows={3}
-            />
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="scale">Scale</Label>
-              <Select
-                value={formData.scale}
-                onValueChange={(value) => setFormData({ ...formData, scale: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select scale" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Lab-scale">Lab-scale</SelectItem>
-                  <SelectItem value="Pilot-scale">Pilot-scale</SelectItem>
-                  <SelectItem value="Commercial">Commercial</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="uniqueness">Uniqueness</Label>
-              <Input
-                id="uniqueness"
-                value={formData.uniqueness}
-                onChange={(e) => setFormData({ ...formData, uniqueness: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="innovation">Innovation</Label>
-              <Input
-                id="innovation"
-                value={formData.innovation}
-                onChange={(e) => setFormData({ ...formData, innovation: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-4 border-t">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

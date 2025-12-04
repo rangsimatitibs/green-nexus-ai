@@ -28,124 +28,59 @@ interface ExternalSource {
   url?: string;
 }
 
-// Categories and use-cases that should NOT be treated as materials
-const NON_MATERIAL_TERMS = new Set([
-  // Material Categories - General
-  'metals', 'metal', 'plastics', 'plastic', 'ceramics', 'ceramic', 'composites', 'composite',
-  'polymers', 'polymer', 'alloys', 'alloy', 'fibers', 'fiber', 'fibres', 'fibre',
-  'bioplastics', 'bioplastic', 'thermoplastics', 'thermoplastic', 'thermosets', 'thermoset',
-  'elastomers', 'elastomer', 'semiconductors', 'semiconductor', 'superconductors', 'superconductor',
-  'nanomaterials', 'nanomaterial', 'biomaterials', 'biomaterial', 'smart materials',
-  'natural materials', 'synthetic materials', 'organic materials', 'inorganic materials',
-  'raw materials', 'advanced materials', 'engineering materials', 'construction materials',
-  'ferrous metals', 'non-ferrous metals', 'precious metals', 'noble metals', 'rare earth metals',
-  'heavy metals', 'light metals', 'transition metals', 'alkali metals', 'alkaline earth metals',
-  'refractory metals', 'base metals', 'industrial metals',
+// Fetch excluded terms from database
+let excludedTermsCache: Set<string> | null = null;
+let excludedTermsCacheTime: number = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getExcludedTerms(): Promise<Set<string>> {
+  const now = Date.now();
   
-  // Polymer Categories
-  'engineering plastics', 'commodity plastics', 'specialty plastics', 'high-performance plastics',
-  'biodegradable plastics', 'bio-based plastics', 'petroleum-based plastics',
-  'amorphous polymers', 'crystalline polymers', 'semi-crystalline polymers',
-  'copolymers', 'homopolymers', 'block copolymers', 'graft copolymers',
-  'thermoplastic elastomers', 'liquid crystal polymers', 'fluoropolymers',
-  'polyolefins', 'polyesters', 'polyamides', 'polyurethanes', 'silicones',
-  'resins', 'resin', 'epoxies', 'epoxy resins', 'phenolic resins', 'acrylic resins',
+  // Return cached terms if still valid
+  if (excludedTermsCache && (now - excludedTermsCacheTime) < CACHE_TTL) {
+    return excludedTermsCache;
+  }
   
-  // Ceramic/Glass Categories
-  'technical ceramics', 'advanced ceramics', 'structural ceramics', 'functional ceramics',
-  'oxide ceramics', 'non-oxide ceramics', 'carbide ceramics', 'nitride ceramics',
-  'glasses', 'glass', 'glass ceramics', 'porcelain', 'earthenware', 'stoneware',
-  'refractories', 'refractory materials', 'abrasives', 'abrasive materials',
-  
-  // Composite Categories
-  'fiber reinforced plastics', 'carbon fiber composites', 'glass fiber composites',
-  'metal matrix composites', 'ceramic matrix composites', 'polymer matrix composites',
-  'laminates', 'laminate', 'sandwich composites', 'particulate composites',
-  
-  // Natural Material Categories
-  'wood', 'woods', 'timber', 'lumber', 'hardwoods', 'softwoods',
-  'natural fibers', 'plant fibers', 'animal fibers', 'mineral fibers',
-  'leather', 'leathers', 'paper', 'papers', 'cardboard',
-  'natural rubber', 'natural polymers', 'biopolymers',
-  
-  // Use Cases / Applications - Industrial
-  'electrical wires', 'electrical wire', 'wires', 'wire', 'cables', 'cable',
-  'packaging', 'packaging materials', 'insulation', 'insulation materials',
-  'coatings', 'coating', 'adhesives', 'adhesive', 'sealants', 'sealant',
-  'textiles', 'textile', 'fabrics', 'fabric', 'clothing', 'apparel',
-  'construction', 'building materials', 'structural materials',
-  'automotive', 'automotive materials', 'aerospace materials',
-  'medical devices', 'medical implants', 'biomedical',
-  'electronics', 'electronic components', 'circuit boards', 'pcb materials',
-  'batteries', 'battery materials', 'energy storage', 'fuel cells',
-  'solar panels', 'solar cells', 'photovoltaic', 'pv materials',
-  'pipes', 'piping', 'tubing', 'tubes', 'hoses', 'hose',
-  'containers', 'bottles', 'films', 'sheets', 'foils',
-  'gaskets', 'seals', 'o-rings', 'bearings', 'bushings',
-  'fasteners', 'screws', 'bolts', 'nuts', 'rivets',
-  'springs', 'gears', 'shafts', 'housings', 'enclosures',
-  
-  // Use Cases / Applications - Consumer
-  'furniture', 'flooring', 'roofing', 'siding', 'windows', 'doors',
-  'appliances', 'cookware', 'utensils', 'cutlery',
-  'toys', 'sporting goods', 'footwear', 'eyewear',
-  'jewelry', 'watches', 'cosmetics', 'personal care',
-  
-  // Use Cases / Applications - Specialized
-  'implants', 'prosthetics', 'dental materials', 'surgical instruments',
-  'drug delivery', 'tissue engineering', 'scaffolds',
-  'catalysts', 'catalyst supports', 'adsorbents', 'absorbents',
-  'sensors', 'actuators', 'transducers',
-  'magnets', 'magnetic materials', 'optical materials', 'acoustic materials',
-  'thermal materials', 'heat exchangers', 'heat sinks',
-  'filtration', 'membranes', 'filters', 'separation materials',
-  
-  // Property-Based Categories
-  'sustainable materials', 'eco-friendly materials', 'green materials',
-  'recyclable materials', 'biodegradable materials', 'compostable materials',
-  'high strength materials', 'lightweight materials', 'durable materials',
-  'conductive materials', 'insulating materials', 'transparent materials',
-  'food grade', 'food safe', 'medical grade', 'pharmaceutical grade',
-  'flame retardant materials', 'fire resistant materials', 'heat resistant materials',
-  'corrosion resistant materials', 'wear resistant materials', 'chemical resistant materials',
-  'waterproof materials', 'moisture resistant materials', 'uv resistant materials',
-  'flexible materials', 'rigid materials', 'soft materials', 'hard materials',
-  'porous materials', 'dense materials', 'cellular materials', 'foam materials',
-  'brittle materials', 'ductile materials', 'malleable materials',
-  'conductive', 'insulating', 'magnetic', 'optical', 'acoustic',
-  
-  // Process/Form Categories
-  'powder materials', 'granules', 'pellets', 'flakes',
-  'rods', 'bars', 'plates', 'ingots', 'billets',
-  'castings', 'forgings', 'extrusions', 'moldings',
-  'coatings', 'thin films', 'thick films', 'surface treatments',
-  'woven', 'nonwoven', 'knitted', 'braided',
-  
-  // Generic/Vague Terms
-  'materials', 'material', 'substances', 'substance', 'compounds', 'compound',
-  'elements', 'element', 'chemicals', 'chemical', 'products', 'product',
-  'components', 'component', 'parts', 'part', 'items', 'item',
-  'stuff', 'things', 'goods', 'supplies', 'resources',
-  'alternatives', 'alternative', 'substitutes', 'substitute', 'replacements',
-  'options', 'solutions', 'types', 'kinds', 'varieties', 'grades',
-  'best materials', 'good materials', 'cheap materials', 'expensive materials',
-  'new materials', 'old materials', 'modern materials', 'traditional materials',
-  'common materials', 'rare materials', 'exotic materials', 'standard materials'
-]);
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    const { data, error } = await supabase
+      .from('excluded_search_terms')
+      .select('term');
+    
+    if (error) {
+      console.log('[ExcludedTerms] Error fetching from database:', error.message);
+      // Return empty set on error, don't fail the whole search
+      return new Set();
+    }
+    
+    const terms = new Set((data || []).map(row => row.term.toLowerCase()));
+    excludedTermsCache = terms;
+    excludedTermsCacheTime = now;
+    console.log(`[ExcludedTerms] Loaded ${terms.size} excluded terms from database`);
+    return terms;
+  } catch (e) {
+    console.log('[ExcludedTerms] Exception:', e);
+    return new Set();
+  }
+}
 
 // Check if a query is a category/use-case rather than a specific material
-function isCategoryOrUseCase(query: string): boolean {
+async function isCategoryOrUseCase(query: string): Promise<boolean> {
   const normalizedQuery = query.toLowerCase().trim();
+  const excludedTerms = await getExcludedTerms();
   
   // Direct match
-  if (NON_MATERIAL_TERMS.has(normalizedQuery)) {
+  if (excludedTerms.has(normalizedQuery)) {
     return true;
   }
   
   // Check for plural/singular variations
   const withoutS = normalizedQuery.endsWith('s') ? normalizedQuery.slice(0, -1) : normalizedQuery;
   const withS = normalizedQuery + 's';
-  if (NON_MATERIAL_TERMS.has(withoutS) || NON_MATERIAL_TERMS.has(withS)) {
+  if (excludedTerms.has(withoutS) || excludedTerms.has(withS)) {
     return true;
   }
   
@@ -1181,7 +1116,7 @@ Deno.serve(async (req) => {
     
     // If no local results, create entry from external sources
     // BUT only if it's a specific material, not a category/use-case
-    const isCategory = isCategoryOrUseCase(query);
+    const isCategory = await isCategoryOrUseCase(query);
     
     if (localResultsArray.length === 0 && externalSources.length > 0 && !isCategory) {
       const properties: MaterialData['properties'] = [];

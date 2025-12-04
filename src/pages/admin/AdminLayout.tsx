@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Database, Beaker, Package, FileText, LayoutDashboard, LogOut, Server, Globe } from "lucide-react";
+import { Database, Beaker, Package, FileText, LayoutDashboard, LogOut, Server, Globe, Ban } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ const yourDataNavigation = [
 
 const externalSourcesNavigation = [
   { name: "Manage Sources", href: "/admin/external-sources", icon: Globe },
+  { name: "Excluded Terms", href: "/admin/excluded-terms", icon: Ban },
 ];
 
 export default function AdminLayout() {

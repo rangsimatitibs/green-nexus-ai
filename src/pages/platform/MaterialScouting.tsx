@@ -1,4 +1,5 @@
-import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download, Loader2, FileText } from "lucide-react";
+import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download, Loader2, FileText, Lock } from "lucide-react";
+import PremiumGate from "@/components/PremiumGate";
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -516,12 +517,16 @@ const MaterialScouting = () => {
                               </>
                             )}
                           </Button>
-                          <Link to={`/platform/material/${material.id}`} className="flex-1">
-                            <Button variant="default" className="w-full">
-                              <FileText className="h-4 w-4 mr-2" />
-                              Advanced Data Sheet
-                            </Button>
-                          </Link>
+                          <Button 
+                            variant="outline" 
+                            className="flex-1 opacity-60 cursor-not-allowed"
+                            disabled
+                            title="Upgrade to Premium to access detailed data sheets"
+                          >
+                            <Lock className="h-4 w-4 mr-2" />
+                            Advanced Data Sheet
+                            <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">Premium</span>
+                          </Button>
                         </div>
                       </div>
 
@@ -542,9 +547,11 @@ const MaterialScouting = () => {
                                 variant={viewMode === "suppliers" ? "default" : "outline"}
                                 onClick={() => setViewMode("suppliers")}
                                 size="sm"
+                                className="relative"
                               >
                                 <Factory className="h-4 w-4 mr-2" />
                                 Find Suppliers ({material.suppliers.length})
+                                <Lock className="h-3 w-3 ml-2 text-primary" />
                               </Button>
                             </div>
 
@@ -592,12 +599,16 @@ const MaterialScouting = () => {
                                 </div>
                               </>
                             ) : (
-                              /* Suppliers View */
-                              <div>
-                                <h5 className="text-lg font-semibold text-foreground mb-4">
-                                  Available Suppliers & Pricing
-                                </h5>
-                                <div className="space-y-4">
+                              /* Suppliers View - Premium Gated */
+                              <PremiumGate
+                                title="Premium Access Required"
+                                description="Unlock supplier contacts, pricing information, and detailed product specifications with Premium access."
+                              >
+                                <div>
+                                  <h5 className="text-lg font-semibold text-foreground mb-4">
+                                    Available Suppliers & Pricing
+                                  </h5>
+                                  <div className="space-y-4">
                                   {material.suppliers.map((supplier: any, idx: number) => (
                                     <Card key={idx} className="p-6">
                                       {/* Company Header with Logo */}
@@ -824,6 +835,7 @@ const MaterialScouting = () => {
                                   ))}
                                 </div>
                               </div>
+                              </PremiumGate>
                             )}
                           </div>
                         </div>

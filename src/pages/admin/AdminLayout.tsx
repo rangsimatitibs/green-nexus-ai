@@ -12,10 +12,8 @@ const yourDataNavigation = [
   { name: "Lab Recipes", href: "/admin/lab-recipes", icon: FileText },
 ];
 
-const externalSources = [
-  { name: "PubChem", status: "Connected" },
-  { name: "MakeItFrom", status: "Connected" },
-  { name: "AI Analysis", status: "Active" },
+const externalSourcesNavigation = [
+  { name: "Manage Sources", href: "/admin/external-sources", icon: Globe },
 ];
 
 export default function AdminLayout() {
@@ -91,15 +89,24 @@ export default function AdminLayout() {
               </span>
             </div>
             <div className="space-y-1">
-              {externalSources.map((source) => (
-                <div
-                  key={source.name}
-                  className="flex items-center justify-between px-3 py-2 text-sm text-muted-foreground"
-                >
-                  <span>{source.name}</span>
-                  <span className="text-xs bg-muted px-2 py-0.5 rounded">{source.status}</span>
-                </div>
-              ))}
+              {externalSourcesNavigation.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.name}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </nav>

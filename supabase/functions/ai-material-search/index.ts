@@ -28,6 +28,63 @@ interface ExternalSource {
   url?: string;
 }
 
+// Categories and use-cases that should NOT be treated as materials
+const NON_MATERIAL_TERMS = new Set([
+  // Categories
+  'metals', 'metal', 'plastics', 'plastic', 'ceramics', 'ceramic', 'composites', 'composite',
+  'polymers', 'polymer', 'alloys', 'alloy', 'fibers', 'fiber', 'fibres', 'fibre',
+  'bioplastics', 'bioplastic', 'thermoplastics', 'thermoplastic', 'thermosets', 'thermoset',
+  'elastomers', 'elastomer', 'semiconductors', 'semiconductor', 'superconductors', 'superconductor',
+  'nanomaterials', 'nanomaterial', 'biomaterials', 'biomaterial', 'smart materials',
+  'natural materials', 'synthetic materials', 'organic materials', 'inorganic materials',
+  'raw materials', 'advanced materials', 'engineering materials', 'construction materials',
+  
+  // Use cases / Applications
+  'electrical wires', 'electrical wire', 'wires', 'wire', 'cables', 'cable',
+  'packaging', 'packaging materials', 'insulation', 'insulation materials',
+  'coatings', 'coating', 'adhesives', 'adhesive', 'sealants', 'sealant',
+  'textiles', 'textile', 'fabrics', 'fabric', 'clothing', 'apparel',
+  'construction', 'building materials', 'structural materials',
+  'automotive', 'automotive materials', 'aerospace materials',
+  'medical devices', 'medical implants', 'biomedical',
+  'electronics', 'electronic components', 'circuit boards',
+  'batteries', 'battery materials', 'energy storage',
+  'solar panels', 'solar cells', 'photovoltaic',
+  'pipes', 'piping', 'tubing', 'tubes',
+  'containers', 'bottles', 'films', 'sheets',
+  
+  // General terms
+  'sustainable materials', 'eco-friendly materials', 'green materials',
+  'recyclable materials', 'biodegradable materials', 'compostable materials',
+  'high strength materials', 'lightweight materials', 'durable materials',
+  'conductive materials', 'insulating materials', 'transparent materials',
+  'food grade', 'food safe', 'medical grade'
+]);
+
+// Check if a query is a category/use-case rather than a specific material
+function isCategoryOrUseCase(query: string): boolean {
+  const normalizedQuery = query.toLowerCase().trim();
+  
+  // Direct match
+  if (NON_MATERIAL_TERMS.has(normalizedQuery)) {
+    return true;
+  }
+  
+  // Check for plural/singular variations
+  const withoutS = normalizedQuery.endsWith('s') ? normalizedQuery.slice(0, -1) : normalizedQuery;
+  const withS = normalizedQuery + 's';
+  if (NON_MATERIAL_TERMS.has(withoutS) || NON_MATERIAL_TERMS.has(withS)) {
+    return true;
+  }
+  
+  // Check for "X materials" pattern
+  if (normalizedQuery.endsWith(' materials') || normalizedQuery.endsWith(' material')) {
+    return true;
+  }
+  
+  return false;
+}
+
 // Use AI to expand query into related search terms
 async function expandQueryWithAI(query: string): Promise<string[]> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -1051,7 +1108,10 @@ Deno.serve(async (req) => {
     }
     
     // If no local results, create entry from external sources
-    if (localResultsArray.length === 0 && externalSources.length > 0) {
+    // BUT only if it's a specific material, not a category/use-case
+    const isCategory = isCategoryOrUseCase(query);
+    
+    if (localResultsArray.length === 0 && externalSources.length > 0 && !isCategory) {
       const properties: MaterialData['properties'] = [];
       
       for (const ext of externalSources) {

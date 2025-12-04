@@ -43,19 +43,67 @@ const MaterialScouting = () => {
     setExpandedMaterial(null);
     setViewMode("overview");
     setSelectedMaterials([]);
+    
     setTimeout(() => {
-      const query = searchQuery.toLowerCase();
-      const filtered = sampleMaterials.filter(mat => 
-        mat.name.toLowerCase().includes(query) ||
-        mat.category.toLowerCase().includes(query) ||
-        Object.values(mat.properties).some(p => String(p).toLowerCase().includes(query)) ||
-        mat.applications.some(a => a.toLowerCase().includes(query)) ||
-        mat.regulations.some(r => r.toLowerCase().includes(query)) ||
-        mat.suppliers.some(s => s.company.toLowerCase().includes(query))
-      );
-      setSearchResults(filtered.length > 0 ? filtered : sampleMaterials);
+      const query = searchQuery.toLowerCase().trim();
+      
+      let filtered = sampleMaterials.filter(mat => {
+        // Basic text search
+        const matchesQuery = !query || 
+          mat.name.toLowerCase().includes(query) ||
+          mat.category.toLowerCase().includes(query) ||
+          Object.values(mat.properties).some(p => String(p).toLowerCase().includes(query)) ||
+          mat.applications.some(a => a.toLowerCase().includes(query)) ||
+          mat.regulations.some(r => r.toLowerCase().includes(query)) ||
+          (mat.uniqueness && mat.uniqueness.toLowerCase().includes(query));
+
+        // Advanced property filters
+        const matchesProperties = properties.every(prop => {
+          if (!prop.property.trim()) return true;
+          const propName = prop.property.toLowerCase();
+          const propValue = prop.value.toLowerCase();
+          
+          // Check if material has this property
+          const materialProp = Object.entries(mat.properties).find(([key]) => 
+            key.toLowerCase().includes(propName)
+          );
+          
+          if (!materialProp) {
+            return prop.importance !== "must-have"; // Only fail if must-have
+          }
+          
+          // If value is specified, check it matches (allows ranges like "100-200")
+          if (propValue) {
+            const matValue = String(materialProp[1]).toLowerCase();
+            return matValue.includes(propValue) || propValue.includes(matValue);
+          }
+          
+          return true;
+        });
+
+        // Industry filter (maps to applications/category)
+        const matchesIndustry = !selectedIndustry || 
+          mat.category.toLowerCase().includes(selectedIndustry.toLowerCase()) ||
+          mat.applications.some(a => a.toLowerCase().includes(selectedIndustry.toLowerCase()));
+
+        // Application filter
+        const matchesApplication = !applicationFilter.trim() ||
+          mat.applications.some(a => a.toLowerCase().includes(applicationFilter.toLowerCase())) ||
+          mat.category.toLowerCase().includes(applicationFilter.toLowerCase());
+
+        return matchesQuery && matchesProperties && matchesIndustry && matchesApplication;
+      });
+
+      // Sort results based on sortBy
+      if (sortBy === "sustainability") {
+        filtered.sort((a, b) => b.sustainability.score - a.sustainability.score);
+      } else if (sortBy === "innovation") {
+        filtered.sort((a, b) => (b.innovation ? 1 : 0) - (a.innovation ? 1 : 0));
+      }
+
+      setSearchResults(filtered.length > 0 ? filtered : []);
       setIsSearching(false);
-    }, 1000);
+    }, 800);
   };
 
   const toggleMaterialSelection = (materialId: string) => {

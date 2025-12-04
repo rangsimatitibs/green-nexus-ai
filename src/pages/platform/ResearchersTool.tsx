@@ -10,10 +10,12 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 import { useResearchData } from "@/hooks/useResearchData";
+import { useMaterialsData } from "@/hooks/useMaterialsData";
 import PremiumGate from "@/components/PremiumGate";
 
 const ResearchersTool = () => {
   const { researchMaterials, labRecipes, materialProperties: materialPropertiesDb, loading, error } = useResearchData();
+  const { materials: scoutingMaterials } = useMaterialsData();
   const [materialFormula, setMaterialFormula] = useState("");
   const [predictions, setPredictions] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
@@ -21,45 +23,6 @@ const ResearchersTool = () => {
   const [recipeSearchQuery, setRecipeSearchQuery] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
   const [showTableView, setShowTableView] = useState(false);
-
-  const sampleMaterials = {
-    "PLA": { name: "Polylactic Acid", tensile: 65, thermal: 55, biodeg: 95, modulus: 3.5 },
-    "PHA": { name: "Polyhydroxyalkanoates", tensile: 40, thermal: 45, biodeg: 98, modulus: 3.0 },
-    "PBS": { name: "Polybutylene Succinate", tensile: 35, thermal: 90, biodeg: 85, modulus: 0.5 }
-  };
-
-  const handlePredict = () => {
-    setIsPredicting(true);
-    setTimeout(() => {
-      const material = Object.entries(sampleMaterials).find(([key]) => 
-        materialFormula.toUpperCase().includes(key)
-      );
-      
-      if (material) {
-        const [_, data] = material;
-        setPredictions({
-          name: data.name,
-          properties: [
-            { name: "Tensile Strength", value: data.tensile, unit: "MPa", confidence: 92 },
-            { name: "Thermal Stability", value: data.thermal, unit: "°C", confidence: 88 },
-            { name: "Biodegradation Rate", value: data.biodeg, unit: "%/year", confidence: 85 },
-            { name: "Young's Modulus", value: data.modulus, unit: "GPa", confidence: 90 }
-          ]
-        });
-      } else {
-        setPredictions({
-          name: materialFormula,
-          properties: [
-            { name: "Tensile Strength", value: 52, unit: "MPa", confidence: 78 },
-            { name: "Thermal Stability", value: 68, unit: "°C", confidence: 82 },
-            { name: "Biodegradation Rate", value: 72, unit: "%/year", confidence: 75 },
-            { name: "Young's Modulus", value: 2.8, unit: "GPa", confidence: 80 }
-          ]
-        });
-      }
-      setIsPredicting(false);
-    }, 1200);
-  };
 
   // Filter recipes based on search query
   const filteredRecipes = labRecipes.filter((recipe) => {
@@ -72,20 +35,22 @@ const ResearchersTool = () => {
     );
   });
 
-  // Combined search handler for Property Finder
+  // Combined search handler for Property Finder - searches multiple databases
   const handleCombinedSearch = () => {
     setIsPredicting(true);
-    
-    // First check database
-    const dbMatch = materialPropertiesDb.find(m => 
-      m.name.toLowerCase().includes(materialFormula.toLowerCase()) ||
-      (m.chemical_structure && m.chemical_structure.toLowerCase().includes(materialFormula.toLowerCase()))
-    );
+    const searchTerm = materialFormula.toLowerCase().trim();
     
     setTimeout(() => {
+      // 1. First check material_properties_database (verified scientific data)
+      const dbMatch = materialPropertiesDb.find(m => 
+        m.name.toLowerCase().includes(searchTerm) ||
+        searchTerm.includes(m.name.toLowerCase()) ||
+        (m.chemical_structure && m.chemical_structure.toLowerCase().includes(searchTerm))
+      );
+      
       if (dbMatch) {
-        // Found in database - format as prediction-style output
-        const dbProperties = Object.entries(dbMatch.properties).slice(0, 4).map(([key, value]) => ({
+        // Found in verified database
+        const dbProperties = Object.entries(dbMatch.properties).map(([key, value]) => ({
           name: key,
           value: value,
           unit: "",
@@ -96,43 +61,83 @@ const ResearchersTool = () => {
           name: dbMatch.name,
           source: "database",
           chemical_structure: dbMatch.chemical_structure,
-          properties: dbProperties,
+          properties: dbProperties.slice(0, 4),
           allProperties: dbMatch.properties,
           sources: dbMatch.sources
         });
-      } else {
-        // Use AI prediction
-        const material = Object.entries(sampleMaterials).find(([key]) => 
-          materialFormula.toUpperCase().includes(key)
-        );
-        
-        if (material) {
-          const [_, data] = material;
-          setPredictions({
-            name: data.name,
-            source: "ai",
-            properties: [
-              { name: "Tensile Strength", value: data.tensile, unit: "MPa", confidence: 92 },
-              { name: "Thermal Stability", value: data.thermal, unit: "°C", confidence: 88 },
-              { name: "Biodegradation Rate", value: data.biodeg, unit: "%/year", confidence: 85 },
-              { name: "Young's Modulus", value: data.modulus, unit: "GPa", confidence: 90 }
-            ]
-          });
-        } else {
-          setPredictions({
-            name: materialFormula,
-            source: "ai",
-            properties: [
-              { name: "Tensile Strength", value: 52, unit: "MPa", confidence: 78 },
-              { name: "Thermal Stability", value: 68, unit: "°C", confidence: 82 },
-              { name: "Biodegradation Rate", value: 72, unit: "%/year", confidence: 75 },
-              { name: "Young's Modulus", value: 2.8, unit: "GPa", confidence: 80 }
-            ]
-          });
-        }
+        setIsPredicting(false);
+        return;
       }
+
+      // 2. Check materials from scouting database
+      const scoutingMatch = scoutingMaterials.find(m =>
+        m.name.toLowerCase().includes(searchTerm) ||
+        searchTerm.includes(m.name.toLowerCase()) ||
+        (m.chemical_formula && m.chemical_formula.toLowerCase().includes(searchTerm)) ||
+        (m.chemical_structure && m.chemical_structure.toLowerCase().includes(searchTerm))
+      );
+
+      if (scoutingMatch) {
+        // Found in scouting database
+        const scoutProperties = Object.entries(scoutingMatch.properties).map(([key, value]) => ({
+          name: key,
+          value: value,
+          unit: "",
+          confidence: null,
+          source: "database"
+        }));
+        setPredictions({
+          name: scoutingMatch.name,
+          source: "database",
+          chemical_structure: scoutingMatch.chemical_structure,
+          properties: scoutProperties.slice(0, 4),
+          allProperties: scoutingMatch.properties,
+          sources: ["MaterialInk Database"]
+        });
+        setIsPredicting(false);
+        return;
+      }
+
+      // 3. Check research materials (novel materials in development)
+      const researchMatch = researchMaterials.find(m =>
+        m.name.toLowerCase().includes(searchTerm) ||
+        searchTerm.includes(m.name.toLowerCase())
+      );
+
+      if (researchMatch) {
+        const researchProperties = Object.entries(researchMatch.properties).map(([key, value]) => ({
+          name: key,
+          value: value,
+          unit: "",
+          confidence: null,
+          source: "research"
+        }));
+        setPredictions({
+          name: researchMatch.name,
+          source: "research",
+          properties: researchProperties.slice(0, 4),
+          allProperties: researchMatch.properties,
+          sources: [researchMatch.institution],
+          researchInfo: {
+            status: researchMatch.status,
+            institution: researchMatch.institution,
+            year: researchMatch.year,
+            funding_stage: researchMatch.funding_stage
+          }
+        });
+        setIsPredicting(false);
+        return;
+      }
+
+      // 4. No match found - show helpful message
+      setPredictions({
+        name: materialFormula,
+        source: "not_found",
+        properties: [],
+        message: `"${materialFormula}" was not found in our databases. Try searching for common biopolymers like PLA, Cellulose, PHA, or check the spelling.`
+      });
       setIsPredicting(false);
-    }, 1200);
+    }, 600);
   };
 
   return (
@@ -257,111 +262,160 @@ const ResearchersTool = () => {
                   {predictions && (
                     <div className="space-y-6 animate-fade-in">
                       <div className="border-t pt-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h3 className="text-lg font-semibold text-foreground mb-1">
-                              Results for {predictions.name}
+                        {predictions.source === "not_found" ? (
+                          // Not found state
+                          <Card className="p-6 bg-muted/50 text-center">
+                            <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                            <h3 className="text-lg font-semibold text-foreground mb-2">
+                              Material Not Found
                             </h3>
-                            <Badge 
-                              variant={predictions.source === "database" ? "default" : "secondary"}
-                              className="gap-1"
-                            >
-                              {predictions.source === "database" ? (
-                                <>
-                                  <Database className="h-3 w-3" />
-                                  Database Verified
-                                </>
-                              ) : (
-                                <>
-                                  <Brain className="h-3 w-3" />
-                                  AI Predicted
-                                </>
-                              )}
-                            </Badge>
-                          </div>
-                          {predictions.allProperties && Object.keys(predictions.allProperties).length > 4 && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setShowTableView(!showTableView)}
-                            >
-                              <Table className="h-4 w-4 mr-2" />
-                              {showTableView ? "Show Cards" : "Show All Properties"}
-                            </Button>
-                          )}
-                        </div>
-
-                        {predictions.chemical_structure && (
-                          <div className="flex items-center gap-2 mb-4">
-                            <Atom className="h-4 w-4 text-accent" />
-                            <code className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
-                              {predictions.chemical_structure}
-                            </code>
-                          </div>
-                        )}
-                        
-                        {!showTableView ? (
-                          <div className="grid md:grid-cols-2 gap-6">
-                            {predictions.properties.map((prop: any, index: number) => (
-                              <Card key={index} className="p-5">
-                                <div className="flex justify-between items-start mb-3">
-                                  <div className="flex-1">
-                                    <h4 className="font-semibold text-foreground mb-1 capitalize">{prop.name}</h4>
-                                    <div className="text-2xl font-bold text-accent mb-2">
-                                      {prop.value} {prop.unit && <span className="text-sm font-normal text-muted-foreground">{prop.unit}</span>}
-                                    </div>
-                                  </div>
-                                  {predictions.source === "ai" ? (
-                                    <Brain className="h-5 w-5 text-accent" />
-                                  ) : (
-                                    <Database className="h-5 w-5 text-primary" />
-                                  )}
-                                </div>
-                                
-                                {prop.confidence ? (
-                                  <div>
-                                    <div className="flex justify-between text-xs text-muted-foreground mb-2">
-                                      <span>Confidence</span>
-                                      <span>{prop.confidence}%</span>
-                                    </div>
-                                    <Progress value={prop.confidence} className="h-2" />
-                                  </div>
-                                ) : (
-                                  <div className="text-xs text-muted-foreground">
-                                    Verified from database sources
-                                  </div>
-                                )}
-                              </Card>
-                            ))}
-                          </div>
-                        ) : (
-                          <Card className="p-4">
-                            <div className="space-y-2">
-                              {Object.entries(predictions.allProperties).map(([key, value]) => (
-                                <div key={key} className="flex justify-between p-3 bg-muted/50 rounded">
-                                  <span className="text-sm font-medium text-foreground capitalize">
-                                    {key}:
-                                  </span>
-                                  <span className="text-sm text-muted-foreground">{String(value)}</span>
-                                </div>
+                            <p className="text-muted-foreground mb-4">
+                              {predictions.message}
+                            </p>
+                            <div className="flex flex-wrap gap-2 justify-center">
+                              <span className="text-sm text-muted-foreground">Try:</span>
+                              {["PLA", "Cellulose", "Sulapac", "Bio-PE"].map((suggestion) => (
+                                <Button
+                                  key={suggestion}
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setMaterialFormula(suggestion);
+                                    setTimeout(() => handleCombinedSearch(), 100);
+                                  }}
+                                >
+                                  {suggestion}
+                                </Button>
                               ))}
                             </div>
                           </Card>
-                        )}
-
-                        {predictions.sources && (
-                          <div className="mt-4 pt-4 border-t">
-                            <p className="text-xs text-muted-foreground mb-2">
-                              <strong>Data Sources:</strong>
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {predictions.sources.map((source: string, idx: number) => (
-                                <Badge key={idx} variant="outline" className="text-xs">
-                                  {source}
+                        ) : (
+                          <>
+                            <div className="flex items-center justify-between mb-4">
+                              <div>
+                                <h3 className="text-lg font-semibold text-foreground mb-1">
+                                  Results for {predictions.name}
+                                </h3>
+                                <Badge 
+                                  variant={predictions.source === "database" ? "default" : predictions.source === "research" ? "secondary" : "outline"}
+                                  className="gap-1"
+                                >
+                                  {predictions.source === "database" ? (
+                                    <>
+                                      <Database className="h-3 w-3" />
+                                      Database Verified
+                                    </>
+                                  ) : predictions.source === "research" ? (
+                                    <>
+                                      <FlaskConical className="h-3 w-3" />
+                                      Research Material
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Brain className="h-3 w-3" />
+                                      AI Predicted
+                                    </>
+                                  )}
                                 </Badge>
-                              ))}
+                              </div>
+                              {predictions.allProperties && Object.keys(predictions.allProperties).length > 4 && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => setShowTableView(!showTableView)}
+                                >
+                                  <Table className="h-4 w-4 mr-2" />
+                                  {showTableView ? "Show Cards" : "Show All Properties"}
+                                </Button>
+                              )}
                             </div>
-                          </div>
+
+                            {predictions.chemical_structure && (
+                              <div className="flex items-center gap-2 mb-4">
+                                <Atom className="h-4 w-4 text-accent" />
+                                <code className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
+                                  {predictions.chemical_structure}
+                                </code>
+                              </div>
+                            )}
+
+                            {predictions.researchInfo && (
+                              <Card className="p-4 mb-4 bg-secondary/50 border-secondary">
+                                <div className="flex items-center gap-2 text-sm text-foreground">
+                                  <FlaskConical className="h-4 w-4 text-primary" />
+                                  <span><strong>Status:</strong> {predictions.researchInfo.status}</span>
+                                  <span className="text-muted-foreground">|</span>
+                                  <span><strong>Institution:</strong> {predictions.researchInfo.institution}</span>
+                                  <span className="text-muted-foreground">|</span>
+                                  <span><strong>Year:</strong> {predictions.researchInfo.year}</span>
+                                </div>
+                              </Card>
+                            )}
+                            
+                            {!showTableView ? (
+                              <div className="grid md:grid-cols-2 gap-6">
+                                {predictions.properties.map((prop: any, index: number) => (
+                                  <Card key={index} className="p-5">
+                                    <div className="flex justify-between items-start mb-3">
+                                      <div className="flex-1">
+                                        <h4 className="font-semibold text-foreground mb-1 capitalize">{prop.name}</h4>
+                                        <div className="text-2xl font-bold text-accent mb-2">
+                                          {prop.value} {prop.unit && <span className="text-sm font-normal text-muted-foreground">{prop.unit}</span>}
+                                        </div>
+                                      </div>
+                                      {predictions.source === "research" ? (
+                                        <FlaskConical className="h-5 w-5 text-primary" />
+                                      ) : (
+                                        <Database className="h-5 w-5 text-primary" />
+                                      )}
+                                    </div>
+                                    
+                                    {prop.confidence ? (
+                                      <div>
+                                        <div className="flex justify-between text-xs text-muted-foreground mb-2">
+                                          <span>Confidence</span>
+                                          <span>{prop.confidence}%</span>
+                                        </div>
+                                        <Progress value={prop.confidence} className="h-2" />
+                                      </div>
+                                    ) : (
+                                      <div className="text-xs text-muted-foreground">
+                                        {predictions.source === "research" ? "Research data" : "Verified from database"}
+                                      </div>
+                                    )}
+                                  </Card>
+                                ))}
+                              </div>
+                            ) : (
+                              <Card className="p-4">
+                                <div className="space-y-2">
+                                  {Object.entries(predictions.allProperties || {}).map(([key, value]) => (
+                                    <div key={key} className="flex justify-between p-3 bg-muted/50 rounded">
+                                      <span className="text-sm font-medium text-foreground capitalize">
+                                        {key}:
+                                      </span>
+                                      <span className="text-sm text-muted-foreground">{String(value)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </Card>
+                            )}
+
+                            {predictions.sources && (
+                              <div className="mt-4 pt-4 border-t">
+                                <p className="text-xs text-muted-foreground mb-2">
+                                  <strong>Data Sources:</strong>
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  {predictions.sources.map((source: string, idx: number) => (
+                                    <Badge key={idx} variant="outline" className="text-xs">
+                                      {source}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>

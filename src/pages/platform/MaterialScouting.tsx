@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUnifiedMaterialSearch } from "@/hooks/useUnifiedMaterialSearch";
 
 const MaterialScouting = () => {
-  const { loading: materialsLoading, error: materialsError, search, lastSearchSource, canLoadMore, loadMore, isLoadingMore } = useUnifiedMaterialSearch();
+  const { loading: materialsLoading, error: materialsError, search, lastSearchSource, canLoadMore, loadMore, isLoadingMore, results } = useUnifiedMaterialSearch();
   const [searchQuery, setSearchQuery] = useState("");
   const [displayResults, setDisplayResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -430,32 +430,40 @@ const MaterialScouting = () => {
                                 </Badge>
                               )}
                             </div>
-                            <div className="mb-3">
-                              <Card className="p-3 bg-muted/50 inline-block">
-                                <div className="flex items-center gap-2 text-sm">
-                                  <Atom className="h-4 w-4 text-primary" />
-                                  <div>
-                                    <span className="font-medium text-foreground">Formula: </span>
-                                    <span className="text-muted-foreground">{material.chemical_formula}</span>
+                            {material.chemical_formula && (
+                              <div className="mb-3">
+                                <Card className="p-3 bg-muted/50 inline-block">
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <Atom className="h-4 w-4 text-primary" />
+                                    <div>
+                                      <span className="font-medium text-foreground">Formula: </span>
+                                      <span className="text-muted-foreground">{material.chemical_formula}</span>
+                                    </div>
                                   </div>
-                                </div>
-                                <div className="text-xs text-muted-foreground mt-1">
-                                  Structure: {material.chemical_structure}
-                                </div>
-                              </Card>
-                            </div>
+                                  {material.chemical_structure && (
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      Structure: {material.chemical_structure}
+                                    </div>
+                                  )}
+                                </Card>
+                              </div>
+                            )}
                             <div className="flex flex-wrap gap-2 mb-3">
-                              <Badge variant="outline" className="gap-1">
-                                <Scale className="h-3 w-3" />
-                                {material.scale}
-                              </Badge>
-                              <Badge variant="outline" className="gap-1">
-                                <Lightbulb className="h-3 w-3" />
-                                {material.innovation}
-                              </Badge>
+                              {material.scale && (
+                                <Badge variant="outline" className="gap-1">
+                                  <Scale className="h-3 w-3" />
+                                  {material.scale}
+                                </Badge>
+                              )}
+                              {material.innovation && (
+                                <Badge variant="outline" className="gap-1">
+                                  <Lightbulb className="h-3 w-3" />
+                                  {material.innovation}
+                                </Badge>
+                              )}
                               <Badge variant="outline" className="gap-1">
                                 <Factory className="h-3 w-3" />
-                                {material.suppliers.length} Suppliers
+                                {material.suppliers?.length || 0} Suppliers
                               </Badge>
                             </div>
                             {material.uniqueness && (
@@ -471,35 +479,58 @@ const MaterialScouting = () => {
                             )}
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-sm text-muted-foreground mb-1">Sustainability</div>
-                            <div className="text-3xl font-bold text-primary">{material.sustainability.score}%</div>
-                          </div>
+                          {material.sustainability?.score !== undefined && material.sustainability.score > 0 && (
+                            <div className="text-right">
+                              <div className="text-sm text-muted-foreground mb-1">Sustainability</div>
+                              <div className="text-3xl font-bold text-primary">{material.sustainability.score}%</div>
+                            </div>
+                          )}
                         </div>
 
-                        <div className="grid md:grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <div className="text-sm font-medium text-foreground mb-2">Applications:</div>
-                            <div className="flex flex-wrap gap-2">
-                              {material.applications.map((app: string, i: number) => (
-                                <Badge key={i} className="bg-primary/10 text-primary hover:bg-primary/20">
-                                  {app}
-                                </Badge>
+                        {(material.applications?.length > 0 || material.regulations?.length > 0) && (
+                          <div className="grid md:grid-cols-2 gap-4 mb-4">
+                            {material.applications?.length > 0 && (
+                              <div>
+                                <div className="text-sm font-medium text-foreground mb-2">Applications:</div>
+                                <div className="flex flex-wrap gap-2">
+                                  {material.applications.map((app: string, i: number) => (
+                                    <Badge key={i} className="bg-primary/10 text-primary hover:bg-primary/20">
+                                      {app}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {material.regulations?.length > 0 && (
+                              <div>
+                                <div className="text-sm font-medium text-foreground mb-2">Regulations:</div>
+                                <div className="flex flex-wrap gap-2">
+                                  {material.regulations.map((reg: string, i: number) => (
+                                    <Badge key={i} variant="outline" className="gap-1">
+                                      <Award className="h-3 w-3" />
+                                      {reg}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Show properties for external results without applications */}
+                        {(!material.applications?.length && !material.regulations?.length && material.properties && Object.keys(material.properties).length > 0) && (
+                          <div className="mb-4">
+                            <div className="text-sm font-medium text-foreground mb-2">Properties:</div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                              {Object.entries(material.properties).slice(0, 6).map(([key, value], i) => (
+                                <div key={i} className="text-sm p-2 bg-muted/50 rounded">
+                                  <span className="text-muted-foreground">{key}: </span>
+                                  <span className="font-medium">{String(value)}</span>
+                                </div>
                               ))}
                             </div>
                           </div>
-                          <div>
-                            <div className="text-sm font-medium text-foreground mb-2">Regulations:</div>
-                            <div className="flex flex-wrap gap-2">
-                              {material.regulations.map((reg: string, i: number) => (
-                                <Badge key={i} variant="outline" className="gap-1">
-                                  <Award className="h-3 w-3" />
-                                  {reg}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
+                        )}
 
                         <div className="flex gap-2">
                           <Button
@@ -851,7 +882,12 @@ const MaterialScouting = () => {
               {displayResults.length > 0 && canLoadMore && (
                 <div className="flex justify-center pt-6">
                   <Button 
-                    onClick={loadMore}
+                    onClick={async () => {
+                      const additionalResults = await loadMore();
+                      if (additionalResults.length > 0) {
+                        setDisplayResults(prev => [...prev, ...additionalResults]);
+                      }
+                    }}
                     disabled={isLoadingMore}
                     variant="outline"
                     className="gap-2"

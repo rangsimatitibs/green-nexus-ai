@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUnifiedMaterialSearch } from "@/hooks/useUnifiedMaterialSearch";
 
 const MaterialScouting = () => {
-  const { loading: materialsLoading, error: materialsError, search, lastSearchSource } = useUnifiedMaterialSearch();
+  const { loading: materialsLoading, error: materialsError, search, lastSearchSource, canLoadMore, loadMore, isLoadingMore } = useUnifiedMaterialSearch();
   const [searchQuery, setSearchQuery] = useState("");
   const [displayResults, setDisplayResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -33,7 +33,7 @@ const MaterialScouting = () => {
   const [selectedIndustry, setSelectedIndustry] = useState("");
   const [applicationFilter, setApplicationFilter] = useState("");
   const [additionalRequirements, setAdditionalRequirements] = useState("");
-  const [deepSearch, setDeepSearch] = useState(false);
+  // Deep search removed - now always searches local + external in parallel
   const [sortBy, setSortBy] = useState("relevance");
   const [savedSearches, setSavedSearches] = useState<Array<{name: string, filters: any}>>([]);
 
@@ -53,7 +53,7 @@ const MaterialScouting = () => {
         application: applicationFilter || undefined,
       };
 
-      const results = await search(searchQuery, filters, deepSearch);
+      const results = await search(searchQuery, filters);
       setDisplayResults(results);
     } catch (err) {
       console.error('Search error:', err);
@@ -337,26 +337,9 @@ const MaterialScouting = () => {
                     />
                   </div>
 
-                  {/* Deep Search and Sort Options */}
+                  {/* Sort Options */}
                   <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="deep-search" 
-                        checked={deepSearch}
-                        onCheckedChange={(checked) => setDeepSearch(checked as boolean)}
-                      />
-                      <label
-                        htmlFor="deep-search"
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        Deep Search (searches additional databases and sources)
-                      </label>
-                    </div>
-                    <p className="text-xs text-muted-foreground pl-6">
-                      Takes longer but provides more comprehensive results
-                    </p>
-
-                    <div className="pt-3">
+                    <div>
                       <label className="text-sm font-medium text-foreground mb-2 block">Sort Results By</label>
                       <select
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -388,7 +371,7 @@ const MaterialScouting = () => {
                         setSelectedIndustry("");
                         setApplicationFilter("");
                         setAdditionalRequirements("");
-                        setDeepSearch(false);
+                        // Deep search removed - always searches all databases
                         setSortBy("relevance");
                       }}
                     >
@@ -438,6 +421,14 @@ const MaterialScouting = () => {
                                 {material.name}
                               </h4>
                               <Badge variant="secondary">{material.category}</Badge>
+                              {material.data_source && (
+                                <Badge 
+                                  variant="outline" 
+                                  className={material.data_source === 'pubchem' ? 'border-blue-500 text-blue-600' : material.data_source === 'jarvis' ? 'border-green-500 text-green-600' : 'border-muted'}
+                                >
+                                  {material.data_source === 'pubchem' ? '🧪 PubChem' : material.data_source === 'jarvis' ? '🔬 JARVIS' : '📊 Local'}
+                                </Badge>
+                              )}
                             </div>
                             <div className="mb-3">
                               <Card className="p-3 bg-muted/50 inline-block">
@@ -856,9 +847,33 @@ const MaterialScouting = () => {
                 </div>
               )}
 
+              {/* Load More Button - shows when < 25 results */}
+              {displayResults.length > 0 && canLoadMore && (
+                <div className="flex justify-center pt-6">
+                  <Button 
+                    onClick={loadMore}
+                    disabled={isLoadingMore}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    {isLoadingMore ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Searching more databases...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="h-4 w-4" />
+                        Load More Results (Search Variations)
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+
               {displayResults.length === 0 && searchQuery && !isSearching && (
                 <div className="text-center py-8 text-muted-foreground">
-                  No materials found. Try a different search term or enable "Deep Search" to search external databases.
+                  No materials found. Try a different search term or check the spelling.
                 </div>
               )}
             </div>

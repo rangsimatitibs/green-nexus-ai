@@ -102,7 +102,7 @@ const ResearchersTool = () => {
       }
 
       // 3. Use unified search (searches local materials + optional external PubChem)
-      const searchResults = await unifiedSearch(searchTerm, {}, deepSearch);
+      const searchResults = await unifiedSearch(searchTerm, {});
       
       if (searchResults.length > 0) {
         const match = searchResults[0];

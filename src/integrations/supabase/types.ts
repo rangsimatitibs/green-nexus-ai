@@ -90,6 +90,27 @@ export type Database = {
         }
         Relationships: []
       }
+      excluded_search_terms: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          term: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          term: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          term?: string
+        }
+        Relationships: []
+      }
       external_data_sources: {
         Row: {
           api_endpoint: string | null

@@ -21,6 +21,7 @@ import SuppliersAdmin from "./pages/admin/SuppliersAdmin";
 import ResearchMaterialsAdmin from "./pages/admin/ResearchMaterialsAdmin";
 import LabRecipesAdmin from "./pages/admin/LabRecipesAdmin";
 import ExternalSourcesAdmin from "./pages/admin/ExternalSourcesAdmin";
+import ExcludedTermsAdmin from "./pages/admin/ExcludedTermsAdmin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="research-materials" element={<ResearchMaterialsAdmin />} />
               <Route path="lab-recipes" element={<LabRecipesAdmin />} />
               <Route path="external-sources" element={<ExternalSourcesAdmin />} />
+              <Route path="excluded-terms" element={<ExcludedTermsAdmin />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

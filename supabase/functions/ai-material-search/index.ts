@@ -131,9 +131,15 @@ async function searchWikipedia(query: string): Promise<ExternalSource | null> {
       return null;
     }
     
-    // Extract useful properties from the text
+    // Extract useful properties from the text - get first 1-2 sentences only
     const properties: Record<string, string> = {};
-    properties['Description'] = extract.substring(0, 500) + (extract.length > 500 ? '...' : '');
+    
+    // Split into sentences and take first 1-2 meaningful ones
+    const sentences = extract.split(/(?<=[.!?])\s+/).filter((s: string) => s.length > 20);
+    const shortDescription = sentences.slice(0, 2).join(' ').trim();
+    properties['Description'] = shortDescription.length > 200 
+      ? shortDescription.substring(0, 200).replace(/\s+\S*$/, '') + '...'
+      : shortDescription;
     
     console.log(`[Wikipedia] Found: ${firstResult.title}`);
     return {
@@ -479,29 +485,22 @@ async function searchMakeItFrom(query: string): Promise<ExternalSource | null> {
       return null;
     }
     
-    // Parse properties from HTML - MakeItFrom uses structure like:
-    // <div class="mech"><p>Property Name</p>...<p>Value <i>Unit</i></p></div>
+    // Parse properties from HTML - MakeItFrom structure:
+    // <div class="mech"><p>Property Name</p><div class="data-bars">...</div><div class="data-bars">...</div><p>Value <i>Unit</i>...</p></div>
     const properties: Record<string, string> = {};
     
-    // Match property divs with classes mech, therm, ele, other, common
-    const propertyDivRegex = /<div class="(?:mech|therm|ele|other|common)"><p>([^<]+)<\/p>.*?<p>([^<]+)(?:<i>([^<]*)<\/i>)?/gs;
+    // Simpler approach: match the pattern directly
+    // The name is in first <p>, value in second <p> after the data-bars divs
+    const regex = /<div class="(?:mech|therm|ele|other|common)"><p>([^<]+)<\/p><div class="data-bars">.*?<\/div><div class="data-bars">.*?<\/div><p>(\d+(?:\.\d+)?)\s*(?:<i>([^<]*)<\/i>)?/g;
     
     let match;
-    while ((match = propertyDivRegex.exec(html)) !== null) {
+    while ((match = regex.exec(html)) !== null) {
       const propName = match[1]?.trim();
-      let propValue = match[2]?.trim();
+      const value = match[2]?.trim();
       const unit = match[3]?.trim();
       
-      if (propName && propValue) {
-        // Clean up HTML entities and extra whitespace
-        propValue = propValue.replace(/&[^;]+;/g, '').replace(/\s+/g, ' ').trim();
-        
-        // Add unit if present
-        if (unit) {
-          // Clean up unit (handle superscripts like cm³)
-          const cleanUnit = unit.replace(/<[^>]+>/g, '').trim();
-          propValue = `${propValue} ${cleanUnit}`;
-        }
+      if (propName && value) {
+        const propValue = unit ? `${value} ${unit}` : value;
         
         // Map property names to our standard format
         const nameMapping: Record<string, string> = {

@@ -9,6 +9,13 @@ export interface SearchFilters {
   application?: string;
 }
 
+export interface PropertyWithSource {
+  name: string;
+  value: string;
+  source: string;
+  source_url?: string;
+}
+
 export interface SearchResult {
   id: string;
   name: string;
@@ -26,12 +33,16 @@ export interface SearchResult {
   updated_at?: string;
   matchScore?: number;
   properties: Record<string, string>;
+  propertiesWithSource?: PropertyWithSource[];
   applications: string[];
+  applicationsWithSource?: Array<{ name: string; source: string }>;
   regulations: string[];
+  regulationsWithSource?: Array<{ name: string; source: string }>;
   sustainability: {
     score: number;
     breakdown: Record<string, number>;
     calculation: string | null;
+    source?: string;
   };
   suppliers: Array<{
     id: string;
@@ -47,6 +58,9 @@ export interface SearchResult {
     detailed_properties?: Record<string, Record<string, string>>;
     certifications: string[];
   }>;
+  synonyms?: string[];
+  ai_summary?: string;
+  sources_used?: string[];
 }
 
 const RESULTS_THRESHOLD = 25;
@@ -55,12 +69,79 @@ export const useUnifiedMaterialSearch = () => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastSearchSource, setLastSearchSource] = useState<'local' | 'external' | 'combined' | null>(null);
+  const [lastSearchSource, setLastSearchSource] = useState<'local' | 'external' | 'combined' | 'ai' | null>(null);
   const [canLoadMore, setCanLoadMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [lastSearchTerm, setLastSearchTerm] = useState<string>('');
 
-  // Search local database
+  // Search using AI agent (primary method)
+  const searchWithAI = useCallback(async (searchTerm: string): Promise<SearchResult[]> => {
+    try {
+      console.log(`[AI Search] Querying AI agent for: ${searchTerm}`);
+      
+      const { data, error: funcError } = await supabase.functions.invoke('ai-material-search', {
+        body: { query: searchTerm, includeAISummary: true }
+      });
+
+      if (funcError) {
+        console.error('[AI Search] Error:', funcError);
+        throw funcError;
+      }
+
+      if (!data?.results || data.results.length === 0) {
+        console.log('[AI Search] No results');
+        return [];
+      }
+
+      console.log(`[AI Search] Found ${data.results.length} results from sources: ${data.sourcesUsed?.join(', ')}`);
+
+      // Transform AI agent results to SearchResult format
+      return data.results.map((result: any, index: number) => {
+        const properties: Record<string, string> = {};
+        result.properties?.forEach((p: any) => {
+          properties[p.name] = p.value;
+        });
+
+        return {
+          id: `ai-result-${index}-${Date.now()}`,
+          name: result.name,
+          category: result.category || 'Material',
+          chemical_formula: result.chemical_formula,
+          chemical_structure: null,
+          innovation: null,
+          uniqueness: null,
+          scale: null,
+          image_url: null,
+          data_source: result.sources_used?.[0] || 'ai',
+          external_id: null,
+          last_synced_at: new Date().toISOString(),
+          matchScore: 95,
+          properties,
+          propertiesWithSource: result.properties || [],
+          applications: result.applications?.map((a: any) => a.name) || [],
+          applicationsWithSource: result.applications || [],
+          regulations: result.regulations?.map((r: any) => r.name) || [],
+          regulationsWithSource: result.regulations || [],
+          sustainability: result.sustainability || { score: 0, breakdown: {}, calculation: null },
+          suppliers: result.suppliers?.map((s: any, idx: number) => ({
+            id: `supplier-${idx}`,
+            company: s.company,
+            country: s.country,
+            properties: {},
+            certifications: []
+          })) || [],
+          synonyms: result.synonyms || [],
+          ai_summary: result.ai_summary,
+          sources_used: result.sources_used || data.sourcesUsed || []
+        };
+      });
+    } catch (err) {
+      console.error('[AI Search] Failed:', err);
+      throw err;
+    }
+  }, []);
+
+  // Fallback: Search local database directly
   const searchLocal = useCallback(async (
     searchTerm: string,
     filters?: SearchFilters,
@@ -83,24 +164,31 @@ export const useUnifiedMaterialSearch = () => {
         return [];
       }
 
-      // Fetch full material details for results
       const materialsWithDetails = await Promise.all(
         data.map(async (material: any) => {
-          const [propertiesRes, applicationsRes, regulationsRes, sustainabilityRes, suppliersRes] = await Promise.all([
+          const [propertiesRes, applicationsRes, regulationsRes, sustainabilityRes, suppliersRes, synonymsRes] = await Promise.all([
             supabase.from('material_properties').select('*').eq('material_id', material.id),
             supabase.from('material_applications').select('*').eq('material_id', material.id),
             supabase.from('material_regulations').select('*').eq('material_id', material.id),
             supabase.from('material_sustainability').select('*').eq('material_id', material.id).maybeSingle(),
             supabase.from('suppliers').select('*').eq('material_id', material.id),
+            supabase.from('material_synonyms').select('synonym').eq('material_id', material.id)
           ]);
 
           const properties: Record<string, string> = {};
+          const propertiesWithSource: PropertyWithSource[] = [];
           propertiesRes.data?.forEach((prop) => {
             properties[prop.property_name] = prop.property_value;
+            propertiesWithSource.push({
+              name: prop.property_name,
+              value: prop.property_value,
+              source: 'Your Database'
+            });
           });
 
           const applications = applicationsRes.data?.map((app) => app.application) || [];
           const regulations = regulationsRes.data?.map((reg) => reg.regulation) || [];
+          const synonyms = synonymsRes.data?.map((s) => s.synonym) || [];
 
           const sustainability = sustainabilityRes.data
             ? {
@@ -112,10 +200,10 @@ export const useUnifiedMaterialSearch = () => {
                   toxicity: sustainabilityRes.data.toxicity_score,
                 },
                 calculation: sustainabilityRes.data.calculation_method,
+                source: 'Your Database'
               }
             : { score: 0, breakdown: {}, calculation: null };
 
-          // Fetch supplier details
           const suppliers = await Promise.all(
             (suppliersRes.data || []).map(async (supplier) => {
               const [propsRes, detailedPropsRes, certsRes] = await Promise.all([
@@ -168,10 +256,15 @@ export const useUnifiedMaterialSearch = () => {
             last_synced_at: material.last_synced_at,
             matchScore: 100,
             properties,
+            propertiesWithSource,
             sustainability,
             applications,
+            applicationsWithSource: applications.map(a => ({ name: a, source: 'Your Database' })),
             regulations,
+            regulationsWithSource: regulations.map(r => ({ name: r, source: 'Your Database' })),
             suppliers,
+            synonyms,
+            sources_used: ['Your Database']
           };
         })
       );
@@ -183,59 +276,7 @@ export const useUnifiedMaterialSearch = () => {
     }
   }, []);
 
-  // Search external APIs (PubChem + JARVIS) in parallel
-  const searchExternal = useCallback(async (searchTerm: string): Promise<SearchResult[]> => {
-    try {
-      console.log(`[External Search] Querying PubChem + JARVIS for: ${searchTerm}`);
-      
-      const { data, error: funcError } = await supabase.functions.invoke('fetch-material-data', {
-        body: { 
-          name: searchTerm, 
-          storeResult: true,
-          sources: ['pubchem', 'jarvis']
-        }
-      });
-
-      if (funcError) {
-        console.error('External API error:', funcError);
-        return [];
-      }
-
-      if (!data?.found || !data?.results) {
-        console.log('[External Search] No results found');
-        return [];
-      }
-
-      console.log(`[External Search] Found ${data.results.length} results`);
-
-      // Convert external results to SearchResult format
-      return data.results.map((result: { source: string; material: { name: string; category: string; chemical_formula: string | null; data_source: string; external_id: string; properties: Record<string, string> }; cid?: number; jid?: string }) => ({
-        id: result.cid ? `pubchem-${result.cid}` : result.jid ? `jarvis-${result.jid}` : `external-${Date.now()}`,
-        name: result.material.name,
-        category: result.material.category,
-        chemical_formula: result.material.chemical_formula,
-        chemical_structure: null,
-        innovation: null,
-        uniqueness: null,
-        scale: null,
-        image_url: null,
-        data_source: result.source,
-        external_id: result.material.external_id,
-        last_synced_at: new Date().toISOString(),
-        matchScore: 85,
-        properties: result.material.properties,
-        applications: [],
-        regulations: [],
-        sustainability: { score: 0, breakdown: {}, calculation: null },
-        suppliers: []
-      }));
-    } catch (err) {
-      console.error('External search error:', err);
-      return [];
-    }
-  }, []);
-
-  // Main search function - searches local AND external in parallel
+  // Main search function - uses AI agent first, falls back to local
   const search = useCallback(async (
     searchTerm: string,
     filters?: SearchFilters
@@ -252,34 +293,20 @@ export const useUnifiedMaterialSearch = () => {
     setLastSearchTerm(searchTerm);
 
     try {
-      // Search local and external databases in parallel
-      const [localResults, externalResults] = await Promise.all([
-        searchLocal(searchTerm, filters),
-        searchExternal(searchTerm)
-      ]);
-
-      console.log(`[Search] Local: ${localResults.length}, External: ${externalResults.length}`);
-
-      // Merge and deduplicate results
-      const combinedResults = [...localResults];
-      const existingFormulas = new Set(localResults.map(r => r.chemical_formula?.toLowerCase()).filter(Boolean));
-      const existingNames = new Set(localResults.map(r => r.name.toLowerCase()));
-
-      for (const extResult of externalResults) {
-        const formulaExists = extResult.chemical_formula && existingFormulas.has(extResult.chemical_formula.toLowerCase());
-        const nameExists = existingNames.has(extResult.name.toLowerCase());
-        
-        if (!formulaExists && !nameExists) {
-          combinedResults.push(extResult);
-          if (extResult.chemical_formula) {
-            existingFormulas.add(extResult.chemical_formula.toLowerCase());
-          }
-          existingNames.add(extResult.name.toLowerCase());
-        }
+      let searchResults: SearchResult[] = [];
+      
+      // Try AI agent first
+      try {
+        searchResults = await searchWithAI(searchTerm);
+        setLastSearchSource('ai');
+      } catch (aiError) {
+        console.log('[Search] AI agent failed, falling back to local search');
+        searchResults = await searchLocal(searchTerm, filters);
+        setLastSearchSource('local');
       }
 
       // Apply additional filters
-      let filteredResults = combinedResults;
+      let filteredResults = searchResults;
       
       if (filters?.properties && filters.properties.length > 0) {
         filteredResults = filteredResults.filter(material => {
@@ -325,7 +352,6 @@ export const useUnifiedMaterialSearch = () => {
       filteredResults.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
 
       setResults(filteredResults);
-      setLastSearchSource('combined');
       setCanLoadMore(filteredResults.length > 0 && filteredResults.length < RESULTS_THRESHOLD);
 
       return filteredResults;
@@ -336,16 +362,15 @@ export const useUnifiedMaterialSearch = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchLocal, searchExternal]);
+  }, [searchWithAI, searchLocal]);
 
-  // Load more results using synonym/variation search
+  // Load more results
   const loadMore = useCallback(async (): Promise<SearchResult[]> => {
     if (!lastSearchTerm || isLoadingMore) return [];
 
     setIsLoadingMore(true);
 
     try {
-      // Generate search variations
       const variations = generateSearchVariations(lastSearchTerm);
       console.log(`[Load More] Searching variations: ${variations.join(', ')}`);
 
@@ -355,12 +380,16 @@ export const useUnifiedMaterialSearch = () => {
       for (const variation of variations) {
         if (variation === lastSearchTerm) continue;
         
-        const extResults = await searchExternal(variation);
-        for (const result of extResults) {
-          if (!existingIds.has(result.id)) {
-            additionalResults.push(result);
-            existingIds.add(result.id);
+        try {
+          const extResults = await searchWithAI(variation);
+          for (const result of extResults) {
+            if (!existingIds.has(result.id)) {
+              additionalResults.push(result);
+              existingIds.add(result.id);
+            }
           }
+        } catch {
+          // Skip failed variations
         }
       }
 
@@ -379,7 +408,7 @@ export const useUnifiedMaterialSearch = () => {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [lastSearchTerm, results, searchExternal, isLoadingMore]);
+  }, [lastSearchTerm, results, searchWithAI, isLoadingMore]);
 
   // Get single material by ID
   const getMaterialById = useCallback(async (id: string): Promise<SearchResult | null> => {
@@ -400,7 +429,7 @@ export const useUnifiedMaterialSearch = () => {
     search,
     loadMore,
     searchLocal,
-    searchExternal,
+    searchWithAI,
     getMaterialById,
   };
 };
@@ -410,22 +439,21 @@ function generateSearchVariations(term: string): string[] {
   const variations = [term];
   const lowerTerm = term.toLowerCase();
 
-  // Synonym mappings for common sustainable materials
   const synonyms: Record<string, string[]> = {
     'bioplastic': ['polylactic acid', 'PLA', 'polyhydroxybutyrate', 'PHB', 'starch polymer'],
-    'pla': ['polylactic acid', 'poly lactic acid'],
+    'pla': ['polylactic acid', 'poly lactic acid', '(C3H4O2)n'],
+    'polylactic acid': ['PLA', 'poly(lactic acid)', '(C3H4O2)n'],
     'biodegradable': ['compostable', 'bio-based', 'organic polymer'],
-    'cellulose': ['cellulose acetate', 'cellulose nanofiber', 'nanocellulose', 'microcellulose'],
+    'cellulose': ['cellulose acetate', 'cellulose nanofiber', 'nanocellulose'],
     'hemp': ['hemp fiber', 'cannabis sativa fiber'],
     'bamboo': ['bamboo fiber', 'bamboo cellulose'],
     'algae': ['algae-based', 'seaweed', 'alginate'],
     'mycelium': ['mushroom leather', 'fungal material'],
     'chitin': ['chitosan', 'crustacean shell'],
     'lignin': ['wood polymer', 'lignocellulose'],
-    'starch': ['starch-based', 'corn starch', 'potato starch', 'thermoplastic starch'],
+    'starch': ['starch-based', 'corn starch', 'thermoplastic starch'],
   };
 
-  // Check if term matches any synonym key
   for (const [key, values] of Object.entries(synonyms)) {
     if (lowerTerm.includes(key)) {
       variations.push(...values);

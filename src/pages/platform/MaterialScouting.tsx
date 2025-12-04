@@ -1,4 +1,4 @@
-import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download, Loader2, FileText, Lock, Globe } from "lucide-react";
+import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download, Loader2, FileText, Lock, Globe, Bot, FlaskConical } from "lucide-react";
 import PremiumGate from "@/components/PremiumGate";
 import { useState } from "react";
 import Header from "@/components/Header";
@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useUnifiedMaterialSearch } from "@/hooks/useUnifiedMaterialSearch";
+import { SourceBadge, SourcesList } from "@/components/ui/SourceBadge";
 
 const MaterialScouting = () => {
   const { loading: materialsLoading, error: materialsError, search, lastSearchSource, canLoadMore, loadMore, isLoadingMore, results } = useUnifiedMaterialSearch();
@@ -383,16 +384,18 @@ const MaterialScouting = () => {
 
               {displayResults.length > 0 && (
                 <div className="space-y-4 animate-fade-in">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold text-foreground">
-                      Found {displayResults.length} Materials
-                      {lastSearchSource === 'external' && (
-                        <Badge variant="secondary" className="ml-2 gap-1">
-                          <Globe className="h-3 w-3" />
-                          From PubChem
-                        </Badge>
+                  <div className="flex justify-between items-center flex-wrap gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-lg font-semibold text-foreground">
+                        Found {displayResults.length} Materials
+                      </h3>
+                      {lastSearchSource === 'ai' && displayResults[0]?.sources_used && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm text-muted-foreground">from:</span>
+                          <SourcesList sources={displayResults[0].sources_used} />
+                        </div>
                       )}
-                    </h3>
+                    </div>
                     {selectedMaterials.length > 0 && (
                       <Button 
                         onClick={() => setShowComparison(true)}
@@ -416,20 +419,36 @@ const MaterialScouting = () => {
                               className="mt-1"
                             />
                             <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
+                            <div className="flex items-center gap-3 mb-2 flex-wrap">
                               <h4 className="text-xl font-semibold text-foreground">
                                 {material.name}
                               </h4>
                               <Badge variant="secondary">{material.category}</Badge>
-                              {material.data_source && (
-                                <Badge 
-                                  variant="outline" 
-                                  className={material.data_source === 'pubchem' ? 'border-blue-500 text-blue-600' : material.data_source === 'jarvis' ? 'border-green-500 text-green-600' : 'border-muted'}
-                                >
-                                  {material.data_source === 'pubchem' ? '🧪 PubChem' : material.data_source === 'jarvis' ? '🔬 JARVIS' : '📊 Local'}
-                                </Badge>
+                              {material.sources_used && material.sources_used.length > 0 ? (
+                                <SourcesList sources={material.sources_used} />
+                              ) : material.data_source && (
+                                <SourceBadge source={material.data_source} />
                               )}
                             </div>
+                            {/* AI Summary */}
+                            {material.ai_summary && (
+                              <Card className="p-3 bg-orange-500/5 border-orange-500/20 mb-3">
+                                <div className="flex items-start gap-2 text-sm">
+                                  <Bot className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                                  <div>
+                                    <span className="font-semibold text-orange-600">AI Summary: </span>
+                                    <span className="text-foreground">{material.ai_summary}</span>
+                                  </div>
+                                </div>
+                              </Card>
+                            )}
+                            {/* Synonyms */}
+                            {material.synonyms && material.synonyms.length > 0 && (
+                              <div className="mb-3">
+                                <span className="text-xs text-muted-foreground">Also known as: </span>
+                                <span className="text-xs text-foreground">{material.synonyms.slice(0, 5).join(', ')}</span>
+                              </div>
+                            )}
                             {material.chemical_formula && (
                               <div className="mb-3">
                                 <Card className="p-3 bg-muted/50 inline-block">
@@ -590,18 +609,35 @@ const MaterialScouting = () => {
 
                             {viewMode === "overview" ? (
                               <>
-                                {/* Properties Grid */}
+                                {/* Properties Grid with Source Badges */}
                                 <div>
                                   <h5 className="text-lg font-semibold text-foreground mb-4">Material Properties</h5>
                                   <div className="grid md:grid-cols-2 gap-4">
-                                    {Object.entries(material.properties).map(([key, value]) => (
-                                      <Card key={key} className="p-4">
-                                        <div className="text-sm text-muted-foreground mb-1 capitalize">
-                                          {key.replace(/([A-Z])/g, ' $1').trim()}
-                                        </div>
-                                        <div className="text-lg font-semibold text-foreground">{String(value)}</div>
-                                      </Card>
-                                    ))}
+                                    {material.propertiesWithSource && material.propertiesWithSource.length > 0 ? (
+                                      material.propertiesWithSource.map((prop: any, idx: number) => (
+                                        <Card key={idx} className="p-4">
+                                          <div className="flex justify-between items-start mb-1">
+                                            <span className="text-sm text-muted-foreground capitalize">
+                                              {prop.name.replace(/([A-Z])/g, ' $1').trim()}
+                                            </span>
+                                            <SourceBadge source={prop.source} url={prop.source_url} />
+                                          </div>
+                                          <div className="text-lg font-semibold text-foreground">{prop.value}</div>
+                                        </Card>
+                                      ))
+                                    ) : (
+                                      Object.entries(material.properties).map(([key, value]) => (
+                                        <Card key={key} className="p-4">
+                                          <div className="flex justify-between items-start mb-1">
+                                            <span className="text-sm text-muted-foreground capitalize">
+                                              {key.replace(/([A-Z])/g, ' $1').trim()}
+                                            </span>
+                                            <SourceBadge source={material.data_source || 'local'} />
+                                          </div>
+                                          <div className="text-lg font-semibold text-foreground">{String(value)}</div>
+                                        </Card>
+                                      ))
+                                    )}
                                   </div>
                                 </div>
 

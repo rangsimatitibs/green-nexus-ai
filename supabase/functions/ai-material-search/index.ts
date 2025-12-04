@@ -405,8 +405,82 @@ async function generateAISummary(
   }
 }
 
+// Generate regulations using AI based on material properties
+async function generateRegulationsWithAI(material: {
+  name: string;
+  category: string;
+  applications: string[];
+}): Promise<Array<{ name: string; source: string }>> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    console.log('[AI-Regulations] No API key');
+    return [];
+  }
+
+  try {
+    console.log(`[AI-Regulations] Generating for: ${material.name}`);
+    
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { 
+            role: 'system', 
+            content: `You are a materials science regulatory expert. Given a material name, category, and applications, determine which regulatory standards and certifications are LIKELY applicable.
+
+Common regulations to consider:
+- Food Contact: FDA 21 CFR, EU 10/2011, GRAS status
+- Packaging: ASTM D6400 (compostability), EN 13432 (EU composting)
+- Environmental: REACH, RoHS, California Prop 65
+- Medical/Biocompatible: ISO 10993, USP Class VI
+- Biodegradability: ISO 14855, ASTM D5338
+- Bio-based: USDA BioPreferred, OK Biobased, TUV Austria
+
+Return ONLY a JSON array of regulation names that are likely applicable. Be specific. Example: ["FDA 21 CFR (Food Contact)", "ASTM D6400 (Industrial Compostability)", "EN 13432 (EU Packaging)"]
+Maximum 6 regulations. Only include regulations that are genuinely relevant to the material type.`
+          },
+          { 
+            role: 'user', 
+            content: `Material: ${material.name}
+Category: ${material.category}
+Applications: ${material.applications.join(', ') || 'General use'}
+
+What regulatory standards likely apply to this material?` 
+          }
+        ],
+        temperature: 0.3
+      })
+    });
+
+    if (!response.ok) {
+      console.log(`[AI-Regulations] API error: ${response.status}`);
+      return [];
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      const regulations = JSON.parse(jsonMatch[0]);
+      console.log(`[AI-Regulations] Generated ${regulations.length} regulations`);
+      return regulations.map((reg: string) => ({ name: reg, source: 'AI Analysis' }));
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('[AI-Regulations] Error:', error);
+    return [];
+  }
+}
+
 // Build MaterialData from local result
-function buildMaterialData(
+async function buildMaterialData(
   local: any,
   externalSources: ExternalSource[],
   sourcesUsed: Set<string>,
@@ -415,7 +489,7 @@ function buildMaterialData(
   aiCommonName: string | null,
   pubchemResult: ExternalSource | null,
   matchScore: number
-): MaterialData {
+): Promise<MaterialData> {
   sourcesUsed.add('Your Database');
   
   const properties: MaterialData['properties'] = local.properties.map((p: any) => ({
@@ -440,6 +514,23 @@ function buildMaterialData(
   // Use common name if available and original name is long IUPAC
   const displayName = (aiCommonName && isLongIUPACName(local.name)) ? aiCommonName : local.name;
   
+  // Get regulations - use local if available, otherwise generate with AI
+  let regulations: Array<{ name: string; source: string }> = [];
+  if (local.regulations && local.regulations.length > 0) {
+    regulations = local.regulations.map((r: any) => ({ name: r.regulation, source: 'Your Database' }));
+  } else {
+    // Generate regulations with AI
+    const applications = local.applications.map((a: any) => a.application);
+    regulations = await generateRegulationsWithAI({
+      name: displayName,
+      category: local.category,
+      applications
+    });
+    if (regulations.length > 0) {
+      sourcesUsed.add('AI Analysis');
+    }
+  }
+  
   return {
     name: displayName,
     iupac_name: isLongIUPACName(local.name) ? local.name : null,
@@ -448,7 +539,7 @@ function buildMaterialData(
     category: local.category,
     properties,
     applications: local.applications.map((a: any) => ({ name: a.application, source: 'Your Database' })),
-    regulations: local.regulations.map((r: any) => ({ name: r.regulation, source: 'Your Database' })),
+    regulations,
     sustainability: local.sustainability ? {
       score: local.sustainability.overall_score,
       breakdown: {
@@ -596,7 +687,7 @@ Deno.serve(async (req) => {
         aiCommonName = aiResult.commonName;
       }
       
-      results.push(buildMaterialData(
+      results.push(await buildMaterialData(
         local,
         externalSources,
         sourcesUsed,
@@ -635,6 +726,16 @@ Deno.serve(async (req) => {
       
       const displayName = (aiCommonName && isLongIUPACName(rawName)) ? aiCommonName : rawName;
       
+      // Generate AI regulations for external-only results
+      const aiRegulations = await generateRegulationsWithAI({
+        name: displayName,
+        category: 'Chemical Compound',
+        applications: []
+      });
+      if (aiRegulations.length > 0) {
+        sourcesUsed.add('AI Analysis');
+      }
+      
       results.push({
         name: displayName,
         iupac_name: isLongIUPACName(rawName) ? rawName : null,
@@ -643,7 +744,7 @@ Deno.serve(async (req) => {
         category: 'Chemical Compound',
         properties,
         applications: [],
-        regulations: [],
+        regulations: aiRegulations,
         sustainability: null,
         suppliers: [],
         ai_summary: aiSummary,

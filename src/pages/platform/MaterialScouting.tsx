@@ -523,10 +523,6 @@ const MaterialScouting = () => {
                                   {material.innovation}
                                 </Badge>
                               )}
-                              <Badge variant="outline" className="gap-1">
-                                <Factory className="h-3 w-3" />
-                                {material.suppliers?.length || 0} Suppliers
-                              </Badge>
                             </div>
                             {material.uniqueness && (
                               <Card className="p-3 bg-primary/5 border-primary/20 mb-3">

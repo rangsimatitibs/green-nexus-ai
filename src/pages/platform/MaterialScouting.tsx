@@ -16,7 +16,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUnifiedMaterialSearch } from "@/hooks/useUnifiedMaterialSearch";
 import { SourceBadge, SourcesList } from "@/components/ui/SourceBadge";
 
-// Component for truncated long IUPAC name with "read more"
+// Pagination
+const RESULTS_PER_PAGE = 10;
+
 const TruncatedIUPACName = ({ name }: { name: string }) => {
   const [expanded, setExpanded] = useState(false);
   
@@ -42,6 +44,7 @@ const MaterialScouting = () => {
   const { loading: materialsLoading, error: materialsError, search, lastSearchSource, canLoadMore, loadMore, isLoadingMore, results } = useUnifiedMaterialSearch();
   const [searchQuery, setSearchQuery] = useState("");
   const [displayResults, setDisplayResults] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [isSearching, setIsSearching] = useState(false);
   const [expandedMaterial, setExpandedMaterial] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"overview" | "suppliers">("overview");
@@ -66,6 +69,7 @@ const MaterialScouting = () => {
     setExpandedMaterial(null);
     setViewMode("overview");
     setSelectedMaterials([]);
+    setCurrentPage(1); // Reset to first page on new search
     
     try {
       const filters = {
@@ -98,6 +102,16 @@ const MaterialScouting = () => {
     return displayResults.filter(m => selectedMaterials.includes(m.id));
   };
 
+  // Pagination calculations
+  const totalPages = Math.ceil(displayResults.length / RESULTS_PER_PAGE);
+  const startIndex = (currentPage - 1) * RESULTS_PER_PAGE;
+  const endIndex = startIndex + RESULTS_PER_PAGE;
+  const paginatedResults = displayResults.slice(startIndex, endIndex);
+  
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const getPropertyDifference = (property: string, materials: any[]) => {
     const values = materials.map(m => {
       if (property.includes('.')) {
@@ -411,6 +425,9 @@ const MaterialScouting = () => {
                       <h3 className="text-lg font-semibold text-foreground">
                         Found {displayResults.length} Materials
                       </h3>
+                      <span className="text-sm text-muted-foreground">
+                        (Showing {startIndex + 1}-{Math.min(endIndex, displayResults.length)})
+                      </span>
                       {lastSearchSource === 'ai' && displayResults[0]?.sources_used && (
                         <div className="flex items-center gap-1">
                           <span className="text-sm text-muted-foreground">from:</span>
@@ -429,7 +446,7 @@ const MaterialScouting = () => {
                       </Button>
                     )}
                   </div>
-                  {displayResults.map((material) => (
+                  {paginatedResults.map((material) => (
                     <Card key={material.id} className="overflow-hidden">
                       {/* Main Material Card */}
                       <div className="p-6">
@@ -940,9 +957,56 @@ const MaterialScouting = () => {
                 </div>
               )}
 
-              {/* Load More Button - shows when < 25 results */}
-              {displayResults.length > 0 && canLoadMore && (
-                <div className="flex justify-center pt-6">
+              {/* Pagination Controls */}
+              {displayResults.length > RESULTS_PER_PAGE && (
+                <div className="flex justify-center items-center gap-2 pt-6">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                      // Show first page, last page, current page, and pages around current
+                      const showPage = page === 1 || page === totalPages || 
+                        (page >= currentPage - 1 && page <= currentPage + 1);
+                      const showEllipsis = page === currentPage - 2 || page === currentPage + 2;
+                      
+                      if (!showPage && !showEllipsis) return null;
+                      if (showEllipsis) return <span key={page} className="px-2 text-muted-foreground">...</span>;
+                      
+                      return (
+                        <Button
+                          key={page}
+                          variant={page === currentPage ? "default" : "outline"}
+                          size="sm"
+                          className="w-9"
+                          onClick={() => goToPage(page)}
+                        >
+                          {page}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
+
+              {/* Load More Button - shows when on last page and can load more */}
+              {displayResults.length > 0 && canLoadMore && currentPage === totalPages && (
+                <div className="flex justify-center pt-4">
                   <Button 
                     onClick={async () => {
                       const additionalResults = await loadMore();
@@ -962,7 +1026,7 @@ const MaterialScouting = () => {
                     ) : (
                       <>
                         <Search className="h-4 w-4" />
-                        Load More Results (Search Variations)
+                        Load More Results
                       </>
                     )}
                   </Button>

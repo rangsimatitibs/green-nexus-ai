@@ -388,9 +388,12 @@ export type Database = {
           chemical_formula: string | null
           chemical_structure: string | null
           created_at: string
+          data_source: string | null
+          external_id: string | null
           id: string
           image_url: string | null
           innovation: string | null
+          last_synced_at: string | null
           name: string
           scale: string | null
           uniqueness: string | null
@@ -401,9 +404,12 @@ export type Database = {
           chemical_formula?: string | null
           chemical_structure?: string | null
           created_at?: string
+          data_source?: string | null
+          external_id?: string | null
           id?: string
           image_url?: string | null
           innovation?: string | null
+          last_synced_at?: string | null
           name: string
           scale?: string | null
           uniqueness?: string | null
@@ -414,9 +420,12 @@ export type Database = {
           chemical_formula?: string | null
           chemical_structure?: string | null
           created_at?: string
+          data_source?: string | null
+          external_id?: string | null
           id?: string
           image_url?: string | null
           innovation?: string | null
+          last_synced_at?: string | null
           name?: string
           scale?: string | null
           uniqueness?: string | null
@@ -813,6 +822,36 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      search_materials: {
+        Args: {
+          category_filter?: string
+          result_limit?: number
+          search_term?: string
+          source_filter?: string
+        }
+        Returns: {
+          category: string
+          chemical_formula: string | null
+          chemical_structure: string | null
+          created_at: string
+          data_source: string | null
+          external_id: string | null
+          id: string
+          image_url: string | null
+          innovation: string | null
+          last_synced_at: string | null
+          name: string
+          scale: string | null
+          uniqueness: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "materials"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
     }
     Enums: {

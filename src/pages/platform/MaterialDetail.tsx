@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ChevronDown, ChevronUp, Loader2, FileText, Download } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Loader2, FileText, Download, Info } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import logoImage from "@/assets/materialink-logo-full.png";
@@ -15,6 +15,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getRegulationDescription } from "@/data/regulationDescriptions";
 
 const MaterialDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -573,14 +575,33 @@ const MaterialDetail = () => {
               <div className="p-0">
                 <table className="w-full">
                   <tbody>
-                    {material.regulations.map((reg: string, idx: number) => (
-                      <tr key={idx} className={idx !== material.regulations.length - 1 ? "border-b border-border" : ""}>
-                        <td className="p-4 font-semibold text-foreground bg-muted/30 w-1/3">
-                          Certification {idx + 1}
-                        </td>
-                        <td className="p-4">{reg}</td>
-                      </tr>
-                    ))}
+                    {material.regulations.map((reg: string, idx: number) => {
+                      const description = getRegulationDescription(reg);
+                      return (
+                        <tr key={idx} className={idx !== material.regulations.length - 1 ? "border-b border-border" : ""}>
+                          <td className="p-4 font-semibold text-foreground bg-muted/30 w-1/3">
+                            Certification {idx + 1}
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <span>{reg}</span>
+                              {description && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs">
+                                      <p>{description}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

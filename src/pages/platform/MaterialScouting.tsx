@@ -1,4 +1,4 @@
-import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download, Loader2, FileText, Lock, Globe, Bot, FlaskConical } from "lucide-react";
+import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download, Loader2, FileText, Lock, Globe, Bot, FlaskConical, Info } from "lucide-react";
 import PremiumGate from "@/components/PremiumGate";
 import { useState } from "react";
 import Header from "@/components/Header";
@@ -15,6 +15,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Textarea } from "@/components/ui/textarea";
 import { useUnifiedMaterialSearch } from "@/hooks/useUnifiedMaterialSearch";
 import { SourceBadge, SourcesList } from "@/components/ui/SourceBadge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getRegulationDescription } from "@/data/regulationDescriptions";
 
 // Pagination
 const RESULTS_PER_PAGE = 10;
@@ -563,12 +565,29 @@ const MaterialScouting = () => {
                               <div>
                                 <div className="text-sm font-medium text-foreground mb-2">Regulations:</div>
                                 <div className="flex flex-wrap gap-2">
-                                  {material.regulations.map((reg: string, i: number) => (
-                                    <Badge key={i} variant="outline" className="gap-1">
-                                      <Award className="h-3 w-3" />
-                                      {reg}
-                                    </Badge>
-                                  ))}
+                                  {material.regulations.map((reg: string, i: number) => {
+                                    const description = getRegulationDescription(reg);
+                                    return description ? (
+                                      <TooltipProvider key={i}>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Badge variant="outline" className="gap-1 cursor-help">
+                                              <Award className="h-3 w-3" />
+                                              {reg}
+                                            </Badge>
+                                          </TooltipTrigger>
+                                          <TooltipContent className="max-w-xs">
+                                            <p>{description}</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    ) : (
+                                      <Badge key={i} variant="outline" className="gap-1">
+                                        <Award className="h-3 w-3" />
+                                        {reg}
+                                      </Badge>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             )}
@@ -1251,9 +1270,23 @@ const MaterialScouting = () => {
                 <div className={getPropertyDifference('regulations', getComparisonData()) ? 'bg-primary/10 p-3 rounded-md border-2 border-primary/30' : ''}>
                   <div className="text-sm font-semibold text-muted-foreground mb-2">Regulations</div>
                   <div className="flex flex-wrap gap-1">
-                    {material.regulations.map((reg: string) => (
-                      <Badge key={reg} variant="outline" className="text-xs">{reg}</Badge>
-                    ))}
+                    {material.regulations.map((reg: string) => {
+                      const description = getRegulationDescription(reg);
+                      return description ? (
+                        <TooltipProvider key={reg}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="outline" className="text-xs cursor-help">{reg}</Badge>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p>{description}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <Badge key={reg} variant="outline" className="text-xs">{reg}</Badge>
+                      );
+                    })}
                   </div>
                 </div>
               </Card>

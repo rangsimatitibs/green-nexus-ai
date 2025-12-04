@@ -90,6 +90,51 @@ export type Database = {
         }
         Relationships: []
       }
+      external_data_sources: {
+        Row: {
+          api_endpoint: string | null
+          api_key_secret_name: string | null
+          created_at: string
+          data_format: Json | null
+          description: string | null
+          field_mapping: Json | null
+          id: string
+          is_active: boolean | null
+          name: string
+          priority: number | null
+          rate_limit_per_minute: number | null
+          updated_at: string
+        }
+        Insert: {
+          api_endpoint?: string | null
+          api_key_secret_name?: string | null
+          created_at?: string
+          data_format?: Json | null
+          description?: string | null
+          field_mapping?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          priority?: number | null
+          rate_limit_per_minute?: number | null
+          updated_at?: string
+        }
+        Update: {
+          api_endpoint?: string | null
+          api_key_secret_name?: string | null
+          created_at?: string
+          data_format?: Json | null
+          description?: string | null
+          field_mapping?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          priority?: number | null
+          rate_limit_per_minute?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lab_recipe_materials: {
         Row: {
           id: string

@@ -517,12 +517,46 @@ Deno.serve(async (req) => {
       ...externalPromises
     ]);
     
-    // Merge local results with match scoring
+    // Merge local results with match scoring based on name relevance
+    const queryLower = query.toLowerCase().trim();
+    
     for (const { term, results } of localSearchResults) {
       for (const result of results) {
         const existing = allLocalResults.get(result.id);
-        const isExactMatch = term.toLowerCase() === query.toLowerCase();
-        const newScore = isExactMatch ? 100 : 70;
+        const nameLower = result.name.toLowerCase().trim();
+        const synonymsLower = (result.synonyms || []).map((s: string) => s.toLowerCase().trim());
+        
+        // Score based on how well the MATERIAL NAME matches the original query
+        let newScore = 50; // Base score
+        
+        // Exact name match (case-insensitive)
+        if (nameLower === queryLower) {
+          newScore = 100;
+        }
+        // Name starts with query (e.g., "PLA" matches "PLA-based material")
+        else if (nameLower.startsWith(queryLower + ' ') || nameLower.startsWith(queryLower + '-')) {
+          newScore = 95;
+        }
+        // Query is an exact synonym match
+        else if (synonymsLower.includes(queryLower)) {
+          newScore = 90;
+        }
+        // Name contains query as a word
+        else if (nameLower.includes(queryLower)) {
+          newScore = 85;
+        }
+        // Query matches partial synonym
+        else if (synonymsLower.some((s: string) => s.includes(queryLower) || queryLower.includes(s))) {
+          newScore = 75;
+        }
+        // Found via expanded search term match
+        else if (term.toLowerCase() === queryLower) {
+          newScore = 70;
+        }
+        // Found via related term
+        else {
+          newScore = 60;
+        }
         
         if (!existing || (existing.matchScore || 0) < newScore) {
           allLocalResults.set(result.id, { ...result, matchScore: newScore });

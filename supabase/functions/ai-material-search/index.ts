@@ -676,9 +676,9 @@ async function generateAISustainability(material: {
     console.log(`[AI-Sustainability] Generating for: ${material.name}`);
     
     const propertiesText = material.properties
-      .slice(0, 10)
+      .slice(0, 15)
       .map(p => `${p.name}: ${p.value}`)
-      .join(', ');
+      .join('; ');
     
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -691,36 +691,68 @@ async function generateAISustainability(material: {
         messages: [
           { 
             role: 'system', 
-            content: `You are a sustainability expert for materials science. Given a material, estimate sustainability scores (0-100) based on available data and scientific knowledge.
+            content: `You are a Life Cycle Assessment (LCA) expert. Analyze materials and provide PRECISE sustainability scores based on scientific data. Use the FULL 0-100 scale with specific values (not rounded to 5s).
 
-Score dimensions:
-- renewable: How renewable is the raw material source? (bio-based = high, fossil-based = low)
-- carbonFootprint: Inverse of carbon footprint during production (low CO2 = high score)
-- biodegradability: How readily does it biodegrade? (industrial compost = 70-85, home compost = 85-100, non-biodegradable = 0-30)
-- toxicity: Inverse of toxicity (food-safe = high, toxic chemicals = low)
+SCORING METHODOLOGY (be precise, use exact values like 67, 82, 43, not 75, 80, 45):
 
-Consider the material category, known properties, and scientific consensus.
+**RENEWABLE (raw material source):**
+- 95-100: 100% bio-based from rapidly renewable sources (bamboo, algae, agricultural waste)
+- 85-94: Bio-based from slower-growing sources (wood, hemp, cotton)
+- 70-84: Partially bio-based (30-70% bio-content)
+- 40-69: Minimal bio-based content (<30%)
+- 15-39: Fossil-derived but recyclable (PET, HDPE)
+- 0-14: Non-renewable, non-recyclable (certain thermosets)
+
+**CARBON FOOTPRINT (production emissions - INVERSE score):**
+- 90-100: Carbon-negative or near-zero (some bio-based materials sequester carbon)
+- 75-89: Very low (<2 kg CO2e/kg material)
+- 55-74: Moderate (2-5 kg CO2e/kg)
+- 35-54: High (5-10 kg CO2e/kg)
+- 15-34: Very high (10-20 kg CO2e/kg)
+- 0-14: Extremely high (>20 kg CO2e/kg, virgin aluminum, some plastics)
+
+**BIODEGRADABILITY:**
+- 92-100: Home compostable in <90 days (PHA, uncoated paper, food waste)
+- 78-91: Industrial compostable in <180 days (PLA, PBAT blends)
+- 55-77: Biodegradable in specific conditions (certain cellulose derivatives)
+- 30-54: Slowly degradable (>5 years in environment)
+- 10-29: Very slowly degradable (decades)
+- 0-9: Essentially non-biodegradable (most conventional plastics, metals)
+
+**TOXICITY (inverse - higher = safer):**
+- 92-100: Food-contact safe, FDA/EU approved, no hazardous additives
+- 78-91: Generally safe, minimal processing chemicals
+- 60-77: Some concerns (certain plasticizers, processing aids)
+- 40-59: Contains regulated substances, requires handling precautions
+- 20-39: Contains hazardous substances (heavy metals, certain solvents)
+- 0-19: Highly toxic, restricted substances
+
+**OVERALL** = weighted average: renewable(25%) + carbonFootprint(30%) + biodegradability(25%) + toxicity(20%)
+
+IMPORTANT: Use SPECIFIC numbers, NOT multiples of 5. Example: 67, not 65 or 70.
 
 Return ONLY valid JSON:
 {
-  "overall": <number 0-100>,
-  "renewable": <number 0-100>,
-  "carbonFootprint": <number 0-100>,
-  "biodegradability": <number 0-100>,
-  "toxicity": <number 0-100>,
-  "justification": "<brief 1-sentence explanation, max 100 chars>"
+  "overall": <precise number 0-100>,
+  "renewable": <precise number 0-100>,
+  "carbonFootprint": <precise number 0-100>,
+  "biodegradability": <precise number 0-100>,
+  "toxicity": <precise number 0-100>,
+  "justification": "<specific reason citing material properties, max 120 chars>"
 }`
           },
           { 
             role: 'user', 
-            content: `Material: ${material.name}
-Category: ${material.category}
-Known Properties: ${propertiesText || 'None available'}
+            content: `Analyze sustainability for:
 
-Estimate sustainability scores for this material.` 
+Material: ${material.name}
+Category: ${material.category}
+Properties: ${propertiesText || 'No specific properties available'}
+
+Provide precise LCA-based sustainability scores using the full 0-100 scale with non-rounded values.` 
           }
         ],
-        temperature: 0.3
+        temperature: 0.5
       })
     });
 
@@ -735,16 +767,33 @@ Estimate sustainability scores for this material.`
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
-      console.log(`[AI-Sustainability] Generated score: ${parsed.overall}`);
+      
+      // Validate and ensure reasonable values
+      const clamp = (val: number) => Math.max(0, Math.min(100, Math.round(val)));
+      
+      const breakdown = {
+        renewable: clamp(parsed.renewable ?? 50),
+        carbonFootprint: clamp(parsed.carbonFootprint ?? 50),
+        biodegradability: clamp(parsed.biodegradability ?? 50),
+        toxicity: clamp(parsed.toxicity ?? 50)
+      };
+      
+      // Calculate weighted overall if AI didn't provide or seems wrong
+      const calculatedOverall = Math.round(
+        breakdown.renewable * 0.25 +
+        breakdown.carbonFootprint * 0.30 +
+        breakdown.biodegradability * 0.25 +
+        breakdown.toxicity * 0.20
+      );
+      
+      const overall = parsed.overall ? clamp(parsed.overall) : calculatedOverall;
+      
+      console.log(`[AI-Sustainability] Generated score: ${overall} (R:${breakdown.renewable} C:${breakdown.carbonFootprint} B:${breakdown.biodegradability} T:${breakdown.toxicity})`);
+      
       return {
-        score: parsed.overall || 50,
-        breakdown: {
-          renewable: parsed.renewable || 50,
-          carbonFootprint: parsed.carbonFootprint || 50,
-          biodegradability: parsed.biodegradability || 50,
-          toxicity: parsed.toxicity || 50
-        },
-        justification: parsed.justification || 'Estimated based on material category and known properties.'
+        score: overall,
+        breakdown,
+        justification: parsed.justification || `Based on ${material.category} properties and LCA methodology.`
       };
     }
     

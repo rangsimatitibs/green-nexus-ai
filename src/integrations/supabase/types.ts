@@ -382,6 +382,38 @@ export type Database = {
           },
         ]
       }
+      material_synonyms: {
+        Row: {
+          created_at: string | null
+          id: string
+          material_id: string
+          synonym: string
+          synonym_type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          material_id: string
+          synonym: string
+          synonym_type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          material_id?: string
+          synonym?: string
+          synonym_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_synonyms_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       materials: {
         Row: {
           category: string

@@ -35,6 +35,12 @@ interface MaterialApplication {
   application: string;
 }
 
+interface MaterialSynonym {
+  id?: string;
+  synonym: string;
+  synonym_type: string;
+}
+
 interface MaterialFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -55,6 +61,7 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
   });
   const [properties, setProperties] = useState<MaterialProperty[]>([]);
   const [applications, setApplications] = useState<MaterialApplication[]>([]);
+  const [synonyms, setSynonyms] = useState<MaterialSynonym[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -97,18 +104,21 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
     });
     setProperties([]);
     setApplications([]);
+    setSynonyms([]);
     setImagePreview(null);
   };
 
   const fetchRelatedData = async (materialId: string) => {
     try {
-      const [propsRes, appsRes] = await Promise.all([
+      const [propsRes, appsRes, synsRes] = await Promise.all([
         supabase.from("material_properties").select("*").eq("material_id", materialId),
         supabase.from("material_applications").select("*").eq("material_id", materialId),
+        supabase.from("material_synonyms").select("*").eq("material_id", materialId),
       ]);
 
       if (propsRes.data) setProperties(propsRes.data);
       if (appsRes.data) setApplications(appsRes.data);
+      if (synsRes.data) setSynonyms(synsRes.data.map(s => ({ id: s.id, synonym: s.synonym, synonym_type: s.synonym_type || 'alias' })));
     } catch (error) {
       console.error("Error fetching related data:", error);
     }
@@ -201,6 +211,21 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
     setApplications(applications.filter((_, i) => i !== index));
   };
 
+  // Synonym management
+  const addSynonym = () => {
+    setSynonyms([...synonyms, { synonym: "", synonym_type: "alias" }]);
+  };
+
+  const updateSynonym = (index: number, field: keyof MaterialSynonym, value: string) => {
+    const updated = [...synonyms];
+    updated[index] = { ...updated[index], [field]: value };
+    setSynonyms(updated);
+  };
+
+  const removeSynonym = (index: number) => {
+    setSynonyms(synonyms.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -264,6 +289,22 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
             if (appsError) throw appsError;
           }
         }
+
+        // Save synonyms - delete existing and insert new
+        await supabase.from("material_synonyms").delete().eq("material_id", materialId);
+        if (synonyms.length > 0) {
+          const synsToInsert = synonyms
+            .filter(s => s.synonym)
+            .map(s => ({
+              material_id: materialId,
+              synonym: s.synonym,
+              synonym_type: s.synonym_type || "alias",
+            }));
+          if (synsToInsert.length > 0) {
+            const { error: synsError } = await supabase.from("material_synonyms").insert(synsToInsert);
+            if (synsError) throw synsError;
+          }
+        }
       }
 
       toast({ title: "Success", description: material ? "Material updated successfully" : "Material created successfully" });
@@ -310,10 +351,11 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
               <TabsTrigger value="properties">Properties ({properties.length})</TabsTrigger>
               <TabsTrigger value="applications">Applications ({applications.length})</TabsTrigger>
+              <TabsTrigger value="synonyms">Synonyms ({synonyms.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="basic" className="space-y-4 mt-4">
@@ -550,6 +592,77 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="synonyms" className="space-y-4 mt-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <Label>Material Synonyms</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Add alternative names, abbreviations, or chemical formulas (e.g., PLA, polylactic acid)
+                  </p>
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={addSynonym}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Synonym
+                </Button>
+              </div>
+              
+              {synonyms.length === 0 ? (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    No synonyms added. Click "Add Synonym" to help users find this material by different names.
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {synonyms.map((syn, index) => (
+                    <Card key={index}>
+                      <CardContent className="pt-4">
+                        <div className="grid grid-cols-12 gap-3 items-end">
+                          <div className="col-span-7 space-y-1">
+                            <Label className="text-xs">Synonym/Alias</Label>
+                            <Input
+                              placeholder="e.g., PLA, polylactic acid, (C3H4O2)n"
+                              value={syn.synonym}
+                              onChange={(e) => updateSynonym(index, "synonym", e.target.value)}
+                            />
+                          </div>
+                          <div className="col-span-4 space-y-1">
+                            <Label className="text-xs">Type</Label>
+                            <Select
+                              value={syn.synonym_type}
+                              onValueChange={(value) => updateSynonym(index, "synonym_type", value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="alias">Alias</SelectItem>
+                                <SelectItem value="abbreviation">Abbreviation</SelectItem>
+                                <SelectItem value="formula">Chemical Formula</SelectItem>
+                                <SelectItem value="iupac">IUPAC Name</SelectItem>
+                                <SelectItem value="trade_name">Trade Name</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="col-span-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeSynonym(index)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>

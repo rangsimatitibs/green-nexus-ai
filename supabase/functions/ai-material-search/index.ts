@@ -19,6 +19,7 @@ interface MaterialData {
   ai_summary: string;
   sources_used: string[];
   matchScore?: number;
+  material_source?: string[];
 }
 
 interface ExternalSource {
@@ -968,7 +969,8 @@ async function buildMaterialData(
     })),
     ai_summary: aiSummary,
     sources_used: Array.from(sourcesUsed),
-    matchScore
+    matchScore,
+    material_source: local.material_source || []
   };
 }
 

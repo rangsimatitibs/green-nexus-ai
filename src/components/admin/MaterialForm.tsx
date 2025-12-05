@@ -58,7 +58,9 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
     scale: "",
     innovation: "",
     image_url: "",
+    material_source: [] as string[],
   });
+  const [newSource, setNewSource] = useState("");
   const [properties, setProperties] = useState<MaterialProperty[]>([]);
   const [applications, setApplications] = useState<MaterialApplication[]>([]);
   const [synonyms, setSynonyms] = useState<MaterialSynonym[]>([]);
@@ -79,6 +81,7 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
         scale: material.scale || "",
         innovation: material.innovation || "",
         image_url: material.image_url || "",
+        material_source: material.material_source || [],
       });
       if (material.image_url) {
         setImagePreview(material.image_url);
@@ -101,11 +104,13 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
       scale: "",
       innovation: "",
       image_url: "",
+      material_source: [],
     });
     setProperties([]);
     setApplications([]);
     setSynonyms([]);
     setImagePreview(null);
+    setNewSource("");
   };
 
   const fetchRelatedData = async (materialId: string) => {
@@ -478,6 +483,65 @@ export default function MaterialForm({ open, onOpenChange, material, onSuccess }
                     onChange={(e) => setFormData({ ...formData, innovation: e.target.value })}
                   />
                 </div>
+              </div>
+
+              {/* Material Sources/Feedstock */}
+              <div className="space-y-2">
+                <Label>Material Source / Feedstock</Label>
+                <p className="text-xs text-muted-foreground">
+                  Origin of the material (e.g., seaweed, agricultural waste, fungi, fossil fuel)
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    value={newSource}
+                    onChange={(e) => setNewSource(e.target.value)}
+                    placeholder="e.g., seaweed, agricultural waste"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newSource.trim()) {
+                        e.preventDefault();
+                        setFormData({
+                          ...formData,
+                          material_source: [...formData.material_source, newSource.trim()]
+                        });
+                        setNewSource("");
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      if (newSource.trim()) {
+                        setFormData({
+                          ...formData,
+                          material_source: [...formData.material_source, newSource.trim()]
+                        });
+                        setNewSource("");
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {formData.material_source.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.material_source.map((source, index) => (
+                      <Badge key={index} variant="secondary" className="gap-1">
+                        {source}
+                        <button
+                          type="button"
+                          onClick={() => setFormData({
+                            ...formData,
+                            material_source: formData.material_source.filter((_, i) => i !== index)
+                          })}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
             </TabsContent>
 

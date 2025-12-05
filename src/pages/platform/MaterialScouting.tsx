@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Textarea } from "@/components/ui/textarea";
 import { useUnifiedMaterialSearch } from "@/hooks/useUnifiedMaterialSearch";
 import { SourceBadge, SourcesList } from "@/components/ui/SourceBadge";
+import { MaterialSourcesList } from "@/components/ui/MaterialSourceBadge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getRegulationDescription } from "@/data/regulationDescriptions";
 
@@ -465,10 +466,9 @@ const MaterialScouting = () => {
                                 {material.name}
                               </h4>
                               <Badge variant="secondary">{material.category}</Badge>
-                              {material.sources_used && material.sources_used.length > 0 ? (
-                                <SourcesList sources={material.sources_used} />
-                              ) : (
-                                <SourceBadge source={material.data_source || 'manual'} />
+                              {/* Material feedstock/origin sources */}
+                              {material.material_source && material.material_source.length > 0 && (
+                                <MaterialSourcesList sources={material.material_source} />
                               )}
                             </div>
                             {/* Long IUPAC name truncated - use iupac_name field from API */}

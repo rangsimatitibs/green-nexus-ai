@@ -63,6 +63,7 @@ export interface SearchResult {
   iupac_name?: string | null;
   ai_summary?: string;
   sources_used?: string[];
+  material_source?: string[];
 }
 
 const RESULTS_THRESHOLD = 25;
@@ -132,11 +133,12 @@ export const useUnifiedMaterialSearch = () => {
             properties: {},
             certifications: []
           })) || [],
-          synonyms: result.synonyms || [],
-          iupac_name: result.iupac_name || null,
-          ai_summary: result.ai_summary,
-          sources_used: result.sources_used || data.sourcesUsed || []
-        };
+            synonyms: result.synonyms || [],
+            iupac_name: result.iupac_name || null,
+            ai_summary: result.ai_summary,
+            sources_used: result.sources_used || data.sourcesUsed || [],
+            material_source: result.material_source || []
+          };
       });
     } catch (err) {
       console.error('[AI Search] Failed:', err);
@@ -267,7 +269,8 @@ export const useUnifiedMaterialSearch = () => {
             regulationsWithSource: regulations.map(r => ({ name: r, source: 'Your Database' })),
             suppliers,
             synonyms,
-            sources_used: ['Your Database']
+            sources_used: ['Your Database'],
+            material_source: material.material_source || []
           };
         })
       );

@@ -5,13 +5,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+type PropertyCategory = 'description' | 'physical' | 'mechanical' | 'thermal' | 'safety' | 'environmental';
+
 interface MaterialData {
   name: string;
   iupac_name: string | null;
   synonyms: string[];
   chemical_formula: string | null;
   category: string;
-  properties: Array<{ name: string; value: string; source: string; source_url?: string }>;
+  properties: Array<{ name: string; value: string; source: string; source_url?: string; category?: PropertyCategory }>;
   applications: Array<{ name: string; source: string }>;
   regulations: Array<{ name: string; source: string }>;
   sustainability: { score: number; breakdown: Record<string, number>; source: string; justification?: string } | null;
@@ -20,6 +22,54 @@ interface MaterialData {
   sources_used: string[];
   matchScore?: number;
   material_source?: string[];
+}
+
+// Property categorization mapping
+const CATEGORY_MAPPINGS: Record<PropertyCategory, string[]> = {
+  description: [
+    'iupac', 'name', 'cas', 'formula', 'description', 'molecular weight', 
+    'synonym', 'chemical structure', 'complexity', 'exact mass', 'monoisotopic'
+  ],
+  physical: [
+    'density', 'solubility', 'melting', 'boiling', 'crystal', 'space group',
+    'xlogp', 'lipophilicity', 'polar surface', 'h-bond', 'hydrogen bond',
+    'unit cell', 'band gap', 'formation energy', 'energy above hull',
+    'refractive', 'viscosity', 'color', 'appearance', 'odor', 'ph'
+  ],
+  mechanical: [
+    'tensile', 'strength', 'elongation', 'modulus', 'hardness', 'young',
+    'shear', 'flexural', 'compressive', 'impact', 'fatigue', 'creep',
+    'wear', 'friction', 'elasticity', 'stiffness', 'ductility', 'brittleness'
+  ],
+  thermal: [
+    'thermal', 'conductivity', 'expansion', 'glass transition', 'heat',
+    'specific heat', 'flammability', 'ignition', 'decomposition', 'hdt',
+    'deflection temperature', 'vicat', 'service temperature'
+  ],
+  safety: [
+    'hazard', 'health', 'ppe', 'protective', 'safety', 'toxic', 
+    'ghs', 'classification', 'warning', 'caution', 'msds', 'sds',
+    'exposure', 'limit', 'lethal', 'ld50', 'carcinogenic', 'mutagenic'
+  ],
+  environmental: [
+    'biodegradable', 'biodegradability', 'compostable', 'renewable',
+    'recyclable', 'carbon footprint', 'sustainability', 'eco', 
+    'environmental', 'bio-based', 'lifecycle', 'lca'
+  ]
+};
+
+function categorizeProperty(propertyName: string): PropertyCategory {
+  const lowerName = propertyName.toLowerCase();
+  
+  for (const [category, keywords] of Object.entries(CATEGORY_MAPPINGS)) {
+    for (const keyword of keywords) {
+      if (lowerName.includes(keyword)) {
+        return category as PropertyCategory;
+      }
+    }
+  }
+  
+  return 'physical'; // Default
 }
 
 interface ExternalSource {
@@ -886,7 +936,8 @@ async function buildMaterialData(
     name: p.property_name,
     value: p.property_value,
     source: 'Your Database',
-    source_url: undefined
+    source_url: undefined,
+    category: categorizeProperty(p.property_name)
   }));
   
   // Add external properties
@@ -894,7 +945,7 @@ async function buildMaterialData(
     sourcesUsed.add(ext.name);
     for (const [name, value] of Object.entries(ext.properties)) {
       if (!properties.find(p => p.name.toLowerCase() === name.toLowerCase())) {
-        properties.push({ name, value, source: ext.name, source_url: ext.url });
+        properties.push({ name, value, source: ext.name, source_url: ext.url, category: categorizeProperty(name) });
       }
     }
   }
@@ -1126,7 +1177,7 @@ Deno.serve(async (req) => {
       for (const ext of externalSources) {
         sourcesUsed.add(ext.name);
         for (const [name, value] of Object.entries(ext.properties)) {
-          properties.push({ name, value, source: ext.name, source_url: ext.url });
+          properties.push({ name, value, source: ext.name, source_url: ext.url, category: categorizeProperty(name) });
         }
       }
       

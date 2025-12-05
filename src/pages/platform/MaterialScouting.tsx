@@ -467,8 +467,8 @@ const MaterialScouting = () => {
                               <Badge variant="secondary">{material.category}</Badge>
                               {material.sources_used && material.sources_used.length > 0 ? (
                                 <SourcesList sources={material.sources_used} />
-                              ) : material.data_source && (
-                                <SourceBadge source={material.data_source} />
+                              ) : (
+                                <SourceBadge source={material.data_source || 'manual'} />
                               )}
                             </div>
                             {/* Long IUPAC name truncated - use iupac_name field from API */}

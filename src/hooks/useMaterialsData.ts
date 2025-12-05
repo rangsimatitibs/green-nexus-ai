@@ -10,6 +10,7 @@ export interface Material {
   uniqueness: string | null;
   scale: string | null;
   innovation: string | null;
+  material_source: string[] | null;
   properties: Record<string, string>;
   sustainability: {
     score: number;
@@ -173,6 +174,7 @@ export const useMaterialsData = () => {
             uniqueness: material.uniqueness,
             scale: material.scale,
             innovation: material.innovation,
+            material_source: material.material_source,
             properties,
             sustainability,
             applications,

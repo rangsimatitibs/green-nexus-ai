@@ -1,4 +1,4 @@
-import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download, Loader2, FileText, Lock, Globe, Bot, FlaskConical, Info } from "lucide-react";
+import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download, Loader2, FileText, Lock, Globe, Bot, FlaskConical, Info, Check, AlertCircle } from "lucide-react";
 import PremiumGate from "@/components/PremiumGate";
 import { useState } from "react";
 import Header from "@/components/Header";
@@ -20,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { getRegulationDescription } from "@/data/regulationDescriptions";
 import { CategorizedProperties } from "@/components/CategorizedProperties";
 import { PropertyExplorer } from "@/components/PropertyExplorer";
+import { AdvancedPropertySearch, PropertyRequirement } from "@/components/AdvancedPropertySearch";
 
 // Pagination
 const RESULTS_PER_PAGE = 10;
@@ -58,15 +59,8 @@ const MaterialScouting = () => {
   
   // Advanced search state
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
-  const [properties, setProperties] = useState<Array<{property: string, value: string, importance: string}>>([
-    {property: "", value: "", importance: "must-have"}
-  ]);
-  const [selectedIndustry, setSelectedIndustry] = useState("");
-  const [applicationFilter, setApplicationFilter] = useState("");
-  const [additionalRequirements, setAdditionalRequirements] = useState("");
-  // Deep search removed - now always searches local + external in parallel
-  const [sortBy, setSortBy] = useState("relevance");
-  const [savedSearches, setSavedSearches] = useState<Array<{name: string, filters: any}>>([]);
+  const [propertyRequirements, setPropertyRequirements] = useState<PropertyRequirement[]>([]);
+  const [hasActiveRequirements, setHasActiveRequirements] = useState(false);
 
 
   const handleSearch = async () => {
@@ -80,13 +74,52 @@ const MaterialScouting = () => {
       const filters = {
         category: undefined,
         source: undefined,
-        properties: properties.filter(p => p.property.trim()),
-        industry: selectedIndustry || undefined,
-        application: applicationFilter || undefined,
+        propertyRequirements: propertyRequirements.filter(p => p.property.trim() && p.value.trim()),
       };
 
       const results = await search(searchQuery, filters);
       setDisplayResults(results);
+      setHasActiveRequirements(filters.propertyRequirements.length > 0);
+    } catch (err) {
+      console.error('Search error:', err);
+      setDisplayResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
+  const handleAdvancedSearch = async (
+    requirements: PropertyRequirement[], 
+    industry: string, 
+    application: string, 
+    additionalReqs: string
+  ) => {
+    setPropertyRequirements(requirements);
+    setIsSearching(true);
+    setExpandedMaterial(null);
+    setViewMode("overview");
+    setSelectedMaterials([]);
+    setCurrentPage(1);
+    
+    try {
+      // Build search query from requirements
+      let query = searchQuery;
+      if (!query && requirements.length > 0) {
+        // Generate search query from requirements
+        query = requirements.map(r => r.property).join(' ');
+      }
+      if (industry) query += ` ${industry}`;
+      if (application) query += ` ${application}`;
+      
+      const filters = {
+        category: undefined,
+        source: undefined,
+        propertyRequirements: requirements.filter(p => p.property.trim() && p.value.trim()),
+      };
+
+      const results = await search(query || 'materials', filters);
+      setDisplayResults(results);
+      setHasActiveRequirements(filters.propertyRequirements.length > 0);
     } catch (err) {
       console.error('Search error:', err);
       setDisplayResults([]);
@@ -253,174 +286,22 @@ const MaterialScouting = () => {
                 {showAdvancedSearch ? (
                   <>
                     <ChevronUp className="h-4 w-4 mr-2" />
-                    Hide Advanced Search
+                    Hide Smart Property Search
                   </>
                 ) : (
                   <>
-                    <ChevronDown className="h-4 w-4 mr-2" />
-                    Show Advanced Search
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Smart Property Search (AI-Powered)
                   </>
                 )}
               </Button>
 
-              {/* Advanced Search Panel */}
+              {/* Advanced Search Panel - New Component */}
               {showAdvancedSearch && (
-                <Card className="p-6 bg-muted/30 space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Material Requirements</h3>
-                    
-                    {/* Property Requirements */}
-                    <div className="space-y-3">
-                      {properties.map((prop, index) => (
-                        <div key={index} className="grid grid-cols-12 gap-3">
-                          <div className="col-span-4">
-                            <Input
-                              placeholder="e.g., Tensile Strength"
-                              value={prop.property}
-                              onChange={(e) => {
-                                const newProps = [...properties];
-                                newProps[index].property = e.target.value;
-                                setProperties(newProps);
-                              }}
-                            />
-                          </div>
-                          <div className="col-span-4">
-                            <Input
-                              placeholder="e.g., 100-200 MPa"
-                              value={prop.value}
-                              onChange={(e) => {
-                                const newProps = [...properties];
-                                newProps[index].value = e.target.value;
-                                setProperties(newProps);
-                              }}
-                            />
-                          </div>
-                          <div className="col-span-3">
-                            <select
-                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                              value={prop.importance}
-                              onChange={(e) => {
-                                const newProps = [...properties];
-                                newProps[index].importance = e.target.value;
-                                setProperties(newProps);
-                              }}
-                            >
-                              <option value="must-have">Must Have</option>
-                              <option value="preferred">Preferred</option>
-                              <option value="nice-to-have">Nice to Have</option>
-                            </select>
-                          </div>
-                          <div className="col-span-1">
-                            {index > 0 && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  const newProps = properties.filter((_, i) => i !== index);
-                                  setProperties(newProps);
-                                }}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setProperties([...properties, {property: "", value: "", importance: "must-have"}])}
-                        className="text-primary"
-                      >
-                        + Add Property
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Industry and Application */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-2 block">Industry</label>
-                      <select
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        value={selectedIndustry}
-                        onChange={(e) => setSelectedIndustry(e.target.value)}
-                      >
-                        <option value="">Select Industry</option>
-                        <option value="packaging">Packaging</option>
-                        <option value="automotive">Automotive</option>
-                        <option value="medical">Medical</option>
-                        <option value="textiles">Textiles</option>
-                        <option value="construction">Construction</option>
-                        <option value="electronics">Electronics</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-2 block">Application</label>
-                      <Input
-                        placeholder="e.g., Medical device housing"
-                        value={applicationFilter}
-                        onChange={(e) => setApplicationFilter(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Additional Requirements */}
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">
-                      Additional Requirements (Optional)
-                    </label>
-                    <Textarea
-                      placeholder="Describe any additional requirements or constraints..."
-                      value={additionalRequirements}
-                      onChange={(e) => setAdditionalRequirements(e.target.value)}
-                      rows={3}
-                      className="resize-none"
-                    />
-                  </div>
-
-                  {/* Sort Options */}
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-2 block">Sort Results By</label>
-                      <select
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                      >
-                        <option value="relevance">Relevance</option>
-                        <option value="sustainability">Sustainability Score</option>
-                        <option value="price-low">Price (Low to High)</option>
-                        <option value="price-high">Price (High to Low)</option>
-                        <option value="innovation">Innovation Level</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3 pt-4 border-t">
-                    <Button 
-                      onClick={handleSearch}
-                      disabled={isSearching}
-                      className="flex-1"
-                    >
-                      {isSearching ? "Searching..." : "Search Materials"}
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => {
-                        setProperties([{property: "", value: "", importance: "must-have"}]);
-                        setSelectedIndustry("");
-                        setApplicationFilter("");
-                        setAdditionalRequirements("");
-                        // Deep search removed - always searches all databases
-                        setSortBy("relevance");
-                      }}
-                    >
-                      Clear Filters
-                    </Button>
-                  </div>
-                </Card>
+                <AdvancedPropertySearch 
+                  onSearch={handleAdvancedSearch}
+                  isSearching={isSearching}
+                />
               )}
 
               {displayResults.length > 0 && (
@@ -468,6 +349,16 @@ const MaterialScouting = () => {
                                 {material.name}
                               </h4>
                               <Badge variant="secondary">{material.category}</Badge>
+                              {/* Show requirement match score if searching with property requirements */}
+                              {material.requirementMatchScore !== undefined && (
+                                <Badge 
+                                  variant={material.requirementMatchScore >= 70 ? "default" : material.requirementMatchScore >= 40 ? "secondary" : "outline"}
+                                  className={material.requirementMatchScore >= 70 ? "bg-green-600" : ""}
+                                >
+                                  {material.requirementMatchScore >= 70 ? <Check className="h-3 w-3 mr-1" /> : null}
+                                  {material.requirementMatchScore}% Match
+                                </Badge>
+                              )}
                             </div>
                             {/* Long IUPAC name truncated - use iupac_name field from API */}
                             {material.iupac_name && (

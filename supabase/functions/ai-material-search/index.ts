@@ -7,6 +7,22 @@ const corsHeaders = {
 
 type PropertyCategory = 'description' | 'physical' | 'mechanical' | 'thermal' | 'safety' | 'environmental';
 
+interface PropertyRequirement {
+  property: string;
+  value: string;
+  unit: string;
+  importance: 'must-have' | 'preferred' | 'nice-to-have';
+}
+
+interface PropertyMatchResult {
+  property: string;
+  required: string;
+  actual: string | null;
+  matches: boolean;
+  matchType: 'exact' | 'range' | 'partial' | 'ai-estimated' | 'not-found';
+  confidence: number;
+}
+
 interface MaterialData {
   name: string;
   iupac_name: string | null;
@@ -22,6 +38,8 @@ interface MaterialData {
   sources_used: string[];
   matchScore?: number;
   material_source?: string[];
+  propertyMatches?: PropertyMatchResult[];
+  requirementMatchScore?: number;
 }
 
 // Property categorization mapping
@@ -1025,6 +1043,217 @@ async function buildMaterialData(
   };
 }
 
+// Parse numeric value from string (handles ranges, comparisons)
+function parseNumericValue(value: string): { min?: number; max?: number; exact?: number } | null {
+  if (!value) return null;
+  
+  const cleaned = value.replace(/[^\d\.\-<>=]/g, ' ').trim();
+  
+  // Range pattern: "100-200" or "100 - 200"
+  const rangeMatch = value.match(/([\d.]+)\s*[-–]\s*([\d.]+)/);
+  if (rangeMatch) {
+    return { min: parseFloat(rangeMatch[1]), max: parseFloat(rangeMatch[2]) };
+  }
+  
+  // Greater than: ">100" or ">=100"
+  const gtMatch = value.match(/[>≥]\s*([\d.]+)/);
+  if (gtMatch) {
+    return { min: parseFloat(gtMatch[1]) };
+  }
+  
+  // Less than: "<100" or "<=100"
+  const ltMatch = value.match(/[<≤]\s*([\d.]+)/);
+  if (ltMatch) {
+    return { max: parseFloat(ltMatch[1]) };
+  }
+  
+  // Exact value
+  const numMatch = cleaned.match(/([\d.]+)/);
+  if (numMatch) {
+    return { exact: parseFloat(numMatch[0]) };
+  }
+  
+  return null;
+}
+
+// Check if a material property value matches a requirement
+function checkPropertyMatch(
+  actualValue: string | null, 
+  requiredValue: string
+): { matches: boolean; matchType: PropertyMatchResult['matchType'] } {
+  if (!actualValue) {
+    return { matches: false, matchType: 'not-found' };
+  }
+  
+  const actualParsed = parseNumericValue(actualValue);
+  const requiredParsed = parseNumericValue(requiredValue);
+  
+  // If both are numeric
+  if (actualParsed && requiredParsed) {
+    const actualNum = actualParsed.exact ?? actualParsed.min ?? actualParsed.max;
+    
+    if (actualNum !== undefined) {
+      // Check against range
+      if (requiredParsed.min !== undefined && requiredParsed.max !== undefined) {
+        const matches = actualNum >= requiredParsed.min && actualNum <= requiredParsed.max;
+        return { matches, matchType: matches ? 'range' : 'partial' };
+      }
+      // Check against min only (>X)
+      if (requiredParsed.min !== undefined) {
+        const matches = actualNum >= requiredParsed.min;
+        return { matches, matchType: matches ? 'range' : 'partial' };
+      }
+      // Check against max only (<X)
+      if (requiredParsed.max !== undefined) {
+        const matches = actualNum <= requiredParsed.max;
+        return { matches, matchType: matches ? 'range' : 'partial' };
+      }
+      // Exact match with 10% tolerance
+      if (requiredParsed.exact !== undefined) {
+        const tolerance = requiredParsed.exact * 0.1;
+        const matches = Math.abs(actualNum - requiredParsed.exact) <= tolerance;
+        return { matches, matchType: matches ? 'exact' : 'partial' };
+      }
+    }
+  }
+  
+  // Fall back to string comparison
+  const actualLower = actualValue.toLowerCase();
+  const requiredLower = requiredValue.toLowerCase();
+  
+  if (actualLower.includes(requiredLower) || requiredLower.includes(actualLower)) {
+    return { matches: true, matchType: 'partial' };
+  }
+  
+  return { matches: false, matchType: 'partial' };
+}
+
+// Validate material against property requirements
+async function validateMaterialRequirements(
+  material: MaterialData,
+  requirements: PropertyRequirement[]
+): Promise<{ propertyMatches: PropertyMatchResult[]; matchScore: number }> {
+  const propertyMatches: PropertyMatchResult[] = [];
+  let mustHaveScore = 0;
+  let mustHaveTotal = 0;
+  let preferredScore = 0;
+  let preferredTotal = 0;
+  let niceToHaveScore = 0;
+  let niceToHaveTotal = 0;
+  
+  for (const req of requirements) {
+    // Find matching property in material
+    const propLower = req.property.toLowerCase();
+    const matchingProp = material.properties.find(p => 
+      p.name.toLowerCase().includes(propLower) || 
+      propLower.includes(p.name.toLowerCase())
+    );
+    
+    const actualValue = matchingProp?.value || null;
+    const { matches, matchType } = checkPropertyMatch(actualValue, req.value);
+    
+    const confidence = matches ? (matchType === 'exact' ? 100 : matchType === 'range' ? 90 : 70) : 0;
+    
+    propertyMatches.push({
+      property: req.property,
+      required: `${req.value}${req.unit ? ' ' + req.unit : ''}`,
+      actual: actualValue,
+      matches,
+      matchType: actualValue ? matchType : 'not-found',
+      confidence
+    });
+    
+    // Score based on importance
+    if (req.importance === 'must-have') {
+      mustHaveTotal++;
+      if (matches) mustHaveScore++;
+    } else if (req.importance === 'preferred') {
+      preferredTotal++;
+      if (matches) preferredScore++;
+    } else {
+      niceToHaveTotal++;
+      if (matches) niceToHaveScore++;
+    }
+  }
+  
+  // Calculate weighted score
+  // Must-have: 60% weight, Preferred: 30% weight, Nice-to-have: 10% weight
+  let matchScore = 0;
+  if (mustHaveTotal > 0) {
+    matchScore += (mustHaveScore / mustHaveTotal) * 60;
+  } else {
+    matchScore += 60; // No must-haves = full score for that category
+  }
+  if (preferredTotal > 0) {
+    matchScore += (preferredScore / preferredTotal) * 30;
+  } else {
+    matchScore += 30;
+  }
+  if (niceToHaveTotal > 0) {
+    matchScore += (niceToHaveScore / niceToHaveTotal) * 10;
+  } else {
+    matchScore += 10;
+  }
+  
+  return { propertyMatches, matchScore: Math.round(matchScore) };
+}
+
+// AI-powered property estimation for missing properties
+async function estimateMissingProperty(
+  materialName: string,
+  propertyName: string,
+  unit: string
+): Promise<{ value: string; confidence: number } | null> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) return null;
+  
+  try {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { 
+            role: 'system', 
+            content: `You are a materials science expert. Estimate the value of material properties based on scientific knowledge.
+            
+Return ONLY a JSON object with:
+- "value": the estimated value with units
+- "confidence": percentage (0-100) of how confident you are
+- "source": brief note on what this estimate is based on
+
+Example: {"value": "150-170", "confidence": 75, "source": "Based on typical values for similar polyesters"}`
+          },
+          { 
+            role: 'user', 
+            content: `For the material "${materialName}", estimate the ${propertyName}${unit ? ' (in ' + unit + ')' : ''}.` 
+          }
+        ],
+        temperature: 0.3
+      })
+    });
+
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const result = JSON.parse(jsonMatch[0]);
+      return { value: result.value, confidence: result.confidence || 50 };
+    }
+    
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // Main handler
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -1032,7 +1261,11 @@ Deno.serve(async (req) => {
   }
   
   try {
-    const { query, includeAISummary = true } = await req.json();
+    const { query, includeAISummary = true, propertyRequirements = [] } = await req.json() as {
+      query: string;
+      includeAISummary?: boolean;
+      propertyRequirements?: PropertyRequirement[];
+    };
     
     if (!query || typeof query !== 'string') {
       return new Response(
@@ -1244,15 +1477,86 @@ Deno.serve(async (req) => {
     // Sort by match score
     results.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
     
-    console.log(`[AI-Search] Returning ${results.length} results from ${sourcesUsed.size} sources`);
+    // Validate against property requirements if provided
+    let validatedResults = results;
+    if (propertyRequirements && propertyRequirements.length > 0) {
+      console.log(`[AI-Search] Validating ${results.length} results against ${propertyRequirements.length} requirements`);
+      
+      // Validate each result against requirements
+      const validationPromises = results.map(async (material) => {
+        const { propertyMatches, matchScore: reqMatchScore } = await validateMaterialRequirements(
+          material,
+          propertyRequirements
+        );
+        
+        // Try to estimate missing "must-have" properties with AI
+        const mustHaveRequirements = propertyRequirements.filter(r => r.importance === 'must-have');
+        const missingMustHaves = mustHaveRequirements.filter(req => 
+          !propertyMatches.find(pm => pm.property === req.property && pm.actual)
+        );
+        
+        // Estimate up to 3 missing must-have properties
+        for (const missing of missingMustHaves.slice(0, 3)) {
+          const estimated = await estimateMissingProperty(material.name, missing.property, missing.unit);
+          if (estimated) {
+            const matchResult = checkPropertyMatch(estimated.value, missing.value);
+            const existingMatch = propertyMatches.find(pm => pm.property === missing.property);
+            if (existingMatch) {
+              existingMatch.actual = `~${estimated.value} (AI Est.)`;
+              existingMatch.matches = matchResult.matches;
+              existingMatch.matchType = 'ai-estimated';
+              existingMatch.confidence = Math.min(estimated.confidence, matchResult.matches ? 70 : 30);
+            }
+          }
+        }
+        
+        // Recalculate score after AI estimation
+        const { matchScore: finalScore } = await validateMaterialRequirements(
+          { ...material, properties: material.properties },
+          propertyRequirements
+        );
+        
+        return {
+          ...material,
+          propertyMatches,
+          requirementMatchScore: finalScore
+        };
+      });
+      
+      const validatedMaterials = await Promise.all(validationPromises);
+      
+      // Filter out materials that don't meet must-have requirements
+      const mustHaveCount = propertyRequirements.filter(r => r.importance === 'must-have').length;
+      
+      validatedResults = validatedMaterials
+        .filter(m => {
+          // If there are must-have requirements, filter by threshold
+          if (mustHaveCount > 0) {
+            const mustHaveMatches = m.propertyMatches?.filter(pm => 
+              propertyRequirements.find(r => r.property === pm.property && r.importance === 'must-have')?.importance === 'must-have' &&
+              pm.matches
+            ).length || 0;
+            // Require at least 50% of must-haves to match
+            return mustHaveMatches >= Math.ceil(mustHaveCount * 0.5);
+          }
+          return true;
+        })
+        // Sort by requirement match score
+        .sort((a, b) => (b.requirementMatchScore || 0) - (a.requirementMatchScore || 0));
+      
+      console.log(`[AI-Search] After validation: ${validatedResults.length} results meet requirements`);
+    }
+    
+    console.log(`[AI-Search] Returning ${validatedResults.length} results from ${sourcesUsed.size} sources`);
     
     return new Response(
       JSON.stringify({
         query,
         expandedTerms,
-        results,
-        totalResults: results.length,
-        sourcesUsed: Array.from(sourcesUsed)
+        results: validatedResults,
+        totalResults: validatedResults.length,
+        sourcesUsed: Array.from(sourcesUsed),
+        hasPropertyRequirements: propertyRequirements && propertyRequirements.length > 0
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

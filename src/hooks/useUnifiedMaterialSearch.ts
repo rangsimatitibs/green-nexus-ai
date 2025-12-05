@@ -14,6 +14,7 @@ export interface PropertyWithSource {
   value: string;
   source: string;
   source_url?: string;
+  category?: 'description' | 'physical' | 'mechanical' | 'thermal' | 'safety' | 'environmental';
 }
 
 export interface SearchResult {

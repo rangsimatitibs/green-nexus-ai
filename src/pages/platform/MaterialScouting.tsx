@@ -18,6 +18,8 @@ import { SourceBadge, SourcesList } from "@/components/ui/SourceBadge";
 import { MaterialSourcesList } from "@/components/ui/MaterialSourceBadge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getRegulationDescription } from "@/data/regulationDescriptions";
+import { CategorizedProperties } from "@/components/CategorizedProperties";
+import { PropertyExplorer } from "@/components/PropertyExplorer";
 
 // Pagination
 const RESULTS_PER_PAGE = 10;
@@ -693,36 +695,30 @@ const MaterialScouting = () => {
 
                             {viewMode === "overview" ? (
                               <>
-                                {/* Properties Grid with Source Badges */}
+                                {/* Categorized Properties */}
                                 <div>
-                                  <h5 className="text-lg font-semibold text-foreground mb-4">Material Properties</h5>
-                                  <div className="grid md:grid-cols-2 gap-4">
-                                    {material.propertiesWithSource && material.propertiesWithSource.length > 0 ? (
-                                      material.propertiesWithSource.map((prop: any, idx: number) => (
-                                        <Card key={idx} className="p-4">
-                                          <div className="flex justify-between items-start mb-1">
-                                            <span className="text-sm text-muted-foreground capitalize">
-                                              {prop.name.replace(/([A-Z])/g, ' $1').trim()}
-                                            </span>
-                                            <SourceBadge source={prop.source} url={prop.source_url} />
-                                          </div>
-                                          <div className="text-lg font-semibold text-foreground">{prop.value}</div>
-                                        </Card>
-                                      ))
-                                    ) : (
-                                      Object.entries(material.properties).map(([key, value]) => (
-                                        <Card key={key} className="p-4">
-                                          <div className="flex justify-between items-start mb-1">
-                                            <span className="text-sm text-muted-foreground capitalize">
-                                              {key.replace(/([A-Z])/g, ' $1').trim()}
-                                            </span>
-                                            <SourceBadge source={material.data_source || 'local'} />
-                                          </div>
-                                          <div className="text-lg font-semibold text-foreground">{String(value)}</div>
-                                        </Card>
-                                      ))
-                                    )}
+                                  <div className="flex items-center justify-between mb-4">
+                                    <h5 className="text-lg font-semibold text-foreground">Material Properties</h5>
+                                    <PropertyExplorer 
+                                      materialName={material.name}
+                                      existingProperties={material.properties}
+                                    />
                                   </div>
+                                  {material.propertiesWithSource && material.propertiesWithSource.length > 0 ? (
+                                    <CategorizedProperties properties={material.propertiesWithSource} />
+                                  ) : Object.keys(material.properties).length > 0 ? (
+                                    <CategorizedProperties 
+                                      properties={Object.entries(material.properties).map(([key, value]) => ({
+                                        name: key,
+                                        value: String(value),
+                                        source: material.data_source || 'Your Database'
+                                      }))}
+                                    />
+                                  ) : (
+                                    <div className="text-muted-foreground text-sm py-4">
+                                      No properties available. Use "Find Additional Properties" to explore.
+                                    </div>
+                                  )}
                                 </div>
 
                               </>

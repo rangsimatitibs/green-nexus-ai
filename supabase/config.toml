@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.ai-material-search]
 verify_jwt = false
+
+[functions.ai-property-lookup]
+verify_jwt = false

@@ -1,12 +1,26 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface PropertyRequirement {
+  property: string;
+  value: string;
+  unit: string;
+  importance: 'must-have' | 'preferred' | 'nice-to-have';
+}
+
 export interface SearchFilters {
   category?: string;
   source?: string;
-  properties?: Array<{ property: string; value: string; importance: string }>;
-  industry?: string;
-  application?: string;
+  propertyRequirements?: PropertyRequirement[];
+}
+
+export interface PropertyMatchResult {
+  property: string;
+  required: string;
+  actual: string | null;
+  matches: boolean;
+  matchType: 'exact' | 'range' | 'partial' | 'ai-estimated' | 'not-found';
+  confidence: number;
 }
 
 export interface PropertyWithSource {
@@ -33,6 +47,8 @@ export interface SearchResult {
   created_at?: string;
   updated_at?: string;
   matchScore?: number;
+  requirementMatchScore?: number;
+  propertyMatches?: PropertyMatchResult[];
   properties: Record<string, string>;
   propertiesWithSource?: PropertyWithSource[];
   applications: string[];
@@ -79,12 +95,16 @@ export const useUnifiedMaterialSearch = () => {
   const [lastSearchTerm, setLastSearchTerm] = useState<string>('');
 
   // Search using AI agent (primary method)
-  const searchWithAI = useCallback(async (searchTerm: string): Promise<SearchResult[]> => {
+  const searchWithAI = useCallback(async (searchTerm: string, propertyRequirements?: PropertyRequirement[]): Promise<SearchResult[]> => {
     try {
       console.log(`[AI Search] Querying AI agent for: ${searchTerm}`);
       
       const { data, error: funcError } = await supabase.functions.invoke('ai-material-search', {
-        body: { query: searchTerm, includeAISummary: true }
+        body: { 
+          query: searchTerm, 
+          includeAISummary: true,
+          propertyRequirements: propertyRequirements || []
+        }
       });
 
       if (funcError) {
@@ -302,9 +322,9 @@ export const useUnifiedMaterialSearch = () => {
     try {
       let searchResults: SearchResult[] = [];
       
-      // Try AI agent first
+      // Try AI agent first with property requirements
       try {
-        searchResults = await searchWithAI(searchTerm);
+        searchResults = await searchWithAI(searchTerm, filters?.propertyRequirements);
         setLastSearchSource('ai');
       } catch (aiError) {
         console.log('[Search] AI agent failed, falling back to local search');
@@ -312,51 +332,13 @@ export const useUnifiedMaterialSearch = () => {
         setLastSearchSource('local');
       }
 
-      // Apply additional filters
+      // Sort by requirement match score if available, otherwise by match score
       let filteredResults = searchResults;
-      
-      if (filters?.properties && filters.properties.length > 0) {
-        filteredResults = filteredResults.filter(material => {
-          return filters.properties!.every(propFilter => {
-            if (!propFilter.property.trim()) return true;
-            
-            const propName = propFilter.property.toLowerCase();
-            const propValue = propFilter.value.toLowerCase();
-            
-            const materialProp = Object.entries(material.properties).find(([key]) => 
-              key.toLowerCase().includes(propName)
-            );
-            
-            if (!materialProp) {
-              return propFilter.importance !== 'must-have';
-            }
-            
-            if (propValue) {
-              const matValue = String(materialProp[1]).toLowerCase();
-              return matValue.includes(propValue) || propValue.includes(matValue);
-            }
-            
-            return true;
-          });
-        });
-      }
-
-      if (filters?.industry) {
-        filteredResults = filteredResults.filter(m => 
-          m.category.toLowerCase().includes(filters.industry!.toLowerCase()) ||
-          m.applications.some(a => a.toLowerCase().includes(filters.industry!.toLowerCase()))
-        );
-      }
-
-      if (filters?.application) {
-        filteredResults = filteredResults.filter(m =>
-          m.applications.some(a => a.toLowerCase().includes(filters.application!.toLowerCase())) ||
-          m.category.toLowerCase().includes(filters.application!.toLowerCase())
-        );
-      }
-
-      // Sort by match score
-      filteredResults.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+      filteredResults.sort((a, b) => {
+        const scoreA = a.requirementMatchScore ?? a.matchScore ?? 0;
+        const scoreB = b.requirementMatchScore ?? b.matchScore ?? 0;
+        return scoreB - scoreA;
+      });
 
       setResults(filteredResults);
       setCanLoadMore(filteredResults.length > 0 && filteredResults.length < RESULTS_THRESHOLD);

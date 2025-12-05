@@ -492,6 +492,7 @@ export type Database = {
           image_url: string | null
           innovation: string | null
           last_synced_at: string | null
+          material_source: string[] | null
           name: string
           scale: string | null
           uniqueness: string | null
@@ -508,6 +509,7 @@ export type Database = {
           image_url?: string | null
           innovation?: string | null
           last_synced_at?: string | null
+          material_source?: string[] | null
           name: string
           scale?: string | null
           uniqueness?: string | null
@@ -524,6 +526,7 @@ export type Database = {
           image_url?: string | null
           innovation?: string | null
           last_synced_at?: string | null
+          material_source?: string[] | null
           name?: string
           scale?: string | null
           uniqueness?: string | null
@@ -939,6 +942,7 @@ export type Database = {
           image_url: string | null
           innovation: string | null
           last_synced_at: string | null
+          material_source: string[] | null
           name: string
           scale: string | null
           uniqueness: string | null

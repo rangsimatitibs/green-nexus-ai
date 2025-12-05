@@ -563,10 +563,10 @@ const MaterialScouting = () => {
                           )}
                         </div>
 
-                        {/* Feedstock Sources Section */}
+                        {/* Material Sources Section */}
                         {material.material_source && material.material_source.length > 0 && (
                           <div className="mb-4">
-                            <div className="text-sm font-medium text-foreground mb-2">Feedstock Sources:</div>
+                            <div className="text-sm font-medium text-foreground mb-2">Sources:</div>
                             <MaterialSourcesList sources={material.material_source} />
                           </div>
                         )}

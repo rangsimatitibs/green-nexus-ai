@@ -13,6 +13,8 @@ import { useResearchData } from "@/hooks/useResearchData";
 import { useUnifiedMaterialSearch } from "@/hooks/useUnifiedMaterialSearch";
 import PremiumGate from "@/components/PremiumGate";
 import { filterResearchProperties } from "@/data/researchProperties";
+import { CategorizedProperties } from "@/components/CategorizedProperties";
+import { PropertyExplorer } from "@/components/PropertyExplorer";
 
 const ResearchersTool = () => {
   const { researchMaterials, labRecipes, materialProperties: materialPropertiesDb, loading, error } = useResearchData();
@@ -342,15 +344,21 @@ const ResearchersTool = () => {
                                   )}
                                 </Badge>
                               </div>
-                              {predictions.allProperties && Object.keys(predictions.allProperties).length > 4 && (
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => setShowTableView(!showTableView)}
-                                >
-                                  <Table className="h-4 w-4 mr-2" />
-                                  {showTableView ? "Show Cards" : "Show All Properties"}
-                                </Button>
+                            {predictions.allProperties && Object.keys(predictions.allProperties).length > 4 && (
+                                <div className="flex gap-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => setShowTableView(!showTableView)}
+                                  >
+                                    <Table className="h-4 w-4 mr-2" />
+                                    {showTableView ? "Show Categorized" : "Show Table View"}
+                                  </Button>
+                                  <PropertyExplorer 
+                                    materialName={predictions.name}
+                                    existingProperties={predictions.allProperties || {}}
+                                  />
+                                </div>
                               )}
                             </div>
 
@@ -377,25 +385,17 @@ const ResearchersTool = () => {
                             )}
                             
                             {!showTableView ? (
-                              <div className="grid md:grid-cols-2 gap-4">
-                                {filterResearchProperties(predictions.allProperties || {}).map((prop, index) => (
-                                  <Card key={index} className="p-4">
-                                    <div className="flex justify-between items-center">
-                                      <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-sm text-muted-foreground capitalize truncate">{prop.name}</h4>
-                                        <div className="text-lg font-bold text-foreground truncate">
-                                          {prop.value}
-                                        </div>
-                                      </div>
-                                      {predictions.source === "research" ? (
-                                        <FlaskConical className="h-4 w-4 text-primary flex-shrink-0 ml-2" />
-                                      ) : (
-                                        <Database className="h-4 w-4 text-primary flex-shrink-0 ml-2" />
-                                      )}
-                                    </div>
-                                  </Card>
-                                ))}
-                              </div>
+                              <CategorizedProperties 
+                                properties={Object.entries(predictions.allProperties || {}).map(([key, value]) => ({
+                                  name: key,
+                                  value: String(value),
+                                  source: predictions.source === "research" 
+                                    ? predictions.researchInfo?.institution || "Research" 
+                                    : predictions.source === "pubchem" 
+                                      ? "PubChem" 
+                                      : "Database"
+                                }))}
+                              />
                             ) : (
                               <Card className="p-4">
                                 <div className="space-y-2">

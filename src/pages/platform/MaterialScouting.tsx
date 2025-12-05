@@ -466,10 +466,6 @@ const MaterialScouting = () => {
                                 {material.name}
                               </h4>
                               <Badge variant="secondary">{material.category}</Badge>
-                              {/* Material feedstock/origin sources */}
-                              {material.material_source && material.material_source.length > 0 && (
-                                <MaterialSourcesList sources={material.material_source} />
-                              )}
                             </div>
                             {/* Long IUPAC name truncated - use iupac_name field from API */}
                             {material.iupac_name && (
@@ -566,6 +562,14 @@ const MaterialScouting = () => {
                             </div>
                           )}
                         </div>
+
+                        {/* Feedstock Sources Section */}
+                        {material.material_source && material.material_source.length > 0 && (
+                          <div className="mb-4">
+                            <div className="text-sm font-medium text-foreground mb-2">Feedstock Sources:</div>
+                            <MaterialSourcesList sources={material.material_source} />
+                          </div>
+                        )}
 
                         {(material.applications?.length > 0 || material.regulations?.length > 0) && (
                           <div className="grid md:grid-cols-2 gap-4 mb-4">

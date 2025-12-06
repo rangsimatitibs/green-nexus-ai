@@ -122,6 +122,28 @@ const deduplicateMaterials = (materials: any[]): any[] => {
   return Array.from(seen.values());
 };
 
+// Format chemical formula with subscripts for numbers and "n"
+const FormatChemicalFormula = ({ formula }: { formula: string }) => {
+  if (!formula) return null;
+  
+  // Split the formula into parts and format numbers/n as subscripts
+  const parts = formula.split(/(\d+|n|\(|\))/g).filter(Boolean);
+  
+  return (
+    <span className="font-mono">
+      {parts.map((part, index) => {
+        // Check if it's a number or 'n' that should be subscript
+        if (/^\d+$/.test(part) || part === 'n') {
+          return (
+            <sub key={index} className="text-[0.7em]">{part}</sub>
+          );
+        }
+        return <span key={index}>{part}</span>;
+      })}
+    </span>
+  );
+};
+
 const TruncatedIUPACName = ({ name }: { name: string }) => {
   const [expanded, setExpanded] = useState(false);
   
@@ -1274,13 +1296,17 @@ const MaterialScouting = () => {
                     {material.chemical_formula && (
                       <div className="mb-2">
                         <span className="text-xs text-muted-foreground">Formula: </span>
-                        <span className="text-sm font-mono text-foreground">{material.chemical_formula}</span>
+                        <span className="text-sm text-foreground">
+                          <FormatChemicalFormula formula={material.chemical_formula} />
+                        </span>
                       </div>
                     )}
                     {material.chemical_structure && (
                       <div className="bg-background rounded p-3 border border-border">
                         <span className="text-xs text-muted-foreground block mb-1">Structure:</span>
-                        <span className="text-xs font-mono text-foreground break-all">{material.chemical_structure}</span>
+                        <span className="text-xs text-foreground break-all">
+                          <FormatChemicalFormula formula={material.chemical_structure} />
+                        </span>
                       </div>
                     )}
                     {!material.chemical_formula && !material.chemical_structure && (
@@ -1288,33 +1314,38 @@ const MaterialScouting = () => {
                     )}
                   </div>
 
-                  {/* Section 3: Description (right after chemical structure) */}
-                  {(material.ai_summary || material.uniqueness) && (
-                    <div className="space-y-3">
-                      {material.ai_summary && (
-                        <div className="bg-orange-500/5 border border-orange-500/20 rounded-lg p-3">
-                          <div className="flex items-start gap-2">
-                            <Bot className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                            <div>
-                              <span className="text-xs font-semibold text-orange-600">Description</span>
-                              <p className="text-sm text-foreground mt-1">{material.ai_summary}</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      {material.uniqueness && (
-                        <div className="bg-accent/10 border border-accent/20 rounded-lg p-3">
-                          <div className="flex items-start gap-2">
-                            <Sparkles className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                            <div>
-                              <span className="text-xs font-semibold text-primary">Uniqueness</span>
-                              <p className="text-sm text-foreground mt-1">{material.uniqueness}</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                  {/* Section 3: Description - Separate section above properties */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold text-foreground">Description</span>
                     </div>
-                  )}
+                    
+                    {material.ai_summary && (
+                      <div className="bg-orange-500/5 border border-orange-500/20 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <Bot className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                          <p className="text-sm text-foreground">{material.ai_summary}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {material.uniqueness && (
+                      <div className="bg-accent/10 border border-accent/20 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <Sparkles className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                          <div>
+                            <span className="text-xs font-semibold text-primary">Uniqueness</span>
+                            <p className="text-sm text-foreground mt-1">{material.uniqueness}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {!material.ai_summary && !material.uniqueness && (
+                      <p className="text-xs text-muted-foreground italic">No description available</p>
+                    )}
+                  </div>
 
                   <Separator />
 

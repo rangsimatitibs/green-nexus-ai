@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, BookOpen, ExternalLink, Star, Loader2, Filter, Calendar, Users, FileText, Quote, Database, FolderPlus, Library, Copy, Check, Plus, Trash2, ChevronDown } from 'lucide-react';
+import { Search, BookOpen, ExternalLink, Star, Loader2, Filter, Calendar, Users, FileText, Quote, Database, FolderPlus, Library, Copy, Check, Plus, Trash2, ChevronDown, Download } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -203,6 +203,56 @@ const formatCitation = (entry: BibliographyEntry, format: CitationFormat): strin
     case 'BibTeX': return formatCitationBibTeX(entry);
     default: return formatCitationAPA(entry);
   }
+};
+
+// Export functions
+const generateBibliographyText = (entries: BibliographyEntry[], format: CitationFormat): string => {
+  const header = `Bibliography Export - ${format} Format\nGenerated on ${new Date().toLocaleDateString()}\n${'='.repeat(50)}\n\n`;
+  const citations = entries.map((entry, idx) => `${idx + 1}. ${formatCitation(entry, format)}`).join('\n\n');
+  return header + citations;
+};
+
+const downloadAsText = (entries: BibliographyEntry[], format: CitationFormat, libraryName: string) => {
+  const content = generateBibliographyText(entries, format);
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${libraryName.replace(/\s+/g, '_')}_bibliography_${format.toLowerCase()}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+const downloadAsRTF = (entries: BibliographyEntry[], format: CitationFormat, libraryName: string) => {
+  // RTF header
+  let rtf = '{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Times New Roman;}}';
+  rtf += '\\f0\\fs24 ';
+  rtf += `{\\b Bibliography Export - ${format} Format}\\par`;
+  rtf += `Generated on ${new Date().toLocaleDateString()}\\par`;
+  rtf += '\\line\\par';
+  
+  entries.forEach((entry, idx) => {
+    const citation = formatCitation(entry, format)
+      .replace(/\*/g, '') // Remove markdown italics
+      .replace(/\\/g, '\\\\')
+      .replace(/\{/g, '\\{')
+      .replace(/\}/g, '\\}');
+    rtf += `${idx + 1}. ${citation}\\par\\par`;
+  });
+  
+  rtf += '}';
+  
+  const blob = new Blob([rtf], { type: 'application/rtf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${libraryName.replace(/\s+/g, '_')}_bibliography_${format.toLowerCase()}.rtf`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 };
 
 export const BibliographySearch: React.FC<BibliographySearchProps> = ({ initialQuery }) => {
@@ -904,7 +954,7 @@ export const BibliographySearch: React.FC<BibliographySearchProps> = ({ initialQ
                       <h3 className="font-semibold">
                         {libraries.find(l => l.id === selectedLibrary)?.name}
                       </h3>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm text-muted-foreground">
                           {libraryEntries.length} articles
                         </span>
@@ -921,6 +971,27 @@ export const BibliographySearch: React.FC<BibliographySearchProps> = ({ initialQ
                             <SelectItem value="BibTeX">BibTeX</SelectItem>
                           </SelectContent>
                         </Select>
+                        {libraryEntries.length > 0 && (
+                          <Select onValueChange={(format) => {
+                            const libraryName = libraries.find(l => l.id === selectedLibrary)?.name || 'bibliography';
+                            if (format === 'txt') {
+                              downloadAsText(libraryEntries, citationFormat, libraryName);
+                              toast.success('Downloaded as text file');
+                            } else if (format === 'rtf') {
+                              downloadAsRTF(libraryEntries, citationFormat, libraryName);
+                              toast.success('Downloaded as RTF (Word-compatible)');
+                            }
+                          }}>
+                            <SelectTrigger className="w-auto h-8 gap-1">
+                              <Download className="w-4 h-4" />
+                              Export
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="txt">Plain Text (.txt)</SelectItem>
+                              <SelectItem value="rtf">Word Document (.rtf)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                     </div>
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Loader2, Bot, X, Sparkles } from "lucide-react";
+import { Search, Loader2, Bot, X, Sparkles, Plus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { COMMON_PROPERTY_SUGGESTIONS } from "@/utils/propertyCategories";
 interface PropertyExplorerProps {
   materialName: string;
   existingProperties: Record<string, string>;
+  onAddToOutput?: (property: { name: string; value: string; isAIGenerated: boolean }) => void;
 }
 
 interface ExploredProperty {
@@ -20,12 +21,13 @@ interface ExploredProperty {
   confidence?: 'high' | 'medium' | 'low';
 }
 
-export function PropertyExplorer({ materialName, existingProperties }: PropertyExplorerProps) {
+export function PropertyExplorer({ materialName, existingProperties, onAddToOutput }: PropertyExplorerProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [exploredProperties, setExploredProperties] = useState<ExploredProperty[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [addedToOutput, setAddedToOutput] = useState<Set<string>>(new Set());
 
   const filteredSuggestions = COMMON_PROPERTY_SUGGESTIONS.filter(
     prop => !existingProperties[prop] && 
@@ -94,6 +96,17 @@ export function PropertyExplorer({ materialName, existingProperties }: PropertyE
 
   const removeProperty = (propertyName: string) => {
     setExploredProperties(prev => prev.filter(p => p.name !== propertyName));
+  };
+
+  const handleAddToOutput = (prop: ExploredProperty) => {
+    if (onAddToOutput) {
+      onAddToOutput({
+        name: prop.name,
+        value: prop.value,
+        isAIGenerated: prop.isAIGenerated
+      });
+      setAddedToOutput(prev => new Set([...prev, prop.name]));
+    }
   };
 
   return (
@@ -183,14 +196,37 @@ export function PropertyExplorer({ materialName, existingProperties }: PropertyE
                       </div>
                       <div className="font-medium text-foreground">{prop.value}</div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={() => removeProperty(prop.name)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      {onAddToOutput && prop.value !== 'Data not available' && (
+                        <Button
+                          variant={addedToOutput.has(prop.name) ? "secondary" : "outline"}
+                          size="sm"
+                          className="h-7 text-xs gap-1"
+                          onClick={() => handleAddToOutput(prop)}
+                          disabled={addedToOutput.has(prop.name)}
+                        >
+                          {addedToOutput.has(prop.name) ? (
+                            <>
+                              <Check className="h-3 w-3" />
+                              Added
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="h-3 w-3" />
+                              Add to Output
+                            </>
+                          )}
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => removeProperty(prop.name)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))}

@@ -1252,15 +1252,26 @@ const MaterialScouting = () => {
             {getComparisonData().map((material) => {
               const exploredProps = exploredPropertiesMap[material.id] || [];
               
-              // Group properties by category
+              // Extract description from properties if it exists
+              let propertyDescription: string | null = null;
+              
+              // Group properties by category, filtering out "Description"
               const groupedProperties: Record<string, Array<{ name: string; value: string }>> = {};
               if (material.properties) {
                 Object.entries(material.properties).forEach(([key, value]) => {
+                  // Check if this is a description property - extract it and don't add to properties
+                  if (key.toLowerCase() === 'description') {
+                    propertyDescription = String(value);
+                    return;
+                  }
                   const category = 'General Properties';
                   if (!groupedProperties[category]) groupedProperties[category] = [];
                   groupedProperties[category].push({ name: key.replace(/([A-Z])/g, ' $1').trim(), value: String(value) });
                 });
               }
+              
+              // Use property description if ai_summary is not available
+              const descriptionText = material.ai_summary || propertyDescription;
               
               // Add explored properties as a separate category
               if (exploredProps.length > 0) {
@@ -1321,11 +1332,11 @@ const MaterialScouting = () => {
                       <span className="text-sm font-semibold text-foreground">Description</span>
                     </div>
                     
-                    {material.ai_summary && (
+                    {descriptionText && (
                       <div className="bg-orange-500/5 border border-orange-500/20 rounded-lg p-3">
                         <div className="flex items-start gap-2">
-                          <Bot className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                          <p className="text-sm text-foreground">{material.ai_summary}</p>
+                          {material.ai_summary && <Bot className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />}
+                          <p className="text-sm text-foreground">{descriptionText}</p>
                         </div>
                       </div>
                     )}
@@ -1342,7 +1353,7 @@ const MaterialScouting = () => {
                       </div>
                     )}
                     
-                    {!material.ai_summary && !material.uniqueness && (
+                    {!descriptionText && !material.uniqueness && (
                       <p className="text-xs text-muted-foreground italic">No description available</p>
                     )}
                   </div>

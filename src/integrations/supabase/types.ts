@@ -90,6 +90,60 @@ export type Database = {
         }
         Relationships: []
       }
+      bibliography_entries: {
+        Row: {
+          abstract: string | null
+          authors: string[]
+          citation_count: number | null
+          created_at: string
+          doi: string | null
+          id: string
+          is_saved: boolean | null
+          journal: string | null
+          keywords: string[] | null
+          material_relevance: string | null
+          source_database: string
+          title: string
+          url: string | null
+          user_id: string | null
+          year: number | null
+        }
+        Insert: {
+          abstract?: string | null
+          authors?: string[]
+          citation_count?: number | null
+          created_at?: string
+          doi?: string | null
+          id?: string
+          is_saved?: boolean | null
+          journal?: string | null
+          keywords?: string[] | null
+          material_relevance?: string | null
+          source_database: string
+          title: string
+          url?: string | null
+          user_id?: string | null
+          year?: number | null
+        }
+        Update: {
+          abstract?: string | null
+          authors?: string[]
+          citation_count?: number | null
+          created_at?: string
+          doi?: string | null
+          id?: string
+          is_saved?: boolean | null
+          journal?: string | null
+          keywords?: string[] | null
+          material_relevance?: string | null
+          source_database?: string
+          title?: string
+          url?: string | null
+          user_id?: string | null
+          year?: number | null
+        }
+        Relationships: []
+      }
       excluded_search_terms: {
         Row: {
           category: string | null

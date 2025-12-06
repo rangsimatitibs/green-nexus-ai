@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.ai-property-lookup]
 verify_jwt = false
+
+[functions.ai-bibliography-search]
+verify_jwt = false

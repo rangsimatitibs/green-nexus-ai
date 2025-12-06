@@ -1,4 +1,4 @@
-import { TrendingUp, Brain, BarChart3, CheckCircle, ArrowRight, Sparkles, Zap, Search, BookOpen, FlaskConical, Database, Users, TrendingUpIcon, Atom, Loader2, Lock, Table, Globe } from "lucide-react";
+import { TrendingUp, Brain, BarChart3, CheckCircle, ArrowRight, Sparkles, Zap, Search, BookOpen, FlaskConical, Database, Users, TrendingUpIcon, Atom, Loader2, Lock, Table, Globe, GraduationCap, Star } from "lucide-react";
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -15,6 +15,7 @@ import PremiumGate from "@/components/PremiumGate";
 import { filterResearchProperties } from "@/data/researchProperties";
 import { CategorizedProperties } from "@/components/CategorizedProperties";
 import { PropertyExplorer } from "@/components/PropertyExplorer";
+import { BibliographySearch } from "@/components/BibliographySearch";
 
 const ResearchersTool = () => {
   const { researchMaterials, labRecipes, materialProperties: materialPropertiesDb, loading, error } = useResearchData();
@@ -207,10 +208,15 @@ const ResearchersTool = () => {
       <section className="py-20 px-6">
         <div className="container mx-auto max-w-7xl">
           <Tabs defaultValue="finder" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-12">
+            <TabsList className="grid w-full grid-cols-4 mb-12">
               <TabsTrigger value="finder" className="flex items-center gap-2">
                 <Search className="h-4 w-4" />
                 Property Finder
+              </TabsTrigger>
+              <TabsTrigger value="bibliography" className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4" />
+                Bibliography
+                <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
               </TabsTrigger>
               <TabsTrigger value="recipes" className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
@@ -446,6 +452,11 @@ const ResearchersTool = () => {
                   </div>
                 </div>
               </Card>
+            </TabsContent>
+
+            {/* Bibliography Tab - Star Feature */}
+            <TabsContent value="bibliography" className="space-y-8">
+              <BibliographySearch />
             </TabsContent>
 
             {/* Lab Recipes Tab - Premium */}

@@ -61,6 +61,16 @@ const MaterialScouting = () => {
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [propertyRequirements, setPropertyRequirements] = useState<PropertyRequirement[]>([]);
   const [hasActiveRequirements, setHasActiveRequirements] = useState(false);
+  const [exploredPropertiesMap, setExploredPropertiesMap] = useState<Record<string, Array<{ name: string; value: string; isAIGenerated: boolean }>>>({});
+
+  // Handler to add explored property to output for a specific material
+  const handleAddExploredProperty = (materialId: string, property: { name: string; value: string; isAIGenerated: boolean }) => {
+    setExploredPropertiesMap(prev => {
+      const existing = prev[materialId] || [];
+      if (existing.some(p => p.name === property.name)) return prev;
+      return { ...prev, [materialId]: [...existing, property] };
+    });
+  };
 
 
   const handleSearch = async () => {
@@ -593,6 +603,7 @@ const MaterialScouting = () => {
                                     <PropertyExplorer 
                                       materialName={material.name}
                                       existingProperties={material.properties}
+                                      onAddToOutput={(prop) => handleAddExploredProperty(material.id, prop)}
                                     />
                                   </div>
                                   {material.propertiesWithSource && material.propertiesWithSource.length > 0 ? (
@@ -611,6 +622,43 @@ const MaterialScouting = () => {
                                     </div>
                                   )}
                                 </div>
+
+                                {/* Explored Properties Output */}
+                                {exploredPropertiesMap[material.id]?.length > 0 && (
+                                  <Card className="p-4 mt-4 border-primary/30 bg-primary/5">
+                                    <div className="flex items-center justify-between mb-3">
+                                      <h5 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                        <Sparkles className="h-4 w-4 text-primary" />
+                                        Added Properties ({exploredPropertiesMap[material.id].length})
+                                      </h5>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        onClick={() => setExploredPropertiesMap(prev => {
+                                          const updated = { ...prev };
+                                          delete updated[material.id];
+                                          return updated;
+                                        })}
+                                        className="text-xs h-7"
+                                      >
+                                        Clear
+                                      </Button>
+                                    </div>
+                                    <div className="grid gap-2 sm:grid-cols-2">
+                                      {exploredPropertiesMap[material.id].map((prop, idx) => (
+                                        <div key={idx} className="flex items-center justify-between p-2 bg-background rounded border">
+                                          <div>
+                                            <span className="text-xs text-muted-foreground">{prop.name}</span>
+                                            <p className="text-sm font-medium">{prop.value}</p>
+                                          </div>
+                                          {prop.isAIGenerated && (
+                                            <Badge variant="secondary" className="text-xs">AI</Badge>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </Card>
+                                )}
 
                               </>
                             ) : (

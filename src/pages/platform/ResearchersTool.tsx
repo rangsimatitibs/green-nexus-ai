@@ -30,6 +30,15 @@ const ResearchersTool = () => {
   const [deepSearch, setDeepSearch] = useState(true);
   const [activeMainTab, setActiveMainTab] = useState("finder");
   const [bibliographyQuery, setBibliographyQuery] = useState("");
+  const [exploredProperties, setExploredProperties] = useState<Array<{ name: string; value: string; isAIGenerated: boolean }>>([]);
+
+  // Handler to add explored property to output
+  const handleAddExploredProperty = (property: { name: string; value: string; isAIGenerated: boolean }) => {
+    setExploredProperties(prev => {
+      if (prev.some(p => p.name === property.name)) return prev;
+      return [...prev, property];
+    });
+  };
 
   // Handler to search bibliography from property finder
   const handleLookForBibliography = (materialName: string) => {
@@ -326,7 +335,8 @@ const ResearchersTool = () => {
                           </Card>
                         ) : (
                           <>
-                            <div className="flex items-center justify-between mb-4">
+                            {/* Results Header */}
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                               <div>
                                 <h3 className="text-lg font-semibold text-foreground mb-1">
                                   Results for {predictions.name}
@@ -358,8 +368,12 @@ const ResearchersTool = () => {
                                   )}
                                 </Badge>
                               </div>
+                            </div>
+
+                            {/* Action Buttons - Reorganized */}
                             {predictions.allProperties && Object.keys(predictions.allProperties).length > 0 && (
-                                <div className="flex gap-2 flex-wrap">
+                              <Card className="p-4 mb-4 bg-muted/30 border-muted">
+                                <div className="flex flex-wrap gap-2">
                                   <Button 
                                     variant="outline" 
                                     size="sm"
@@ -368,23 +382,57 @@ const ResearchersTool = () => {
                                     <GraduationCap className="h-4 w-4 mr-2" />
                                     Find Research Papers
                                   </Button>
+                                  <PropertyExplorer 
+                                    materialName={predictions.name}
+                                    existingProperties={predictions.allProperties || {}}
+                                    onAddToOutput={handleAddExploredProperty}
+                                  />
                                   {Object.keys(predictions.allProperties).length > 4 && (
                                     <Button 
-                                      variant="outline" 
+                                      variant={showTableView ? "default" : "outline"}
                                       size="sm"
                                       onClick={() => setShowTableView(!showTableView)}
                                     >
                                       <Table className="h-4 w-4 mr-2" />
-                                      {showTableView ? "Show Categorized" : "Show Table View"}
+                                      {showTableView ? "Table View ✓" : "Table View"}
                                     </Button>
                                   )}
-                                  <PropertyExplorer 
-                                    materialName={predictions.name}
-                                    existingProperties={predictions.allProperties || {}}
-                                  />
                                 </div>
-                              )}
-                            </div>
+                              </Card>
+                            )}
+
+                            {/* Explored Properties Output */}
+                            {exploredProperties.length > 0 && (
+                              <Card className="p-4 mb-4 border-primary/30 bg-primary/5">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                    <Sparkles className="h-4 w-4 text-primary" />
+                                    Added Properties ({exploredProperties.length})
+                                  </h4>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => setExploredProperties([])}
+                                    className="text-xs h-7"
+                                  >
+                                    Clear All
+                                  </Button>
+                                </div>
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                  {exploredProperties.map((prop, idx) => (
+                                    <div key={idx} className="flex items-center justify-between p-2 bg-background rounded border">
+                                      <div>
+                                        <span className="text-xs text-muted-foreground">{prop.name}</span>
+                                        <p className="text-sm font-medium">{prop.value}</p>
+                                      </div>
+                                      {prop.isAIGenerated && (
+                                        <Badge variant="secondary" className="text-xs">AI</Badge>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </Card>
+                            )}
 
                             {predictions.chemical_structure && (
                               <div className="flex items-center gap-2 mb-4">

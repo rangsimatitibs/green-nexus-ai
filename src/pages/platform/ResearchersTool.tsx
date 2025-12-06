@@ -28,6 +28,14 @@ const ResearchersTool = () => {
   const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
   const [showTableView, setShowTableView] = useState(false);
   const [deepSearch, setDeepSearch] = useState(true);
+  const [activeMainTab, setActiveMainTab] = useState("finder");
+  const [bibliographyQuery, setBibliographyQuery] = useState("");
+
+  // Handler to search bibliography from property finder
+  const handleLookForBibliography = (materialName: string) => {
+    setBibliographyQuery(materialName);
+    setActiveMainTab("bibliography");
+  };
 
   // Filter recipes based on search query
   const filteredRecipes = labRecipes.filter((recipe) => {
@@ -207,7 +215,7 @@ const ResearchersTool = () => {
       {/* Main Research Tools */}
       <section className="py-20 px-6">
         <div className="container mx-auto max-w-7xl">
-          <Tabs defaultValue="finder" className="w-full">
+          <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="w-full">
             <TabsList className="grid w-full grid-cols-4 mb-12">
               <TabsTrigger value="finder" className="flex items-center gap-2">
                 <Search className="h-4 w-4" />
@@ -350,16 +358,26 @@ const ResearchersTool = () => {
                                   )}
                                 </Badge>
                               </div>
-                            {predictions.allProperties && Object.keys(predictions.allProperties).length > 4 && (
-                                <div className="flex gap-2">
+                            {predictions.allProperties && Object.keys(predictions.allProperties).length > 0 && (
+                                <div className="flex gap-2 flex-wrap">
                                   <Button 
                                     variant="outline" 
                                     size="sm"
-                                    onClick={() => setShowTableView(!showTableView)}
+                                    onClick={() => handleLookForBibliography(predictions.name)}
                                   >
-                                    <Table className="h-4 w-4 mr-2" />
-                                    {showTableView ? "Show Categorized" : "Show Table View"}
+                                    <GraduationCap className="h-4 w-4 mr-2" />
+                                    Find Research Papers
                                   </Button>
+                                  {Object.keys(predictions.allProperties).length > 4 && (
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => setShowTableView(!showTableView)}
+                                    >
+                                      <Table className="h-4 w-4 mr-2" />
+                                      {showTableView ? "Show Categorized" : "Show Table View"}
+                                    </Button>
+                                  )}
                                   <PropertyExplorer 
                                     materialName={predictions.name}
                                     existingProperties={predictions.allProperties || {}}
@@ -456,7 +474,7 @@ const ResearchersTool = () => {
 
             {/* Bibliography Tab - Star Feature */}
             <TabsContent value="bibliography" className="space-y-8">
-              <BibliographySearch />
+              <BibliographySearch initialQuery={bibliographyQuery} />
             </TabsContent>
 
             {/* Lab Recipes Tab - Premium */}

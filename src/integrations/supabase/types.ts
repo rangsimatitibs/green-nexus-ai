@@ -144,6 +144,33 @@ export type Database = {
         }
         Relationships: []
       }
+      bibliography_libraries: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       excluded_search_terms: {
         Row: {
           category: string | null
@@ -777,6 +804,68 @@ export type Database = {
           year?: number
         }
         Relationships: []
+      }
+      saved_bibliography_entries: {
+        Row: {
+          abstract: string | null
+          authors: string[]
+          citation_count: number | null
+          created_at: string
+          doi: string | null
+          id: string
+          journal: string | null
+          keywords: string[] | null
+          library_id: string
+          material_relevance: string | null
+          notes: string | null
+          source_database: string
+          title: string
+          url: string | null
+          year: number | null
+        }
+        Insert: {
+          abstract?: string | null
+          authors?: string[]
+          citation_count?: number | null
+          created_at?: string
+          doi?: string | null
+          id?: string
+          journal?: string | null
+          keywords?: string[] | null
+          library_id: string
+          material_relevance?: string | null
+          notes?: string | null
+          source_database: string
+          title: string
+          url?: string | null
+          year?: number | null
+        }
+        Update: {
+          abstract?: string | null
+          authors?: string[]
+          citation_count?: number | null
+          created_at?: string
+          doi?: string | null
+          id?: string
+          journal?: string | null
+          keywords?: string[] | null
+          library_id?: string
+          material_relevance?: string | null
+          notes?: string | null
+          source_database?: string
+          title?: string
+          url?: string | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_bibliography_entries_library_id_fkey"
+            columns: ["library_id"]
+            isOneToOne: false
+            referencedRelation: "bibliography_libraries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       supplier_certifications: {
         Row: {

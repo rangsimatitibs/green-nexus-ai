@@ -1130,140 +1130,223 @@ const MaterialScouting = () => {
           </DialogHeader>
 
           <div className="grid gap-6 mt-6" style={{ gridTemplateColumns: `repeat(${selectedMaterials.length}, minmax(300px, 1fr))` }}>
-            {getComparisonData().map((material) => (
-              <Card key={material.id} className="p-6 space-y-4">
-                {/* Material Header */}
-                <div>
-                  <h3 className="text-xl font-bold text-foreground mb-2">{material.name}</h3>
-                  <Badge variant="secondary">{material.category}</Badge>
-                </div>
+            {getComparisonData().map((material) => {
+              const exploredProps = exploredPropertiesMap[material.id] || [];
+              
+              // Group properties by category
+              const groupedProperties: Record<string, Array<{ name: string; value: string }>> = {};
+              if (material.properties) {
+                Object.entries(material.properties).forEach(([key, value]) => {
+                  const category = 'General Properties';
+                  if (!groupedProperties[category]) groupedProperties[category] = [];
+                  groupedProperties[category].push({ name: key.replace(/([A-Z])/g, ' $1').trim(), value: String(value) });
+                });
+              }
+              
+              // Add explored properties as a separate category
+              if (exploredProps.length > 0) {
+                groupedProperties['Explored Properties'] = exploredProps.map(p => ({ name: p.name, value: p.value }));
+              }
 
-                <Separator />
-
-                {/* Chemical Formula */}
-                <div className={getPropertyDifference('chemicalFormula', getComparisonData()) ? 'bg-primary/10 p-3 rounded-md border-2 border-primary/30' : ''}>
-                  <div className="text-sm font-semibold text-muted-foreground mb-1">Chemical Formula</div>
-                  <div className="text-sm text-foreground font-mono">{material.chemicalFormula}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{material.chemicalStructure}</div>
-                </div>
-
-                {/* Uniqueness */}
-                {material.uniqueness && (
-                  <div className="bg-accent/10 p-3 rounded-md">
-                    <div className="flex items-start gap-2">
-                      <Sparkles className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                      <div className="text-xs text-foreground">{material.uniqueness}</div>
+              return (
+                <Card key={material.id} className="p-6 space-y-4">
+                  {/* Section 1: Header & Category */}
+                  <div className="border-b border-border pb-4">
+                    <h3 className="text-xl font-bold text-foreground mb-2">{material.name}</h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="secondary">{material.category}</Badge>
+                      {material.material_source && (
+                        <MaterialSourcesList sources={material.material_source} />
+                      )}
                     </div>
                   </div>
-                )}
 
-                {/* Properties */}
-                <div>
-                  <div className="text-sm font-semibold text-muted-foreground mb-2">Properties</div>
-                  <div className="space-y-2">
-                    {Object.entries(material.properties).map(([key, value]) => (
-                      <div 
-                        key={key}
-                        className={`text-sm ${getPropertyDifference(`properties.${key}`, getComparisonData()) ? 'bg-primary/10 p-2 rounded-md border-2 border-primary/30' : 'p-2'}`}
-                      >
-                        <span className="text-muted-foreground capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}: </span>
-                        <span className="text-foreground font-medium">{String(value)}</span>
+                  {/* Section 2: Chemical Structure & Formula */}
+                  <div className={`rounded-lg p-4 ${getPropertyDifference('chemicalFormula', getComparisonData()) ? 'bg-primary/10 border-2 border-primary/30' : 'bg-muted/30'}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Atom className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold text-foreground">Chemical Information</span>
+                    </div>
+                    {material.chemical_formula && (
+                      <div className="mb-2">
+                        <span className="text-xs text-muted-foreground">Formula: </span>
+                        <span className="text-sm font-mono text-foreground">{material.chemical_formula}</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sustainability Score */}
-                <div className={getPropertyDifference('sustainability.score', getComparisonData()) ? 'bg-primary/10 p-3 rounded-md border-2 border-primary/30' : 'p-3'}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm font-semibold text-muted-foreground">Sustainability Score</span>
-                    {material.sustainability?.source === 'AI Analysis' && (
-                      <Bot className="h-3 w-3 text-muted-foreground" />
+                    )}
+                    {material.chemical_structure && (
+                      <div className="bg-background rounded p-3 border border-border">
+                        <span className="text-xs text-muted-foreground block mb-1">Structure:</span>
+                        <span className="text-xs font-mono text-foreground break-all">{material.chemical_structure}</span>
+                      </div>
+                    )}
+                    {!material.chemical_formula && !material.chemical_structure && (
+                      <span className="text-xs text-muted-foreground italic">Chemical data not available</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Progress value={material.sustainability?.score || 0} className="flex-1" />
-                    <span className="text-2xl font-bold text-primary">{material.sustainability?.score || 0}</span>
+
+                  {/* Section 3: Description & Uniqueness */}
+                  <div className="space-y-3">
+                    {material.ai_summary && (
+                      <div className="bg-orange-500/5 border border-orange-500/20 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <Bot className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <span className="text-xs font-semibold text-orange-600">AI Summary</span>
+                            <p className="text-sm text-foreground mt-1">{material.ai_summary}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {material.uniqueness && (
+                      <div className="bg-accent/10 border border-accent/20 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <Sparkles className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                          <div>
+                            <span className="text-xs font-semibold text-primary">Uniqueness</span>
+                            <p className="text-sm text-foreground mt-1">{material.uniqueness}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  {material.sustainability?.justification && (
-                    <p className="text-xs text-muted-foreground mt-2 italic">
-                      {material.sustainability.justification}
-                    </p>
-                  )}
-                  <div className="mt-3 space-y-1">
-                    {material.sustainability?.breakdown && Object.entries(material.sustainability.breakdown).map(([key, value]) => (
-                      <div key={key} className="flex justify-between text-xs">
-                        <span className="text-muted-foreground capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
-                        <span className="text-foreground font-medium">{String(value)}/100</span>
+
+                  <Separator />
+
+                  {/* Section 4: Sectioned Properties */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold text-foreground">Properties</span>
+                    </div>
+
+                    {Object.entries(groupedProperties).map(([category, props]) => (
+                      <div key={category} className="space-y-2">
+                        <h6 className="text-xs font-semibold text-primary uppercase tracking-wide">{category}</h6>
+                        <div className="bg-muted/20 rounded-lg p-3 space-y-1">
+                          {props.map((prop, idx) => (
+                            <div 
+                              key={idx}
+                              className={`flex justify-between text-sm py-1 ${
+                                getPropertyDifference(`properties.${prop.name}`, getComparisonData()) 
+                                  ? 'bg-primary/10 px-2 rounded border border-primary/30' 
+                                  : 'border-b border-border/30 last:border-0'
+                              }`}
+                            >
+                              <span className="text-muted-foreground capitalize">{prop.name}</span>
+                              <span className="text-foreground font-medium">{prop.value}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ))}
-                  </div>
-                </div>
 
-                {/* Applications */}
-                <div className={getPropertyDifference('applications', getComparisonData()) ? 'bg-primary/10 p-3 rounded-md border-2 border-primary/30' : ''}>
-                  <div className="text-sm font-semibold text-muted-foreground mb-2">Applications</div>
-                  <div className="flex flex-wrap gap-1">
-                    {material.applications.map((app: string) => (
-                      <Badge key={app} variant="outline" className="text-xs">{app}</Badge>
-                    ))}
+                    {Object.keys(groupedProperties).length === 0 && (
+                      <p className="text-xs text-muted-foreground italic">No properties available</p>
+                    )}
                   </div>
-                </div>
 
-                {/* Scale */}
-                <div className={getPropertyDifference('scale', getComparisonData()) ? 'bg-primary/10 p-3 rounded-md border-2 border-primary/30' : ''}>
-                  <div className="text-sm font-semibold text-muted-foreground mb-1">Production Scale</div>
-                  <div className="text-sm text-foreground flex items-center gap-2">
-                    <Scale className="h-4 w-4" />
-                    {material.scale}
-                  </div>
-                </div>
+                  <Separator />
 
-                {/* Innovation Level */}
-                <div className={getPropertyDifference('innovation', getComparisonData()) ? 'bg-primary/10 p-3 rounded-md border-2 border-primary/30' : ''}>
-                  <div className="text-sm font-semibold text-muted-foreground mb-1">Innovation Level</div>
-                  <div className="text-sm text-foreground flex items-center gap-2">
-                    <Lightbulb className="h-4 w-4" />
-                    {material.innovation}
+                  {/* Section 5: Sustainability Score */}
+                  <div className={`rounded-lg p-4 ${getPropertyDifference('sustainability.score', getComparisonData()) ? 'bg-primary/10 border-2 border-primary/30' : 'bg-muted/20'}`}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <TrendingUp className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold text-foreground">Sustainability Score</span>
+                      {material.sustainability?.source === 'AI Analysis' && (
+                        <Bot className="h-3 w-3 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <Progress value={material.sustainability?.score || 0} className="flex-1" />
+                      <span className="text-2xl font-bold text-primary">{material.sustainability?.score || 0}</span>
+                    </div>
+                    {material.sustainability?.justification && (
+                      <p className="text-xs text-muted-foreground italic mb-2">
+                        {material.sustainability.justification}
+                      </p>
+                    )}
+                    {material.sustainability?.breakdown && (
+                      <div className="grid grid-cols-2 gap-1 mt-2">
+                        {Object.entries(material.sustainability.breakdown).map(([key, value]) => (
+                          <div key={key} className="flex justify-between text-xs">
+                            <span className="text-muted-foreground capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                            <span className="text-foreground font-medium">{String(value)}/100</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
 
-                {/* Suppliers Count */}
-                <div>
-                  <div className="text-sm font-semibold text-muted-foreground mb-1">Available Suppliers</div>
-                  <div className="text-sm text-foreground flex items-center gap-2">
-                    <Factory className="h-4 w-4" />
-                    {material.suppliers.length} suppliers
+                  {/* Section 6: Applications */}
+                  <div className={`rounded-lg p-3 ${getPropertyDifference('applications', getComparisonData()) ? 'bg-primary/10 border-2 border-primary/30' : ''}`}>
+                    <div className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">Applications</div>
+                    <div className="flex flex-wrap gap-1">
+                      {material.applications?.map((app: string) => (
+                        <Badge key={app} variant="outline" className="text-xs">{app}</Badge>
+                      ))}
+                      {(!material.applications || material.applications.length === 0) && (
+                        <span className="text-xs text-muted-foreground italic">No applications listed</span>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Regulations */}
-                <div className={getPropertyDifference('regulations', getComparisonData()) ? 'bg-primary/10 p-3 rounded-md border-2 border-primary/30' : ''}>
-                  <div className="text-sm font-semibold text-muted-foreground mb-2">Regulations</div>
-                  <div className="flex flex-wrap gap-1">
-                    {material.regulations.map((reg: string) => {
-                      const description = getRegulationDescription(reg);
-                      return description ? (
-                        <TooltipProvider key={reg}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="inline-flex">
-                                <Badge variant="outline" className="text-xs cursor-help">{reg}</Badge>
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs">
-                              <p>{description}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ) : (
-                        <Badge key={reg} variant="outline" className="text-xs">{reg}</Badge>
-                      );
-                    })}
+                  {/* Section 7: Production & Innovation */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className={`rounded-lg p-3 ${getPropertyDifference('scale', getComparisonData()) ? 'bg-primary/10 border-2 border-primary/30' : 'bg-muted/20'}`}>
+                      <div className="text-xs font-semibold text-muted-foreground mb-1">Production Scale</div>
+                      <div className="text-sm text-foreground flex items-center gap-2">
+                        <Scale className="h-4 w-4 text-primary" />
+                        {material.scale || 'N/A'}
+                      </div>
+                    </div>
+                    <div className={`rounded-lg p-3 ${getPropertyDifference('innovation', getComparisonData()) ? 'bg-primary/10 border-2 border-primary/30' : 'bg-muted/20'}`}>
+                      <div className="text-xs font-semibold text-muted-foreground mb-1">Innovation Level</div>
+                      <div className="text-sm text-foreground flex items-center gap-2">
+                        <Lightbulb className="h-4 w-4 text-primary" />
+                        {material.innovation || 'N/A'}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+
+                  {/* Section 8: Suppliers */}
+                  <div className="rounded-lg p-3 bg-muted/20">
+                    <div className="text-xs font-semibold text-muted-foreground mb-1">Available Suppliers</div>
+                    <div className="text-sm text-foreground flex items-center gap-2">
+                      <Factory className="h-4 w-4 text-primary" />
+                      {material.suppliers?.length || 0} suppliers
+                    </div>
+                  </div>
+
+                  {/* Section 9: Regulations */}
+                  {material.regulations && material.regulations.length > 0 && (
+                    <div className={`rounded-lg p-3 ${getPropertyDifference('regulations', getComparisonData()) ? 'bg-primary/10 border-2 border-primary/30' : ''}`}>
+                      <div className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">Regulations</div>
+                      <div className="flex flex-wrap gap-1">
+                        {material.regulations.map((reg: string) => {
+                          const description = getRegulationDescription(reg);
+                          return description ? (
+                            <TooltipProvider key={reg}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="inline-flex">
+                                    <Badge variant="outline" className="text-xs cursor-help">{reg}</Badge>
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  <p>{description}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            <Badge key={reg} variant="outline" className="text-xs">{reg}</Badge>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
           </div>
 
           <div className="mt-6 p-4 bg-muted/30 rounded-lg">

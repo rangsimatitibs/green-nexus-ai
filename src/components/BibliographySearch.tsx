@@ -147,6 +147,52 @@ const formatCitationBibTeX = (entry: BibliographyEntry): string => {
 }`;
 };
 
+// Common research themes to extract from titles/abstracts
+const THEME_PATTERNS: Record<string, RegExp> = {
+  'Synthesis': /\b(synthe(sis|sized|sizing)|fabricat|prepar(ation|ed|ing))\b/i,
+  'Characterization': /\b(characteriz|analys[ie]s|spectroscop|microscop)\b/i,
+  'Mechanical Properties': /\b(mechanic|tensile|strength|elastic|stiffness|hardness)\b/i,
+  'Thermal Properties': /\b(thermal|temperature|heat|melting|glass transition|Tg)\b/i,
+  'Biodegradable': /\b(biodegrad|compost|decompos)\b/i,
+  'Sustainable': /\b(sustainab|renewable|green|eco-friendly|environmental)\b/i,
+  'Nanocomposite': /\b(nano(composite|particle|material|fiber|tube)|graphene)\b/i,
+  'Polymer': /\b(polymer|polymeriz|copolymer|biopolymer|thermoplastic)\b/i,
+  'Biomedical': /\b(biomedic|drug delivery|tissue engineer|scaffold|implant)\b/i,
+  'Packaging': /\b(packag|film|coating|barrier|food)\b/i,
+  'Electrochemical': /\b(electrochem|battery|capacitor|electrode|electroly)\b/i,
+  'Optical': /\b(optic|photon|luminescen|fluorescen|spectral)\b/i,
+  'Composite': /\b(composite|reinforc|fiber|matrix|hybrid)\b/i,
+  'Review': /\b(review|overview|survey|perspective|advances in)\b/i,
+  'In Vitro': /\b(in vitro|cell culture|cytotoxic|biocompat)\b/i,
+  'In Vivo': /\b(in vivo|animal|mouse|rat|clinical)\b/i,
+  'Processing': /\b(process|extrusion|injection|molding|casting)\b/i,
+  'Recycling': /\b(recycl|reuse|circular|waste|upcycl)\b/i,
+};
+
+const getThemeTags = (entry: BibliographyEntry): string[] => {
+  const tags: string[] = [];
+  const textToAnalyze = `${entry.title} ${entry.abstract || ''}`.toLowerCase();
+  
+  // First, add keywords if available (limit to 3)
+  if (entry.keywords && entry.keywords.length > 0) {
+    const cleanKeywords = entry.keywords
+      .slice(0, 3)
+      .map(k => k.trim())
+      .filter(k => k.length > 2 && k.length < 30);
+    tags.push(...cleanKeywords);
+  }
+  
+  // Then extract themes from title/abstract
+  for (const [theme, pattern] of Object.entries(THEME_PATTERNS)) {
+    if (pattern.test(textToAnalyze) && !tags.some(t => t.toLowerCase() === theme.toLowerCase())) {
+      tags.push(theme);
+    }
+    if (tags.length >= 6) break; // Limit total tags
+  }
+  
+  return tags.slice(0, 6);
+};
+
 const formatCitation = (entry: BibliographyEntry, format: CitationFormat): string => {
   switch (format) {
     case 'APA': return formatCitationAPA(entry);
@@ -480,16 +526,18 @@ export const BibliographySearch: React.FC<BibliographySearchProps> = ({ initialQ
             </p>
           )}
 
-          {/* Keywords */}
-          {entry.keywords.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {entry.keywords.slice(0, 5).map(keyword => (
-                <Badge key={keyword} variant="secondary" className="text-xs">
-                  {keyword}
-                </Badge>
-              ))}
-            </div>
-          )}
+          {/* Theme Tags */}
+          <div className="flex flex-wrap gap-1.5">
+            {getThemeTags(entry).map((tag, idx) => (
+              <Badge 
+                key={`${tag}-${idx}`} 
+                variant="outline" 
+                className="text-xs bg-secondary/50 text-secondary-foreground border-secondary-foreground/20 hover:bg-secondary/70 transition-colors"
+              >
+                {tag}
+              </Badge>
+            ))}
+          </div>
 
           {/* Actions */}
           <div className="flex items-center gap-2 pt-2 border-t border-border flex-wrap">

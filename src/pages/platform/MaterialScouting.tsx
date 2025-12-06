@@ -25,6 +25,103 @@ import { AdvancedPropertySearch, PropertyRequirement } from "@/components/Advanc
 // Pagination
 const RESULTS_PER_PAGE = 10;
 
+// Common name mappings for complex IUPAC names
+const SIMPLE_NAME_MAPPINGS: Record<string, string> = {
+  'chitosan': 'Chitosan',
+  'cellulose': 'Cellulose',
+  'nanocellulose': 'Nanocellulose',
+  'chitin': 'Chitin',
+  'starch': 'Starch',
+  'lignin': 'Lignin',
+  'pectin': 'Pectin',
+  'alginate': 'Alginate',
+  'carrageenan': 'Carrageenan',
+  'gelatin': 'Gelatin',
+  'collagen': 'Collagen',
+  'keratin': 'Keratin',
+  'silk': 'Silk Fibroin',
+  'polylactic': 'PLA (Polylactic Acid)',
+  'polyhydroxybutyrate': 'PHB',
+  'polyhydroxyalkanoate': 'PHA',
+  'polycaprolactone': 'PCL (Polycaprolactone)',
+  'polybutylene succinate': 'PBS',
+  'hydroxybenzoic': 'p-Hydroxybenzoic Acid',
+  '4-hydroxybenzoic': 'p-Hydroxybenzoic Acid',
+  'pentamidin': 'Pentamidine',
+  'carbamimidoyl': 'Pentamidine analog',
+};
+
+// Simplify complex IUPAC names to common names when possible
+const simplifyMaterialName = (name: string, iupacName?: string): string => {
+  if (!name) return 'Unknown Material';
+  
+  const lowerName = name.toLowerCase();
+  
+  // Check if name is too complex (contains many stereochemistry markers)
+  const stereochemistryCount = (name.match(/\(\d[SRsr],/g) || []).length;
+  if (stereochemistryCount > 3) {
+    // Try to find a simpler name from mappings
+    for (const [key, simpleName] of Object.entries(SIMPLE_NAME_MAPPINGS)) {
+      if (lowerName.includes(key)) {
+        return simpleName;
+      }
+    }
+    // Check IUPAC name for clues
+    if (iupacName) {
+      for (const [key, simpleName] of Object.entries(SIMPLE_NAME_MAPPINGS)) {
+        if (iupacName.toLowerCase().includes(key)) {
+          return simpleName;
+        }
+      }
+    }
+    // If still complex, try to extract a meaningful part
+    if (lowerName.includes('carbamate') && lowerName.includes('amino')) {
+      return 'Chitosan derivative';
+    }
+    if (lowerName.includes('oxan') && lowerName.includes('hydroxymethyl')) {
+      return 'Polysaccharide derivative';
+    }
+  }
+  
+  // Apply simple name mappings
+  for (const [key, simpleName] of Object.entries(SIMPLE_NAME_MAPPINGS)) {
+    if (lowerName.includes(key)) {
+      return simpleName;
+    }
+  }
+  
+  return name;
+};
+
+// Normalize names for deduplication
+const normalizeName = (name: string): string => {
+  return name.toLowerCase()
+    .replace(/[-_\s]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+// Deduplicate materials by normalized name
+const deduplicateMaterials = (materials: any[]): any[] => {
+  const seen = new Map<string, any>();
+  
+  for (const material of materials) {
+    const simpleName = simplifyMaterialName(material.name, material.iupac_name);
+    const normalizedName = normalizeName(simpleName);
+    
+    if (!seen.has(normalizedName)) {
+      // Store with simplified name
+      seen.set(normalizedName, {
+        ...material,
+        displayName: simpleName,
+        originalName: material.name,
+      });
+    }
+  }
+  
+  return Array.from(seen.values());
+};
+
 const TruncatedIUPACName = ({ name }: { name: string }) => {
   const [expanded, setExpanded] = useState(false);
   
@@ -88,7 +185,7 @@ const MaterialScouting = () => {
       };
 
       const results = await search(searchQuery, filters);
-      setDisplayResults(results);
+      setDisplayResults(deduplicateMaterials(results));
       setHasActiveRequirements(filters.propertyRequirements.length > 0);
     } catch (err) {
       console.error('Search error:', err);
@@ -128,7 +225,7 @@ const MaterialScouting = () => {
       };
 
       const results = await search(query || 'materials', filters);
-      setDisplayResults(results);
+      setDisplayResults(deduplicateMaterials(results));
       setHasActiveRequirements(filters.propertyRequirements.length > 0);
     } catch (err) {
       console.error('Search error:', err);
@@ -356,7 +453,7 @@ const MaterialScouting = () => {
                             <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2 flex-wrap">
                               <h4 className="text-xl font-semibold text-foreground">
-                                {material.name}
+                                {material.displayName || simplifyMaterialName(material.name, material.iupac_name)}
                               </h4>
                               <Badge variant="secondary">{material.category}</Badge>
                               {/* Show requirement match score if searching with property requirements */}
@@ -1152,7 +1249,14 @@ const MaterialScouting = () => {
                 <Card key={material.id} className="p-6 space-y-4">
                   {/* Section 1: Header & Category */}
                   <div className="border-b border-border pb-4">
-                    <h3 className="text-xl font-bold text-foreground mb-2">{material.name}</h3>
+                    <h3 className="text-xl font-bold text-foreground mb-2">
+                      {material.displayName || simplifyMaterialName(material.name, material.iupac_name)}
+                    </h3>
+                    {material.originalName && material.originalName !== material.displayName && (
+                      <p className="text-xs text-muted-foreground mb-2 italic">
+                        Original: {material.originalName.length > 60 ? material.originalName.substring(0, 60) + '...' : material.originalName}
+                      </p>
+                    )}
                     <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant="secondary">{material.category}</Badge>
                       {material.material_source && (
@@ -1184,31 +1288,33 @@ const MaterialScouting = () => {
                     )}
                   </div>
 
-                  {/* Section 3: Description & Uniqueness */}
-                  <div className="space-y-3">
-                    {material.ai_summary && (
-                      <div className="bg-orange-500/5 border border-orange-500/20 rounded-lg p-3">
-                        <div className="flex items-start gap-2">
-                          <Bot className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <span className="text-xs font-semibold text-orange-600">AI Summary</span>
-                            <p className="text-sm text-foreground mt-1">{material.ai_summary}</p>
+                  {/* Section 3: Description (right after chemical structure) */}
+                  {(material.ai_summary || material.uniqueness) && (
+                    <div className="space-y-3">
+                      {material.ai_summary && (
+                        <div className="bg-orange-500/5 border border-orange-500/20 rounded-lg p-3">
+                          <div className="flex items-start gap-2">
+                            <Bot className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="text-xs font-semibold text-orange-600">Description</span>
+                              <p className="text-sm text-foreground mt-1">{material.ai_summary}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                    {material.uniqueness && (
-                      <div className="bg-accent/10 border border-accent/20 rounded-lg p-3">
-                        <div className="flex items-start gap-2">
-                          <Sparkles className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                          <div>
-                            <span className="text-xs font-semibold text-primary">Uniqueness</span>
-                            <p className="text-sm text-foreground mt-1">{material.uniqueness}</p>
+                      )}
+                      {material.uniqueness && (
+                        <div className="bg-accent/10 border border-accent/20 rounded-lg p-3">
+                          <div className="flex items-start gap-2">
+                            <Sparkles className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="text-xs font-semibold text-primary">Uniqueness</span>
+                              <p className="text-sm text-foreground mt-1">{material.uniqueness}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  )}
 
                   <Separator />
 

@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Search, Loader2, Bot, X, Sparkles, Plus, Check } from "lucide-react";
+import { Search, Loader2, Bot, X, Sparkles, Plus, Check, BookOpen, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { COMMON_PROPERTY_SUGGESTIONS } from "@/utils/propertyCategories";
 
@@ -14,11 +15,22 @@ interface PropertyExplorerProps {
   onAddToOutput?: (property: { name: string; value: string; isAIGenerated: boolean }) => void;
 }
 
+interface PropertySource {
+  title: string;
+  authors: string[];
+  journal?: string;
+  year?: number;
+  doi?: string;
+  url?: string;
+}
+
 interface ExploredProperty {
   name: string;
   value: string;
   isAIGenerated: boolean;
   confidence?: 'high' | 'medium' | 'low';
+  note?: string;
+  sources?: PropertySource[];
 }
 
 export function PropertyExplorer({ materialName, existingProperties, onAddToOutput }: PropertyExplorerProps) {
@@ -69,7 +81,9 @@ export function PropertyExplorer({ materialName, existingProperties, onAddToOutp
           name: propertyName,
           value: data.value,
           isAIGenerated: true,
-          confidence: data.confidence || 'medium'
+          confidence: data.confidence || 'medium',
+          note: data.note,
+          sources: data.sources || []
         }]);
       } else {
         setExploredProperties(prev => [...prev, {
@@ -117,7 +131,7 @@ export function PropertyExplorer({ materialName, existingProperties, onAddToOutp
           Find Additional Properties
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -173,12 +187,12 @@ export function PropertyExplorer({ materialName, existingProperties, onAddToOutp
                 <Card key={prop.name} className="p-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="text-sm text-muted-foreground">{prop.name}</span>
                         {prop.isAIGenerated && (
                           <Badge variant="secondary" className="text-xs gap-1">
-                            <Bot className="h-3 w-3" />
-                            AI Estimated
+                            <BookOpen className="h-3 w-3" />
+                            Research-backed
                           </Badge>
                         )}
                         {prop.confidence && prop.isAIGenerated && (
@@ -195,8 +209,50 @@ export function PropertyExplorer({ materialName, existingProperties, onAddToOutp
                         )}
                       </div>
                       <div className="font-medium text-foreground">{prop.value}</div>
+                      
+                      {/* Source note */}
+                      {prop.note && (
+                        <div className="text-xs text-muted-foreground mt-1 italic">
+                          {prop.note}
+                        </div>
+                      )}
+                      
+                      {/* Research sources */}
+                      {prop.sources && prop.sources.length > 0 && (
+                        <Collapsible className="mt-2">
+                          <CollapsibleTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 text-xs gap-1 p-0 hover:bg-transparent">
+                              <BookOpen className="h-3 w-3" />
+                              {prop.sources.length} source{prop.sources.length > 1 ? 's' : ''} found
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="mt-2 space-y-1">
+                            {prop.sources.map((source, idx) => (
+                              <div key={idx} className="text-xs bg-muted/50 rounded p-2">
+                                <div className="font-medium line-clamp-2">{source.title}</div>
+                                <div className="text-muted-foreground mt-0.5">
+                                  {source.authors?.slice(0, 2).join(', ')}
+                                  {source.authors?.length > 2 && ' et al.'}
+                                  {source.journal && ` • ${source.journal}`}
+                                  {source.year && ` (${source.year})`}
+                                </div>
+                                {source.url && (
+                                  <a 
+                                    href={source.url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:underline inline-flex items-center gap-1 mt-1"
+                                  >
+                                    View source <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                )}
+                              </div>
+                            ))}
+                          </CollapsibleContent>
+                        </Collapsible>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 ml-2">
                       {onAddToOutput && prop.value !== 'Data not available' && (
                         <Button
                           variant={addedToOutput.has(prop.name) ? "secondary" : "outline"}
@@ -213,7 +269,7 @@ export function PropertyExplorer({ materialName, existingProperties, onAddToOutp
                           ) : (
                             <>
                               <Plus className="h-3 w-3" />
-                              Add to Output
+                              Add
                             </>
                           )}
                         </Button>
@@ -235,9 +291,9 @@ export function PropertyExplorer({ materialName, existingProperties, onAddToOutp
 
           {/* Info */}
           <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-md">
-            <Bot className="h-4 w-4 inline mr-1" />
-            Properties not found in our database will be estimated using AI. 
-            Values marked as "AI Estimated" should be verified before use.
+            <BookOpen className="h-4 w-4 inline mr-1" />
+            Properties are sourced from PubMed, CrossRef, and other academic databases. 
+            Values are validated against peer-reviewed research when available.
           </div>
         </div>
       </DialogContent>

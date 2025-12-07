@@ -717,6 +717,42 @@ export type Database = {
         }
         Relationships: []
       }
+      property_lookup_cache: {
+        Row: {
+          confidence: string | null
+          created_at: string
+          id: string
+          material_name: string
+          property_name: string
+          property_value: string
+          search_count: number | null
+          sources: Json | null
+          updated_at: string
+        }
+        Insert: {
+          confidence?: string | null
+          created_at?: string
+          id?: string
+          material_name: string
+          property_name: string
+          property_value: string
+          search_count?: number | null
+          sources?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          confidence?: string | null
+          created_at?: string
+          id?: string
+          material_name?: string
+          property_name?: string
+          property_value?: string
+          search_count?: number | null
+          sources?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       research_material_applications: {
         Row: {
           application: string

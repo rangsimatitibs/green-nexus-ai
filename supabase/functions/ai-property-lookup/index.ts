@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,6 +19,94 @@ interface PropertyResult {
     doi?: string;
     url?: string;
   }>;
+  cached?: boolean;
+}
+
+// Initialize Supabase client for caching
+function getSupabaseClient() {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  return createClient(supabaseUrl, supabaseKey);
+}
+
+// Check cache for existing property lookup
+async function checkCache(materialName: string, propertyName: string): Promise<PropertyResult | null> {
+  try {
+    const supabase = getSupabaseClient();
+    const normalizedMaterial = materialName.toLowerCase().trim();
+    const normalizedProperty = propertyName.toLowerCase().trim();
+    
+    const { data, error } = await supabase
+      .from('property_lookup_cache')
+      .select('*')
+      .eq('material_name', normalizedMaterial)
+      .eq('property_name', normalizedProperty)
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+
+    // Check if cache is still fresh (7 days)
+    const cacheAge = Date.now() - new Date(data.updated_at).getTime();
+    const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+    
+    if (cacheAge > maxAge) {
+      console.log('[PropertyLookup] Cache expired, will refresh');
+      return null;
+    }
+
+    // Increment search count
+    await supabase
+      .from('property_lookup_cache')
+      .update({ search_count: data.search_count + 1 })
+      .eq('id', data.id);
+
+    console.log(`[PropertyLookup] Cache hit for ${propertyName} on ${materialName}`);
+    
+    return {
+      value: data.property_value,
+      confidence: data.confidence as 'high' | 'medium' | 'low',
+      sources: data.sources as any[],
+      cached: true
+    };
+  } catch (error) {
+    console.error('[PropertyLookup] Cache check error:', error);
+    return null;
+  }
+}
+
+// Save result to cache
+async function saveToCache(
+  materialName: string, 
+  propertyName: string, 
+  result: PropertyResult
+): Promise<void> {
+  if (!result.value) return;
+  
+  try {
+    const supabase = getSupabaseClient();
+    const normalizedMaterial = materialName.toLowerCase().trim();
+    const normalizedProperty = propertyName.toLowerCase().trim();
+    
+    await supabase
+      .from('property_lookup_cache')
+      .upsert({
+        material_name: normalizedMaterial,
+        property_name: normalizedProperty,
+        property_value: result.value,
+        confidence: result.confidence,
+        sources: result.sources || [],
+        search_count: 1,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'material_name,property_name'
+      });
+
+    console.log(`[PropertyLookup] Cached result for ${propertyName} on ${materialName}`);
+  } catch (error) {
+    console.error('[PropertyLookup] Cache save error:', error);
+  }
 }
 
 // Search PubMed for property data
@@ -227,6 +316,15 @@ serve(async (req) => {
 
     console.log(`[PropertyLookup] Looking up ${propertyName} for ${materialName}`);
 
+    // Check cache first
+    const cachedResult = await checkCache(materialName, propertyName);
+    if (cachedResult) {
+      return new Response(
+        JSON.stringify(cachedResult),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Search academic sources in parallel
     const [pubmedResult, crossrefResult] = await Promise.all([
       searchPubMedForProperty(materialName, propertyName),
@@ -252,6 +350,9 @@ serve(async (req) => {
 
     // Use AI to extract the actual property value from research context
     const result = await extractPropertyWithAI(materialName, propertyName, uniqueSources);
+
+    // Save to cache for future lookups
+    await saveToCache(materialName, propertyName, result);
 
     console.log(`[PropertyLookup] Result: ${result.value} (${result.confidence})`);
 

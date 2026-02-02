@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Sparkles, Search, FlaskConical, Factory, Crown, ArrowRight, Star } from "lucide-react";
+import { Check, Sparkles, Search, FlaskConical, Factory, Crown, ArrowRight, Star, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,10 @@ import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription, SubscriptionTier } from "@/hooks/useSubscription";
 import { BillingToggle, BillingPeriod } from "@/components/BillingToggle";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { getPriceId } from "@/config/stripe";
 
 interface TierConfig {
   name: string;
@@ -158,6 +161,61 @@ const Subscriptions = () => {
   const { user } = useAuth();
   const { tier: currentTier } = useSubscription();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
+  const [loadingTier, setLoadingTier] = useState<SubscriptionTier | null>(null);
+  const navigate = useNavigate();
+
+  const handleCheckout = async (tier: SubscriptionTier) => {
+    if (!user) {
+      navigate('/signup');
+      return;
+    }
+
+    const priceId = getPriceId(tier, billingPeriod);
+    if (!priceId) {
+      toast.error("This plan is not available for checkout yet.");
+      return;
+    }
+
+    setLoadingTier(tier);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { priceId },
+      });
+
+      if (error) throw error;
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error("Failed to start checkout. Please try again.");
+    } finally {
+      setLoadingTier(null);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    setLoadingTier('free' as SubscriptionTier); // Use as loading indicator
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+
+      if (error) throw error;
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error('No portal URL returned');
+      }
+    } catch (error) {
+      console.error('Portal error:', error);
+      toast.error("Failed to open subscription management. Please try again.");
+    } finally {
+      setLoadingTier(null);
+    }
+  };
 
   const getPrice = (tier: TierConfig) => {
     return billingPeriod === 'monthly' ? tier.monthlyPrice : tier.annualPrice;
@@ -270,8 +328,17 @@ const Subscriptions = () => {
 
                 <CardFooter>
                   {user && currentTier === tier.tier ? (
-                    <Button className="w-full" variant="outline" disabled size="sm">
-                      Current Plan
+                    <Button 
+                      className="w-full" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={currentTier !== 'free' ? handleManageSubscription : undefined}
+                      disabled={loadingTier !== null}
+                    >
+                      {loadingTier && currentTier !== 'free' ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : null}
+                      {currentTier === 'free' ? 'Current Plan' : 'Manage Subscription'}
                     </Button>
                   ) : tier.tier === "free" ? (
                     <Link to={user ? "/platform/material-scouting" : "/signup"} className="w-full">
@@ -285,12 +352,14 @@ const Subscriptions = () => {
                       className="w-full" 
                       variant={tier.popular ? "default" : "outline"}
                       size="sm"
-                      onClick={() => {
-                        alert("Payment integration coming soon! Contact us at Rangsimatiti.b.s@gmail.com");
-                      }}
+                      disabled={loadingTier !== null}
+                      onClick={() => handleCheckout(tier.tier)}
                     >
+                      {loadingTier === tier.tier ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : null}
                       {tier.cta}
-                      <ArrowRight className="h-4 w-4 ml-1" />
+                      {loadingTier !== tier.tier && <ArrowRight className="h-4 w-4 ml-1" />}
                     </Button>
                   )}
                 </CardFooter>

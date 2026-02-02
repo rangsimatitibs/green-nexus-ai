@@ -286,7 +286,7 @@ const Subscriptions = () => {
                       variant={tier.popular ? "default" : "outline"}
                       size="sm"
                       onClick={() => {
-                        alert("Payment integration coming soon! Contact us at hello@materialink.io");
+                        alert("Payment integration coming soon! Contact us at Rangsimatiti.b.s@gmail.com");
                       }}
                     >
                       {tier.cta}
@@ -448,7 +448,7 @@ const Subscriptions = () => {
             <div className="pb-6">
               <h3 className="font-semibold text-lg mb-2">Do you offer team or enterprise pricing?</h3>
               <p className="text-muted-foreground">
-                Yes! For teams larger than 5 users or enterprise needs, contact us at hello@materialink.io for custom pricing and features.
+                Yes! For teams larger than 5 users or enterprise needs, contact us at Rangsimatiti.b.s@gmail.com for custom pricing and features.
               </p>
             </div>
           </div>

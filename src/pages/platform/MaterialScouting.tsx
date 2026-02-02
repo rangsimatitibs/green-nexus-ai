@@ -22,6 +22,9 @@ import { getRegulationDescription } from "@/data/regulationDescriptions";
 import { CategorizedProperties } from "@/components/CategorizedProperties";
 import { PropertyExplorer } from "@/components/PropertyExplorer";
 import { AdvancedPropertySearch, PropertyRequirement } from "@/components/AdvancedPropertySearch";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
+import { toast } from "sonner";
 
 // Pagination
 const RESULTS_PER_PAGE = 10;
@@ -167,6 +170,8 @@ const TruncatedIUPACName = ({ name }: { name: string }) => {
 };
 
 const MaterialScouting = () => {
+  const { user } = useAuth();
+  const { canSearch, incrementSearchCount, tier } = useSubscription();
   const { loading: materialsLoading, error: materialsError, search, lastSearchSource, canLoadMore, loadMore, isLoadingMore, results } = useUnifiedMaterialSearch();
   const [searchQuery, setSearchQuery] = useState("");
   const [displayResults, setDisplayResults] = useState<any[]>([]);
@@ -194,6 +199,30 @@ const MaterialScouting = () => {
 
 
   const handleSearch = async () => {
+    // Check authentication
+    if (!user) {
+      toast.error("Please sign in to search", {
+        description: "Create a free account to get 5 searches per day.",
+        action: {
+          label: "Sign Up",
+          onClick: () => window.location.href = "/signup",
+        },
+      });
+      return;
+    }
+
+    // Check search quota for free tier
+    if (!canSearch) {
+      toast.error("Daily search limit reached", {
+        description: "Upgrade to Researcher or Industry tier for unlimited searches.",
+        action: {
+          label: "View Plans",
+          onClick: () => window.location.href = "/pricing",
+        },
+      });
+      return;
+    }
+
     setIsSearching(true);
     setExpandedMaterial(null);
     setViewMode("overview");
@@ -210,6 +239,11 @@ const MaterialScouting = () => {
       const results = await search(searchQuery, filters);
       setDisplayResults(deduplicateMaterials(results));
       setHasActiveRequirements(filters.propertyRequirements.length > 0);
+      
+      // Increment search count for free tier users
+      if (tier === 'free') {
+        await incrementSearchCount();
+      }
     } catch (err) {
       console.error('Search error:', err);
       setDisplayResults([]);
@@ -224,6 +258,30 @@ const MaterialScouting = () => {
     application: string, 
     additionalReqs: string
   ) => {
+    // Check authentication
+    if (!user) {
+      toast.error("Please sign in to search", {
+        description: "Create a free account to get 5 searches per day.",
+        action: {
+          label: "Sign Up",
+          onClick: () => window.location.href = "/signup",
+        },
+      });
+      return;
+    }
+
+    // Check search quota for free tier
+    if (!canSearch) {
+      toast.error("Daily search limit reached", {
+        description: "Upgrade to Researcher or Industry tier for unlimited searches.",
+        action: {
+          label: "View Plans",
+          onClick: () => window.location.href = "/pricing",
+        },
+      });
+      return;
+    }
+
     setPropertyRequirements(requirements);
     setIsSearching(true);
     setExpandedMaterial(null);
@@ -250,6 +308,11 @@ const MaterialScouting = () => {
       const results = await search(query || 'materials', filters);
       setDisplayResults(deduplicateMaterials(results));
       setHasActiveRequirements(filters.propertyRequirements.length > 0);
+      
+      // Increment search count for free tier users
+      if (tier === 'free') {
+        await incrementSearchCount();
+      }
     } catch (err) {
       console.error('Search error:', err);
       setDisplayResults([]);

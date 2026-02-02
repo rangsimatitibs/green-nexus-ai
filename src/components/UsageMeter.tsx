@@ -1,6 +1,7 @@
 import { Progress } from "@/components/ui/progress";
-import { Search, Sparkles } from "lucide-react";
+import { Search, Sparkles, LogIn } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -12,7 +13,37 @@ interface UsageMeterProps {
 const FREE_TIER_DAILY_LIMIT = 5;
 
 export const UsageMeter = ({ className = "", showUpgradeButton = true }: UsageMeterProps) => {
+  const { user } = useAuth();
   const { tier, dailyUsage, remainingSearches, loading } = useSubscription();
+
+  // Show login prompt for unauthenticated users
+  if (!user) {
+    return (
+      <div className={`rounded-lg border bg-card p-4 ${className}`}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <LogIn className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Sign in to Search</span>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">
+          Create a free account to get 5 AI-powered searches per day.
+        </p>
+        <div className="flex gap-2">
+          <Link to="/auth" className="flex-1">
+            <Button variant="outline" size="sm" className="w-full">
+              Sign In
+            </Button>
+          </Link>
+          <Link to="/signup" className="flex-1">
+            <Button size="sm" className="w-full">
+              Sign Up Free
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // Don't show for paid tiers
   if (tier !== 'free' || loading) {

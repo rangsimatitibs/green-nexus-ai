@@ -17,6 +17,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, User } from "lucide-react";
 import logo from "@/assets/materialink-logo.png";
+import { SubscriptionBadge } from "@/components/SubscriptionBadge";
 
 const Header = () => {
   const { user, isAdmin, signOut } = useAuth();
@@ -112,6 +113,7 @@ const Header = () => {
           <div className="flex items-center gap-3">
             {user ? (
               <>
+                <SubscriptionBadge size="sm" />
                 {isAdmin && (
                   <Link to="/admin">
                     <Button variant="outline" size="sm">

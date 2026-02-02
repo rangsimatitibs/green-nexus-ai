@@ -1,5 +1,6 @@
 import { Search, Database, Target, CheckCircle, ArrowRight, Sparkles, ChevronDown, ChevronUp, Factory, Scale, Lightbulb, Award, DollarSign, TrendingUp, Atom, GitCompare, X, Download, Loader2, FileText, Lock, Globe, Bot, FlaskConical, Info, Check, AlertCircle } from "lucide-react";
-import PremiumGate from "@/components/PremiumGate";
+import TierGate from "@/components/TierGate";
+import { UsageMeter } from "@/components/UsageMeter";
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -406,6 +407,9 @@ const MaterialScouting = () => {
                 </Button>
               </div>
 
+              {/* Usage meter for free tier users */}
+              <UsageMeter showUpgradeButton={true} />
+
               {/* Advanced Search Toggle */}
               <Button 
                 variant="outline" 
@@ -781,10 +785,11 @@ const MaterialScouting = () => {
 
                               </>
                             ) : (
-                              /* Suppliers View - Premium Gated */
-                              <PremiumGate
-                                title="Premium Access Required"
-                                description="Unlock supplier contacts, pricing information, and detailed product specifications with Premium access."
+                              /* Suppliers View - Industry Tier Gated */
+                              <TierGate
+                                requiredTier="industry"
+                                title="Industry Access Required"
+                                description="Unlock supplier contacts, pricing information, and detailed product specifications with an Industry subscription."
                               >
                                 <div>
                                   <h5 className="text-lg font-semibold text-foreground mb-4">
@@ -1017,7 +1022,7 @@ const MaterialScouting = () => {
                                   ))}
                                 </div>
                               </div>
-                              </PremiumGate>
+                              </TierGate>
                             )}
                           </div>
                         </div>

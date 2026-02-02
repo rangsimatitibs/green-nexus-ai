@@ -42,11 +42,11 @@ const Footer = () => {
             <h3 className="text-sm font-semibold text-foreground">Contact</h3>
             <div className="flex flex-col gap-3">
               <a 
-                href="mailto:alex@materialink.com" 
+                href="mailto:Rangsimatiti.b.s@gmail.com" 
                 className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-smooth"
               >
                 <Mail className="w-4 h-4" />
-                <span>alex@materialink.com</span>
+                <span>Rangsimatiti.b.s@gmail.com</span>
               </a>
               <a
                 href="https://www.linkedin.com/company/materia-link/?viewAsMember=true"

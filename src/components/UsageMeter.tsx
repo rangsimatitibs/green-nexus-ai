@@ -32,7 +32,7 @@ export const UsageMeter = ({ className = "", showUpgradeButton = true }: UsageMe
         <div className="flex gap-2">
           <Link to="/auth" className="flex-1">
             <Button variant="outline" size="sm" className="w-full">
-              Sign In
+              Log in
             </Button>
           </Link>
           <Link to="/signup" className="flex-1">

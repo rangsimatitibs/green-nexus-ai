@@ -850,7 +850,7 @@ const MaterialScouting = () => {
                             ) : (
                               /* Suppliers View - Industry Tier Gated */
                               <TierGate
-                                requiredTier="industry"
+                                requiredTier="industry_lite"
                                 title="Industry Access Required"
                                 description="Unlock supplier contacts, pricing information, and detailed product specifications with an Industry subscription."
                               >

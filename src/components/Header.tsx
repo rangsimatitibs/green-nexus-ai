@@ -95,22 +95,12 @@ const Header = () => {
               </NavigationMenuList>
             </NavigationMenu>
 
-            <Link to="/about" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
-              About
-            </Link>
             <Link to="/pricing" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
               Pricing
             </Link>
-            <a 
-              href="#contact" 
-              className="text-sm font-medium text-foreground hover:text-primary transition-smooth"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-            >
-              Contact
-            </a>
+            <Link to="/about" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
+              About
+            </Link>
           </div>
           
           <div className="flex items-center gap-3">

@@ -175,7 +175,7 @@ async function searchCrossRefForProperty(
     const url = `https://api.crossref.org/works?query=${encodeURIComponent(query)}&rows=5&filter=type:journal-article`;
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'MaterialInk/1.0 (mailto:research@materialink.io)'
+        'User-Agent': 'MaterialInk/1.0 (mailto:rangsimatiti.b.s@gmail.com)'
       }
     });
 

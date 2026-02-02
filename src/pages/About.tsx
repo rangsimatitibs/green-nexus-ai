@@ -3,7 +3,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail } from "lucide-react";
-import alexPhoto from "@/assets/alex-joseph.jpg";
 import rangsimatiti from "@/assets/rangsimatiti.jpg";
 import holgerPhoto from "@/assets/dr-holger-warth.jpg";
 
@@ -12,16 +11,8 @@ const About = () => {
 
   const teamMembers = [
     {
-      name: "Alex Joseph",
-      role: "Co-Founder",
-      shortBio: "A serial entrepreneur, with a history of turning AI concepts into scalable platforms.",
-      fullBio: "Former CTO of Google-backed Dermie.AI, bringing deep knowledge of machine learning and a vision for transforming industries with intelligent systems.",
-      email: "alex@materialink.ai",
-      image: alexPhoto,
-    },
-    {
       name: "Rangsimatiti Binda Saichompoo",
-      role: "Co-Founder",
+      role: "Founder & CEO",
       shortBio: "A sustainability alchemist, driven by the urgency of plastic pollution.",
       fullBio: "Combining scientific insights in sustainable materials & biomass valorization with an entrepreneurial spirit, turning innovation into impact for a cleaner future.",
       email: "rangsimatiti.b.s@gmail.com",
@@ -53,7 +44,7 @@ const About = () => {
           </div>
 
           {/* Team Section */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {teamMembers.map((member, index) => (
               <Card
                 key={index}

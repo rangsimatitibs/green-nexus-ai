@@ -639,6 +639,30 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_usage: {
+        Row: {
+          created_at: string | null
+          id: string
+          month: string
+          search_count: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          month?: string
+          search_count?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          month?: string
+          search_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       optimization_runs: {
         Row: {
           agitation: number
@@ -929,6 +953,7 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          billing_period: string | null
           created_at: string | null
           current_period_end: string | null
           current_period_start: string | null
@@ -941,6 +966,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          billing_period?: string | null
           created_at?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
@@ -953,6 +979,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          billing_period?: string | null
           created_at?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
@@ -1211,6 +1238,10 @@ export type Database = {
         | "researcher"
         | "industry"
         | "free"
+        | "researcher_lite"
+        | "researcher_premium"
+        | "industry_lite"
+        | "industry_premium"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1345,6 +1376,10 @@ export const Constants = {
         "researcher",
         "industry",
         "free",
+        "researcher_lite",
+        "researcher_premium",
+        "industry_lite",
+        "industry_premium",
       ],
     },
   },

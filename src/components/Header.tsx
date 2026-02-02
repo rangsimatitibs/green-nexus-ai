@@ -95,8 +95,8 @@ const Header = () => {
               </NavigationMenuList>
             </NavigationMenu>
 
-            <Link to="/pricing" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
-              Pricing
+            <Link to="/subscriptions" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
+              Subscriptions
             </Link>
             <Link to="/about" className="text-sm font-medium text-foreground hover:text-primary transition-smooth">
               About

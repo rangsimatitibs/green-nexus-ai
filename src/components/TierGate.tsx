@@ -1,4 +1,4 @@
-import { Lock, Sparkles, Building2, FlaskConical, User } from "lucide-react";
+import { Lock, Sparkles, Building2, FlaskConical, User, Star, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
@@ -11,21 +11,28 @@ interface TierGateProps {
   children: React.ReactNode;
 }
 
-const tierConfig = {
+const tierConfig: Record<SubscriptionTier, {
+  icon: typeof User;
+  label: string;
+  color: string;
+  bgColor: string;
+  price?: string;
+  features?: string[];
+}> = {
   free: {
     icon: User,
     label: "Free",
     color: "text-muted-foreground",
     bgColor: "bg-muted/50",
   },
-  researcher: {
+  researcher_lite: {
     icon: FlaskConical,
-    label: "Researcher",
+    label: "Researcher Lite",
     color: "text-blue-500",
     bgColor: "bg-blue-500/10",
     price: "$29/month",
     features: [
-      "Unlimited material searches",
+      "100 material searches per month",
       "Full property data with AI predictions",
       "Bibliography search & paper discovery",
       "Lab Recipes access",
@@ -33,19 +40,49 @@ const tierConfig = {
       "Export citations and data",
     ],
   },
-  industry: {
-    icon: Building2,
-    label: "Industry",
-    color: "text-primary",
-    bgColor: "bg-primary/10",
-    price: "$199/month",
+  researcher_premium: {
+    icon: Star,
+    label: "Researcher Premium",
+    color: "text-blue-600",
+    bgColor: "bg-blue-600/10",
+    price: "$49/month",
     features: [
-      "Everything in Researcher tier",
+      "Unlimited material searches",
+      "Full property data with AI predictions",
+      "Bibliography search & paper discovery",
+      "Lab Recipes access",
+      "Research Library access",
+      "Priority support",
+    ],
+  },
+  industry_lite: {
+    icon: Building2,
+    label: "Industry Lite",
+    color: "text-amber-500",
+    bgColor: "bg-amber-500/10",
+    price: "$149/month",
+    features: [
+      "100 material searches per month",
+      "Everything in Researcher Premium",
       "Supplier Database Access",
       "Company contact details",
       "Pricing & MOQ data",
       "Lead time information",
-      "Bulk export & reports",
+    ],
+  },
+  industry_premium: {
+    icon: Crown,
+    label: "Industry Premium",
+    color: "text-primary",
+    bgColor: "bg-primary/10",
+    price: "$249/month",
+    features: [
+      "Unlimited material searches",
+      "Everything in Industry Lite",
+      "API Access",
+      "Dedicated account manager",
+      "Priority support",
+      "Custom integrations",
     ],
   },
 };
@@ -78,11 +115,13 @@ const TierGate = ({
   const config = tierConfig[requiredTier];
   const Icon = config.icon;
 
-  const defaultTitle = requiredTier === 'industry' 
+  const isIndustryTier = requiredTier === 'industry_lite' || requiredTier === 'industry_premium';
+  
+  const defaultTitle = isIndustryTier 
     ? "Industry Access Required"
     : "Researcher Access Required";
 
-  const defaultDescription = requiredTier === 'industry'
+  const defaultDescription = isIndustryTier
     ? "Access supplier information, pricing, and contact details with an Industry subscription."
     : "Unlock advanced research tools, bibliography search, and lab recipes with a Researcher subscription.";
 
@@ -108,13 +147,13 @@ const TierGate = ({
             {description || defaultDescription}
           </p>
 
-          {'price' in config && (
+          {config.price && (
             <p className="text-lg font-semibold text-primary mb-4">
-              {config.price}
+              Starting at {config.price}
             </p>
           )}
 
-          {'features' in config && (
+          {config.features && (
             <ul className="text-left text-sm text-muted-foreground mb-6 space-y-2">
               {config.features.map((feature, index) => (
                 <li key={index} className="flex items-start gap-2">
@@ -125,7 +164,7 @@ const TierGate = ({
             </ul>
           )}
 
-          <Link to="/pricing">
+          <Link to="/subscriptions">
             <Button variant="hero" className="w-full">
               <Sparkles className="h-4 w-4 mr-2" />
               Upgrade to {config.label}
@@ -134,7 +173,7 @@ const TierGate = ({
 
           {currentTier !== 'free' && (
             <p className="text-xs text-muted-foreground mt-4">
-              Current plan: <span className="font-medium capitalize">{currentTier}</span>
+              Current plan: <span className="font-medium">{tierConfig[currentTier].label}</span>
             </p>
           )}
         </Card>

@@ -205,7 +205,7 @@ async function searchCrossRef(query: string, maxResults: number): Promise<Biblio
     const url = `https://api.crossref.org/works?query=${encodeURIComponent(query)}&rows=${maxResults}&filter=type:journal-article`;
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'MaterialInk/1.0 (mailto:research@materialink.io)'
+        'User-Agent': 'MaterialInk/1.0 (mailto:rangsimatiti.b.s@gmail.com)'
       }
     });
 

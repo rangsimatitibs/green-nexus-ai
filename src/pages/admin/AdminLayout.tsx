@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Database, Beaker, Package, FileText, LayoutDashboard, LogOut, Server, Globe, Ban } from "lucide-react";
+import { Database, Beaker, Package, FileText, LayoutDashboard, LogOut, Server, Globe, Ban, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,10 @@ const yourDataNavigation = [
 const externalSourcesNavigation = [
   { name: "Manage Sources", href: "/admin/external-sources", icon: Globe },
   { name: "Excluded Terms", href: "/admin/excluded-terms", icon: Ban },
+];
+
+const userManagementNavigation = [
+  { name: "Waitlist Signups", href: "/admin/waitlist", icon: Users },
 ];
 
 export default function AdminLayout() {
@@ -91,6 +95,38 @@ export default function AdminLayout() {
             </div>
             <div className="space-y-1">
               {externalSourcesNavigation.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* User Management Section */}
+          <div>
+            <div className="flex items-center gap-2 px-3 mb-2">
+              <Users className="h-4 w-4 text-primary" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                User Management
+              </span>
+            </div>
+            <div className="space-y-1">
+              {userManagementNavigation.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link

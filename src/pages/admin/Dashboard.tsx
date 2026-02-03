@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Database, Beaker, Package, FileText, Globe, Server, Edit, Eye } from "lucide-react";
+import { Database, Beaker, Package, FileText, Globe, Server, Edit, Eye, Users } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { Link } from "react-router-dom";
@@ -28,6 +28,7 @@ export default function Dashboard() {
     suppliers: 0,
     researchMaterials: 0,
     labRecipes: 0,
+    waitlistSignups: 0,
   });
   const [categoryData, setCategoryData] = useState<{ name: string; value: number }[]>([]);
   const [countryData, setCountryData] = useState<{ name: string; value: number }[]>([]);
@@ -42,11 +43,12 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const [materials, suppliers, researchMaterials, labRecipes, categoriesRes, countriesRes] = await Promise.all([
+      const [materials, suppliers, researchMaterials, labRecipes, waitlistSignups, categoriesRes, countriesRes] = await Promise.all([
         supabase.from("materials").select("id", { count: "exact", head: true }),
         supabase.from("suppliers").select("id", { count: "exact", head: true }),
         supabase.from("research_materials").select("id", { count: "exact", head: true }),
         supabase.from("lab_recipes").select("id", { count: "exact", head: true }),
+        supabase.from("waitlist_signups").select("id", { count: "exact", head: true }),
         supabase.from("materials").select("category"),
         supabase.from("suppliers").select("country"),
       ]);
@@ -56,6 +58,7 @@ export default function Dashboard() {
         suppliers: suppliers.count || 0,
         researchMaterials: researchMaterials.count || 0,
         labRecipes: labRecipes.count || 0,
+        waitlistSignups: waitlistSignups.count || 0,
       });
 
       // Process category data
@@ -240,6 +243,16 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.labRecipes}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Waitlist Signups</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.waitlistSignups}</div>
           </CardContent>
         </Card>
       </div>

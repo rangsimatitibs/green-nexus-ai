@@ -1,13 +1,14 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, CheckCircle, Cog, Target, MessageSquare } from "lucide-react";
+import { Search, Cog, MessageSquare, Sparkles, FlaskConical, Factory, Crown, Star } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { z } from "zod";
@@ -21,7 +22,35 @@ const signupSchema = z.object({
   companyName: z.string().trim().max(100).optional(),
   phone: z.string().trim().max(20).optional(),
   interestArea: z.string().min(1, { message: "Please select an interest area" }),
+  selectedTier: z.string().optional(),
 });
+
+const tierDisplayNames: Record<string, { name: string; icon: React.ReactNode; color: string; price: { monthly: number; annual: number } }> = {
+  researcher_lite: { 
+    name: "Researcher Lite", 
+    icon: <FlaskConical className="h-5 w-5" />, 
+    color: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+    price: { monthly: 29, annual: 290 }
+  },
+  researcher_premium: { 
+    name: "Researcher Premium", 
+    icon: <Star className="h-5 w-5" />, 
+    color: "bg-blue-600/10 text-blue-600 border-blue-600/20",
+    price: { monthly: 49, annual: 490 }
+  },
+  industry_lite: { 
+    name: "Industry Lite", 
+    icon: <Factory className="h-5 w-5" />, 
+    color: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+    price: { monthly: 149, annual: 1490 }
+  },
+  industry_premium: { 
+    name: "Industry Premium", 
+    icon: <Crown className="h-5 w-5" />, 
+    color: "bg-amber-600/10 text-amber-600 border-amber-600/20",
+    price: { monthly: 249, annual: 2490 }
+  },
+};
 
 const services = [
   {
@@ -57,6 +86,12 @@ const services = [
 ];
 
 const SignUp = () => {
+  const [searchParams] = useSearchParams();
+  const selectedTier = searchParams.get('tier');
+  const billingPeriod = searchParams.get('billing') as 'monthly' | 'annual' | null;
+  
+  const tierInfo = selectedTier ? tierDisplayNames[selectedTier] : null;
+  
   const [formData, setFormData] = useState({
     email: "",
     fullName: "",
@@ -68,14 +103,32 @@ const SignUp = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Auto-select interest area based on tier
+  useEffect(() => {
+    if (selectedTier && !formData.interestArea) {
+      const isResearcherTier = selectedTier.includes('researcher');
+      const isIndustryTier = selectedTier.includes('industry');
+      if (isResearcherTier) {
+        setFormData(prev => ({ ...prev, interestArea: 'researchers-tool' }));
+      } else if (isIndustryTier) {
+        setFormData(prev => ({ ...prev, interestArea: 'all-services' }));
+      }
+    }
+  }, [selectedTier]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       // Validate form data
-      signupSchema.parse(formData);
+      signupSchema.parse({ ...formData, selectedTier: selectedTier || undefined });
       
       setIsSubmitting(true);
+
+      // Build the interest area with tier info
+      const interestWithTier = selectedTier 
+        ? `${formData.interestArea} (Selected: ${tierInfo?.name || selectedTier} - ${billingPeriod || 'monthly'})`
+        : formData.interestArea;
 
       const { error } = await supabase
         .from("waitlist_signups")
@@ -85,7 +138,7 @@ const SignUp = () => {
             full_name: formData.fullName,
             company_name: formData.companyName || null,
             phone: formData.phone || null,
-            interest_area: formData.interestArea
+            interest_area: interestWithTier
           }
         ]);
 
@@ -141,23 +194,57 @@ const SignUp = () => {
       <Header />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-6">
+          {/* Selected Tier Banner */}
+          {tierInfo && (
+            <div className="max-w-2xl mx-auto mb-8">
+              <div className={`p-4 rounded-xl border-2 ${tierInfo.color} flex items-center justify-between`}>
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${tierInfo.color}`}>
+                    {tierInfo.icon}
+                  </div>
+                  <div>
+                    <p className="font-semibold flex items-center gap-2">
+                      {tierInfo.name}
+                      <Badge variant="secondary" className="text-xs">
+                        Selected Plan
+                      </Badge>
+                    </p>
+                    <p className="text-sm opacity-80">
+                      ${billingPeriod === 'annual' ? tierInfo.price.annual : tierInfo.price.monthly}
+                      /{billingPeriod === 'annual' ? 'year' : 'month'}
+                    </p>
+                  </div>
+                </div>
+                <Sparkles className="h-5 w-5 opacity-60" />
+              </div>
+            </div>
+          )}
+
           {/* Hero Section */}
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Join the Future of Sustainable Materials
+              {tierInfo ? "Request Early Access" : "Join the Future of Sustainable Materials"}
             </h1>
             <p className="text-xl text-muted-foreground">
-              Get early access to our platform and start your free trial when we launch.
+              {tierInfo 
+                ? `You've selected the ${tierInfo.name} plan. Join our waitlist and we'll notify you when checkout is ready.`
+                : "Get early access to our platform and start your free trial when we launch."
+              }
             </p>
           </div>
 
           {/* Sign Up Form - Now First */}
           <div className="max-w-2xl mx-auto mb-16">
-            <Card className="border-2">
+            <Card className={`border-2 ${tierInfo ? 'border-primary/30' : ''}`}>
               <CardHeader>
-                <CardTitle className="text-2xl">Request Early Access</CardTitle>
+                <CardTitle className="text-2xl">
+                  {tierInfo ? `Join Waitlist for ${tierInfo.name}` : "Request Early Access"}
+                </CardTitle>
                 <CardDescription>
-                  Fill out the form below and we'll notify you when the platform is ready.
+                  {tierInfo 
+                    ? "Fill out the form below and we'll notify you as soon as checkout is available for your selected plan."
+                    : "Fill out the form below and we'll notify you when the platform is ready."
+                  }
                 </CardDescription>
               </CardHeader>
               <CardContent>

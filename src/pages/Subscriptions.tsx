@@ -11,7 +11,6 @@ import { BillingToggle, BillingPeriod } from "@/components/BillingToggle";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { getPriceId } from "@/config/stripe";
 
 interface TierConfig {
   name: string;
@@ -164,37 +163,9 @@ const Subscriptions = () => {
   const [loadingTier, setLoadingTier] = useState<SubscriptionTier | null>(null);
   const navigate = useNavigate();
 
-  const handleCheckout = async (tier: SubscriptionTier) => {
-    if (!user) {
-      navigate('/signup');
-      return;
-    }
-
-    const priceId = getPriceId(tier, billingPeriod);
-    if (!priceId) {
-      toast.error("This plan is not available for checkout yet.");
-      return;
-    }
-
-    setLoadingTier(tier);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId },
-      });
-
-      if (error) throw error;
-      
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      } else {
-        throw new Error('No checkout URL returned');
-      }
-    } catch (error) {
-      console.error('Checkout error:', error);
-      toast.error("Failed to start checkout. Please try again.");
-    } finally {
-      setLoadingTier(null);
-    }
+  const handleCheckout = (tier: SubscriptionTier) => {
+    // Redirect to signup with tier info (Stripe checkout not ready yet)
+    navigate(`/signup?tier=${tier}&billing=${billingPeriod}`);
   };
 
   const handleManageSubscription = async () => {

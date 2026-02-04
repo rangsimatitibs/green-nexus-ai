@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,43 +20,54 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<AuthMode>("login");
-  const [searchParams] = useSearchParams();
+  
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already logged in
+    // Set up auth state listener FIRST to catch recovery events
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log("Auth event:", event);
+        
+        // Handle password recovery event
+        if (event === "PASSWORD_RECOVERY") {
+          setMode("reset-password");
+          toast({
+            title: "Password Reset",
+            description: "Please enter your new password below.",
+          });
+          return;
+        }
+        
+        // If user is signed in and not in recovery mode, redirect
+        if (event === "SIGNED_IN" && mode !== "reset-password") {
+          navigate("/");
+        }
+      }
+    );
+
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate("/");
+      if (session && mode !== "reset-password") {
+        // Check if this is a recovery session by looking at the URL hash
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const type = hashParams.get("type");
+        
+        if (type === "recovery") {
+          setMode("reset-password");
+          toast({
+            title: "Password Reset",
+            description: "Please enter your new password below.",
+          });
+        } else {
+          navigate("/");
+        }
       }
     });
-  }, [navigate]);
 
-  // Handle password reset from email link
-  useEffect(() => {
-    const handleAuthCallback = async () => {
-      // Check for hash fragments (Supabase uses these for auth callbacks)
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get("access_token");
-      const type = hashParams.get("type");
-      
-      if (accessToken && type === "recovery") {
-        setMode("reset-password");
-        toast({
-          title: "Password Reset",
-          description: "Please enter your new password below.",
-        });
-      }
-      
-      // Also check URL params for legacy support
-      if (searchParams.get("type") === "recovery") {
-        setMode("reset-password");
-      }
-    };
-    
-    handleAuthCallback();
-  }, [searchParams, toast]);
+    return () => subscription.unsubscribe();
+  }, [navigate, toast, mode]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();

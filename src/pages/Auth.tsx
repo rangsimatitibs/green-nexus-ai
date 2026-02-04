@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -21,17 +21,31 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<AuthMode>("login");
   
+  // Use ref to track recovery mode synchronously (avoids race condition)
+  const isRecoveryMode = useRef(false);
+  
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener FIRST to catch recovery events
+    // Check URL hash FIRST before setting up listeners
+    // This ensures we detect recovery mode before any auth events fire
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get("type");
+    
+    if (type === "recovery") {
+      isRecoveryMode.current = true;
+      setMode("reset-password");
+    }
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log("Auth event:", event);
+        console.log("Auth event:", event, "isRecoveryMode:", isRecoveryMode.current);
         
         // Handle password recovery event
         if (event === "PASSWORD_RECOVERY") {
+          isRecoveryMode.current = true;
           setMode("reset-password");
           toast({
             title: "Password Reset",
@@ -40,34 +54,25 @@ export default function Auth() {
           return;
         }
         
-        // If user is signed in and not in recovery mode, redirect
-        if (event === "SIGNED_IN" && mode !== "reset-password") {
+        // If user is signed in and NOT in recovery mode, redirect
+        // Use the ref for synchronous check to avoid race condition
+        if (event === "SIGNED_IN" && !isRecoveryMode.current) {
           navigate("/");
         }
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && mode !== "reset-password") {
-        // Check if this is a recovery session by looking at the URL hash
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const type = hashParams.get("type");
-        
-        if (type === "recovery") {
-          setMode("reset-password");
-          toast({
-            title: "Password Reset",
-            description: "Please enter your new password below.",
-          });
-        } else {
+    // Check for existing session (but not if we're in recovery mode)
+    if (!isRecoveryMode.current) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session && !isRecoveryMode.current) {
           navigate("/");
         }
-      }
-    });
+      });
+    }
 
     return () => subscription.unsubscribe();
-  }, [navigate, toast, mode]);
+  }, [navigate, toast]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,8 +228,13 @@ export default function Auth() {
         description: "Your password has been successfully reset. You can now log in.",
       });
       
-      // Clear the hash and redirect
+      // Reset recovery mode and clear the hash
+      isRecoveryMode.current = false;
       window.history.replaceState(null, "", window.location.pathname);
+      
+      // Sign out so user can log in with new password
+      await supabase.auth.signOut();
+      
       setMode("login");
       setPassword("");
       setConfirmPassword("");
